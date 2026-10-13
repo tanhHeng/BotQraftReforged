@@ -40,22 +40,21 @@ botcraft init
 botcraft start
 ```
 
-也可使用 `python -m botcraft`；无参数等价于 `start`。初始化只补缺，不覆盖已有文件。详细配置及运维命令见[部署与配置](docs/configuration.md)。
+也可使用 `python -m botcraft`；无参数等价于 `start`。初始化会补齐缺少的文件并保留已有内容。详细配置及运维命令见[实例配置](docs/quick-start/configuration.md)。
 
 ## 插件
 
 将插件放入实例的 `plugins` 目录。先从 [Echo 示例](example_plugins/echo.py)开始：群聊或 C2C 输入 `/echo Hello world`，即可通过原消息来源被动回复文本。
 
-[插件开发指南](docs/plugin-development.md)介绍命令、事件、权限、翻译和 QQ 消息；[打包指南](docs/packaging.md)介绍插件格式与分发。
+[插件开发指南](docs/plugin-dev/index.md)介绍命令、事件、权限、翻译和 QQ 消息；[打包指南](docs/plugin-dev/plugin-format.md)介绍插件格式与分发。
 
-[今日人品插件](docs/jrrp-plugin.md)提供 `/jrrp`、中文消息触发、语录投稿/撤回和命令键盘；仅对平台实际推送的群聊/C2C 消息生效。
+[今日人品插件](docs/plugin-dev/jrrp-plugin.md)提供 `/jrrp`、中文消息触发、语录投稿/撤回和命令键盘；接收群聊消息时，请先在 QQ 平台开启相应推送能力。
 
 ## 文档
 
-- [文档目录与开发验证](docs/README.md)
-- [部署、配置、日志与运维](docs/configuration.md)
-- [插件开发](docs/plugin-development.md)
-- [插件元数据与打包](docs/packaging.md)
+- [文档首页](docs/index.md)
+- [安装、配置、日志与运维](docs/quick-start/configuration.md)
+- [插件开发](docs/plugin-dev/index.md)
+- [插件元数据与打包](docs/plugin-dev/plugin-format.md)
 
 本地检查不等于真实 QQ 平台验收；实际可用能力取决于账号权限和平台接口。运行诊断使用英文日志，原始响应以 `Raw response` 标记；翻译资源仍可提供中文输出。
-

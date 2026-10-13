@@ -40,23 +40,23 @@ Enter your QQ Open Platform `appid` and `secret` in the generated `config.yml`, 
 botcraft start
 ```
 
-You can also use `python -m botcraft`; running without arguments is equivalent to `start`. Initialization creates missing files without overwriting existing ones. See [Deployment and configuration](docs/configuration.md) for configuration and administration commands.
+You can also use `python -m botcraft`; running without arguments is equivalent to `start`. Initialization creates missing files without overwriting existing ones. See [Instance configuration](docs/quick-start/configuration.md) for configuration and administration commands.
 
 ## Plugins
 
 Place plugins in the instance's `plugins` directory. Start with the [Echo example](example_plugins/echo.py): send `/echo Hello world` in a group chat or C2C conversation to receive a passive reply using the original message context.
 
-The [Plugin development guide](docs/plugin-development.md) covers commands, events, permissions, translations, and QQ messages. The [Packaging guide](docs/packaging.md) covers plugin formats and distribution.
+The [Plugin development guide](docs/plugin-dev/index.md) covers commands, events, permissions, translations, and QQ messages. The [Packaging guide](docs/plugin-dev/plugin-format.md) covers plugin formats and distribution.
 
-The [daily fortune plugin](docs/jrrp-plugin.md) supports `/jrrp`, Chinese message aliases, quote submissions/withdrawal, and command keyboards for group/C2C messages actually delivered by QQ.
+The [daily fortune plugin](docs/plugin-dev/jrrp-plugin.md) supports `/jrrp`, Chinese message aliases, quote submissions/withdrawal, and command keyboards for group/C2C messages actually delivered by QQ.
 
 ## Documentation
 
 The detailed guides are currently available in Simplified Chinese:
 
-- [Documentation index and development checks](docs/README.md)
-- [Deployment, configuration, logging, and administration](docs/configuration.md)
-- [Plugin development](docs/plugin-development.md)
-- [Plugin metadata and packaging](docs/packaging.md)
+- [Documentation homepage](docs/index.md)
+- [Installation, configuration, logging, and administration](docs/quick-start/configuration.md)
+- [Plugin development](docs/plugin-dev/index.md)
+- [Plugin metadata and packaging](docs/plugin-dev/plugin-format.md)
 
 Local checks do not constitute acceptance testing against the real QQ platform. Available capabilities depend on account permissions and platform APIs. Runtime diagnostics use English log messages, with raw responses marked `Raw response`; translation resources can still provide Chinese output.
