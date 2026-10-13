@@ -17,47 +17,6 @@ BotCraftReforged builds on MCDR's plugin development, command management, permis
 
 Requires **Python 3.10 or later**. MCDR 2.14.4 is a code dependency, not the runtime host; no Minecraft server is required.
 
-## Getting started
-
-The project has not yet been published to PyPI. Install from the source directory:
-
-```sh
-python -m pip install .
-botcraft --version
-```
-
-Then initialize an instance in a separate, empty directory:
-
-```sh
-mkdir botcraft-run
-cd botcraft-run
-botcraft init
-```
-
-Enter your QQ Open Platform `appid` and `secret` in the generated `config.yml`, then start the bot:
-
-```sh
-botcraft start
-```
-
-You can also use `python -m botcraft`; running without arguments is equivalent to `start`. Initialization creates missing files without overwriting existing ones. See [Instance configuration](docs/quick-start/configuration.md) for configuration and administration commands.
-
-## Plugins
-
-Place plugins in the instance's `plugins` directory. Start with the [Echo example](example_plugins/echo.py): send `/echo Hello world` in a group chat or C2C conversation to receive a passive reply using the original message context.
-
-The [Plugin development guide](docs/plugin-dev/index.md) covers commands, events, permissions, translations, and QQ messages. The [Packaging guide](docs/plugin-dev/plugin-format.md) covers plugin formats and distribution.
-
-The [daily fortune plugin](docs/plugin-dev/jrrp-plugin.md) supports `/jrrp`, Chinese message aliases, quote submissions/withdrawal, and command keyboards for group/C2C messages actually delivered by QQ.
-
 ## Documentation
 
-The detailed guides are currently available in Simplified Chinese:
-
-- [Documentation homepage](docs/index.md)
-- [Installation, configuration, logging, and administration](docs/quick-start/configuration.md)
-- [Plugin development](docs/plugin-dev/index.md)
-- [Plugin metadata and packaging](docs/plugin-dev/plugin-format.md)
-- [Contributing to BotCraft](docs/botcraft-dev/index.md)
-
-Local checks do not constitute acceptance testing against the real QQ platform. Available capabilities depend on account permissions and platform APIs. Runtime diagnostics use English log messages, with raw responses marked `Raw response`; translation resources can still provide Chinese output.
+Check out the full documentation at [https://botcraft.tanh.moe/](https://botcraft.tanh.moe/).

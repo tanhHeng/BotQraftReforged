@@ -17,45 +17,6 @@ BotCraftReforged 继承了 MCDR 的插件开发、指令管理、权限管理等
 
 需要 **Python 3.10 或以上**。MCDR 2.14.4 是代码依赖，不是宿主；无需 Minecraft 服务端。
 
-## 使用
-
-目前尚未发布到 PyPI。在源码根目录安装：
-
-```sh
-python -m pip install .
-botcraft --version
-```
-
-随后在独立的空目录初始化运行实例：
-
-```sh
-mkdir botcraft-run
-cd botcraft-run
-botcraft init
-```
-
-在生成的 `config.yml` 中填写 QQ 开放平台的 `appid` 和 `secret`，然后启动：
-
-```sh
-botcraft start
-```
-
-也可使用 `python -m botcraft`；无参数等价于 `start`。初始化会补齐缺少的文件并保留已有内容。详细配置及运维命令见[实例配置](docs/quick-start/configuration.md)。
-
-## 插件
-
-将插件放入实例的 `plugins` 目录。先从 [Echo 示例](example_plugins/echo.py)开始：群聊或 C2C 输入 `/echo Hello world`，即可通过原消息来源被动回复文本。
-
-[插件开发指南](docs/plugin-dev/index.md)介绍命令、事件、权限、翻译和 QQ 消息；[打包指南](docs/plugin-dev/plugin-format.md)介绍插件格式与分发。
-
-[今日人品插件](docs/plugin-dev/jrrp-plugin.md)提供 `/jrrp`、中文消息触发、语录投稿/撤回和命令键盘；接收群聊消息时，请先在 QQ 平台开启相应推送能力。
-
 ## 文档
 
-- [文档首页](docs/index.md)
-- [安装、配置、日志与运维](docs/quick-start/configuration.md)
-- [插件开发](docs/plugin-dev/index.md)
-- [插件元数据与打包](docs/plugin-dev/plugin-format.md)
-- [为 BotCraft 贡献代码](docs/botcraft-dev/index.md)
-
-本地检查不等于真实 QQ 平台验收；实际可用能力取决于账号权限和平台接口。运行诊断使用英文日志，原始响应以 `Raw response` 标记；翻译资源仍可提供中文输出。
+访问 [https://botcraft.tanh.moe/](https://botcraft.tanh.moe/) 查看完整文档。
