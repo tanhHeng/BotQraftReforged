@@ -1,11 +1,15 @@
 import { defineConfig } from "vitepress";
 
+const base = process.env.VITEPRESS_BASE || "/";
+
 export default defineConfig({
-  base: process.env.VITEPRESS_BASE || "/",
+  base,
   title: "BotCraftReforged",
   description: "适配官方 QQ 机器人的开发框架，基于 MCDReforged 构建。",
   lang: "zh-CN",
+  head: [["link", { rel: "icon", href: `${base}favicon.ico` }]],
   themeConfig: {
+    logo: "/icon.png",
     nav: [
       { text: "主页", link: "/" },
       { text: "快速上手", link: "/quick-start/" },
