@@ -1,6 +1,7 @@
 import { defineConfig } from "vitepress";
 
 export default defineConfig({
+  base: process.env.VITEPRESS_BASE || "/",
   title: "BotCraftReforged",
   description: "适配官方 QQ 机器人的开发框架，基于 MCDReforged 构建。",
   lang: "zh-CN",
