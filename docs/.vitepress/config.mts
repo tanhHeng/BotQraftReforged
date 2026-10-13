@@ -62,6 +62,6 @@ export default defineConfig({
         ],
       },
     ],
-    socialLinks: [{ icon: "github", link: "https://github.com/BotCraftReforged/BotCraftReforged" }],
+    socialLinks: [{ icon: "github", link: "https://github.com/tanhHeng/BotCraftReforged" }],
   },
 });
