@@ -56,5 +56,6 @@ botcraft start
 - [安装、配置、日志与运维](docs/quick-start/configuration.md)
 - [插件开发](docs/plugin-dev/index.md)
 - [插件元数据与打包](docs/plugin-dev/plugin-format.md)
+- [为 BotCraft 贡献代码](docs/botcraft-dev/index.md)
 
 本地检查不等于真实 QQ 平台验收；实际可用能力取决于账号权限和平台接口。运行诊断使用英文日志，原始响应以 `Raw response` 标记；翻译资源仍可提供中文输出。

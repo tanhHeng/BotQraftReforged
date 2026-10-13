@@ -58,5 +58,6 @@ The detailed guides are currently available in Simplified Chinese:
 - [Installation, configuration, logging, and administration](docs/quick-start/configuration.md)
 - [Plugin development](docs/plugin-dev/index.md)
 - [Plugin metadata and packaging](docs/plugin-dev/plugin-format.md)
+- [Contributing to BotCraft](docs/botcraft-dev/index.md)
 
 Local checks do not constitute acceptance testing against the real QQ platform. Available capabilities depend on account permissions and platform APIs. Runtime diagnostics use English log messages, with raw responses marked `Raw response`; translation resources can still provide Chinese output.

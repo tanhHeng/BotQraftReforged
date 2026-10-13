@@ -14,6 +14,9 @@ hero:
       text: 插件开发
       link: /plugin-dev/
     - theme: alt
+      text: BotCraft 开发
+      link: /botcraft-dev/
+    - theme: alt
       text: GitHub
       link: "https://github.com/BotCraftReforged/BotCraftReforged"
 

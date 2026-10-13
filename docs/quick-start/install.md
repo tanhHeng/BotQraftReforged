@@ -31,7 +31,7 @@ botcraft --version
 
 这次安装会把 BotCraft 装进当前 Python 环境，之后你可以在任意目录创建实例。
 
-要在实例里放插件，可以看[添加插件](./add-plugins.md)。
+要在实例里放插件，可以看[添加插件](./add-plugins.md)。想改 BotCraft 源码本身，请改用可编辑安装，见[本地开发与验证](../botcraft-dev/setup.md)。
 
 ## 其他安装方式
 

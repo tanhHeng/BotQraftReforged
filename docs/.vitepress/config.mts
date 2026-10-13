@@ -9,6 +9,7 @@ export default defineConfig({
       { text: "主页", link: "/" },
       { text: "快速上手", link: "/quick-start/" },
       { text: "插件开发", link: "/plugin-dev/" },
+      { text: "BotCraft 开发", link: "/botcraft-dev/" },
     ],
     sidebar: [
       {
@@ -47,6 +48,16 @@ export default defineConfig({
           { text: "主动发送、引用与撤回", link: "/plugin-dev/sending" },
           { text: "API 索引", link: "/plugin-dev/api" },
           { text: "今日人品示例", link: "/plugin-dev/jrrp-plugin" },
+        ],
+      },
+      {
+        text: "BotCraft 开发",
+        link: "/botcraft-dev/",
+        items: [
+          { text: "框架结构", link: "/botcraft-dev/architecture" },
+          { text: "本地开发与验证", link: "/botcraft-dev/setup" },
+          { text: "代码与文档约定", link: "/botcraft-dev/conventions" },
+          { text: "文档站编写", link: "/botcraft-dev/docs" },
         ],
       },
     ],
