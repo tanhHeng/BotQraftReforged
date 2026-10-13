@@ -9,8 +9,8 @@
 把下面的回调加到已加载插件的入口模块。然后在群聊或 C2C 发送 `/ping`：
 
 ```python
-from botcraft.api.event import QQMessageReceived
-from botcraft.api.types import QQPluginServerInterface
+from botqraft.api.event import QQMessageReceived
+from botqraft.api.types import QQPluginServerInterface
 
 def on_message(server: QQPluginServerInterface, event: QQMessageReceived):
     if event.message_data.content == '/ping':
@@ -26,7 +26,7 @@ def on_message(server: QQPluginServerInterface, event: QQMessageReceived):
 
 ## 使用原始来源
 
-`QQCommandSource` 从 `botcraft.api.command` 导入。常用字段如下：
+`QQCommandSource` 从 `botqraft.api.command` 导入。常用字段如下：
 
 | 字段或方法        | 用途                                 |
 | ----------------- | ------------------------------------ |
@@ -46,7 +46,7 @@ def on_message(server: QQPluginServerInterface, event: QQMessageReceived):
 
 被动上下文大约有 600 秒有效期，同时还受原始平台时间和账号发送规则限制。收到消息后请及时回复，并把原始来源留给相关操作用。
 
-过期或上下文已失效时，提交会抛出 `PassiveReplyExpiredError`，从 `botcraft.api.exception` 导入。需要长期发送时，改用真实目标和平台允许的[主动发送接口](sending.md#主动发送)。
+过期或上下文已失效时，提交会抛出 `PassiveReplyExpiredError`，从 `botqraft.api.exception` 导入。需要长期发送时，改用真实目标和平台允许的[主动发送接口](sending.md#主动发送)。
 
 默认回复只提供被动关联。需要展示引用时，显式传入 `refer_msg`。引用索引和同会话的要求见[引用消息](sending.md#引用消息)。
 
@@ -55,9 +55,9 @@ def on_message(server: QQPluginServerInterface, event: QQMessageReceived):
 群关系事件使用 `server.reply_event(event, message)`。它只接受真实的 `GROUP_ADD_ROBOT` 或 `GROUP_MSG_RECEIVE` 事件，并使用原始事件 ID 和群会话做事件关联的被动发送：
 
 ```python
-from botcraft.api.decorator import qq_event_listener
-from botcraft.api.event import QQEvent
-from botcraft.api.types import QQPluginServerInterface
+from botqraft.api.decorator import qq_event_listener
+from botqraft.api.event import QQEvent
+from botqraft.api.types import QQPluginServerInterface
 
 @qq_event_listener('GROUP_ADD_ROBOT')
 def greet_new_group(server: QQPluginServerInterface, event: QQEvent):
@@ -77,8 +77,8 @@ def greet_new_group(server: QQPluginServerInterface, event: QQEvent):
 ```python
 import asyncio
 
-from botcraft.api.command import QQCommandSource
-from botcraft.api.exception import NetworkError
+from botqraft.api.command import QQCommandSource
+from botqraft.api.exception import NetworkError
 
 async def reply_result(source: QQCommandSource):
     try:
@@ -105,7 +105,7 @@ async def reply_result(source: QQCommandSource):
 - 连接还没 READY 或已经变化时，处理 `NotReadyError`。
 - HTTP 和平台失败时，读取 `NetworkError` 的 `category`、`http_code`、`err_code`、`code` 和 `trace_id`。异常文字用于阅读和诊断。
 
-相关框架异常都从 `botcraft.api.exception` 导入。发送前用 `server.is_ready()` 查询状态，同时也要处理检查之后状态变化造成的提交失败。
+相关框架异常都从 `botqraft.api.exception` 导入。发送前用 `server.is_ready()` 查询状态，同时也要处理检查之后状态变化造成的提交失败。
 
 `ResultUnknownError` 表示平台可能已经执行了操作。再次提交前先核实结果，避免重复回复或重复撤回。
 

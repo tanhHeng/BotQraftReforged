@@ -3,7 +3,7 @@
 layout: home
 
 hero:
-  name: "BotCraftReforged"
+  name: "BotQraftReforged"
   text: "适配官方 QQ 机器人的现代开发框架。"
   #  tagline: My great project tagline
   actions:
@@ -14,11 +14,11 @@ hero:
       text: 插件开发
       link: /plugin-dev/
     - theme: alt
-      text: BotCraft 开发
-      link: /botcraft-dev/
+      text: BotQraft 开发
+      link: /botqraft-dev/
     - theme: alt
       text: GitHub
-      link: "https://github.com/BotCraftReforged/BotCraftReforged"
+      link: "https://github.com/BotQraftReforged/BotQraftReforged"
 
 features:
   - title: 基于 MCDReforged 开发

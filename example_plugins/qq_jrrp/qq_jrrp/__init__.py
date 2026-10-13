@@ -1,8 +1,8 @@
-"""LazyAlienWS qq_jrrp port for BotCraft (GPL-3.0-only).
+"""LazyAlienWS qq_jrrp port for BotQraft (GPL-3.0-only).
 
 Source: https://github.com/UnknownBits/LazyAlienWS/blob/main/plugins/qq_jrrp.py
 Modified 2026-10-01: native QQ Markdown, command keyboards and safe JSON persistence.
-Modified 2026-10-05: public BotCraft group/C2C APIs, translations, exact aliases,
+Modified 2026-10-05: public BotQraft group/C2C APIs, translations, exact aliases,
 stdlib record validation and help registration; reference replies are omitted.
 """
 
@@ -10,9 +10,9 @@ from datetime import date
 from pathlib import Path
 from types import ModuleType
 
-from botcraft.api.command import GreedyText, Literal, QQCommandSource, Text
-from botcraft.message.message_received import QQMessageReceived
-from botcraft.api.types import QQPluginServerInterface
+from botqraft.api.command import GreedyText, Literal, QQCommandSource, Text
+from botqraft.message.message_received import QQMessageReceived
+from botqraft.api.types import QQPluginServerInterface
 
 from .fortune import daily_luck
 from .keyboard import command_keyboard

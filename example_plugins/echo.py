@@ -1,7 +1,7 @@
 """Reply passively with the text supplied to /echo."""
 from types import ModuleType
-from botcraft.api.command import CommandContext, GreedyText, QQCommandSource, SimpleCommandBuilder
-from botcraft.api.types import QQPluginServerInterface
+from botqraft.api.command import CommandContext, GreedyText, QQCommandSource, SimpleCommandBuilder
+from botqraft.api.types import QQPluginServerInterface
 
 
 PLUGIN_METADATA = {
@@ -9,7 +9,7 @@ PLUGIN_METADATA = {
     'version': '1.0.0',
     'name': 'Echo',
     'description': 'Passively echo the supplied text',
-    'dependencies': {'botcraft': '>=0.1.0'},
+    'dependencies': {'botqraft': '>=0.1.0'},
 }
 
 

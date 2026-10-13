@@ -2,7 +2,7 @@
 
 读完这一页，你能把一个完整的示例插件装进实例，跑通查询、投稿和撤回的每一步。
 
-这个插件把原来的 LazyBot/NoneBot 今日人品插件迁移到了 BotCraft，用 QQ Markdown、命令键盘和被动回复组合出完整功能。你可以从 [qq_jrrp 示例](https://github.com/BotCraftReforged/BotCraftReforged/blob/main/example_plugins/qq_jrrp/botcraft.plugin.json)开始看。
+这个插件把原来的 LazyBot/NoneBot 今日人品插件迁移到了 BotQraft，用 QQ Markdown、命令键盘和被动回复组合出完整功能。你可以从 [qq_jrrp 示例](https://github.com/BotQraftReforged/BotQraftReforged/blob/main/example_plugins/qq_jrrp/botqraft.plugin.json)开始看。
 
 迁移后的插件独立运行。原 LazyBot 代码与语录数据保持原样。要沿用已有语录，先备份，再按本文的数据格式整理好，放进运行实例。
 
@@ -10,18 +10,18 @@
 
 按下面三步操作：
 
-1. 把整个 `example_plugins/qq_jrrp` 目录复制到实例配置的插件目录。`botcraft.plugin.json`、入口包 `qq_jrrp/`、`lang/`、`LICENSE` 和 `NOTICE` 都要完整保留。
-2. 启动实例。BotCraft 会自动注册插件根目录 `lang/` 里的翻译文件。
+1. 把整个 `example_plugins/qq_jrrp` 目录复制到实例配置的插件目录。`botqraft.plugin.json`、入口包 `qq_jrrp/`、`lang/`、`LICENSE` 和 `NOTICE` 都要完整保留。
+2. 启动实例。BotQraft 会自动注册插件根目录 `lang/` 里的翻译文件。
 
    如果你就在仓库根目录，已经初始化的测试实例在 `test/`，可以这样安装：
 
    ```powershell
    Copy-Item -Recurse .\example_plugins\qq_jrrp .\test\plugins\qq_jrrp
    Set-Location .\test
-   python -m botcraft start
+   python -m botqraft start
    ```
 
-3. 实例已经在运行时，在运维控制台执行 `/botcraft plugin refresh` 加载新插件。
+3. 实例已经在运行时，在运维控制台执行 `/botqraft plugin refresh` 加载新插件。
 
 插件只登记一个 `/jrrp` 帮助/面板项，远端面板由框架统一管理。ID 为 `qq_jrrp` 的目录插件与压缩插件只保留一个可加载副本。
 
@@ -50,7 +50,7 @@
 - 初始语录池为空。语录池保持相同时，旧算法最多选择三种每日候选语录。
 - 投稿成功消息显示四个按钮，撤回按钮携带本条投稿的 UUID。所有人都可点击，执行权限由服务端检查。其他场景只显示一行「今日人品」「投稿」「帮助」。
 - 群聊按钮负责把命令填入输入框。C2C 的今日人品和帮助按钮允许自动发送。投稿模板和撤回按钮填入输入框后，由用户确认发送。
-- 用 `/botcraft pref language set en_us` 可以切换输出语言。中文和英文内容来自根目录 `lang/`。正文通过带插件命名空间的 `rtr` 封装延迟求值。键盘标签和模板在发送前生成字符串。代码注释、异常与硬编码日志使用英文。
+- 用 `/botqraft pref language set en_us` 可以切换输出语言。中文和英文内容来自根目录 `lang/`。正文通过带插件命名空间的 `rtr` 封装延迟求值。键盘标签和模板在发送前生成字符串。代码注释、异常与硬编码日志使用英文。
 
 ## 投稿与撤回
 
@@ -101,12 +101,12 @@
 
 ## 分发许可
 
-迁移插件保留原来源与 **GPL-3.0-only** 许可。具体内容见插件目录中的 [LICENSE](https://github.com/BotCraftReforged/BotCraftReforged/blob/main/example_plugins/qq_jrrp/LICENSE) 和 [NOTICE](https://github.com/BotCraftReforged/BotCraftReforged/blob/main/example_plugins/qq_jrrp/NOTICE)。这份许可适用于迁移插件，BotCraft 框架的许可证单独确定。
+迁移插件保留原来源与 **GPL-3.0-only** 许可。具体内容见插件目录中的 [LICENSE](https://github.com/BotQraftReforged/BotQraftReforged/blob/main/example_plugins/qq_jrrp/LICENSE) 和 [NOTICE](https://github.com/BotQraftReforged/BotQraftReforged/blob/main/example_plugins/qq_jrrp/NOTICE)。这份许可适用于迁移插件，BotQraft 框架的许可证单独确定。
 
 分发前先确认归档包含许可、来源说明和翻译资源，然后执行：
 
 ```sh
-botcraft pack -i example_plugins/qq_jrrp -o packed_plugins
+botqraft pack -i example_plugins/qq_jrrp -o packed_plugins
 ```
 
 打包选项见[插件元数据与打包](plugin-format.md)。

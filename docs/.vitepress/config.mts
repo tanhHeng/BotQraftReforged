@@ -4,7 +4,7 @@ const base = process.env.VITEPRESS_BASE || "/";
 
 export default defineConfig({
   base,
-  title: "BotCraftReforged",
+  title: "BotQraftReforged",
   description: "适配官方 QQ 机器人的开发框架，基于 MCDReforged 构建。",
   lang: "zh-CN",
   head: [["link", { rel: "icon", href: `${base}favicon.ico` }]],
@@ -14,15 +14,15 @@ export default defineConfig({
       { text: "主页", link: "/" },
       { text: "快速上手", link: "/quick-start/" },
       { text: "插件开发", link: "/plugin-dev/" },
-      { text: "BotCraft 开发", link: "/botcraft-dev/" },
+      { text: "BotQraft 开发", link: "/botqraft-dev/" },
     ],
     sidebar: [
       {
         text: "快速上手",
         link: "/quick-start/",
         items: [
-          { text: "什么是 BotCraft", link: "/quick-start/intro" },
-          { text: "安装 BotCraft", link: "/quick-start/install" },
+          { text: "什么是 BotQraft", link: "/quick-start/intro" },
+          { text: "安装 BotQraft", link: "/quick-start/install" },
           { text: "配置并启动", link: "/quick-start/start" },
           { text: "添加插件", link: "/quick-start/add-plugins" },
           { text: "实例配置", link: "/quick-start/configuration" },
@@ -56,16 +56,16 @@ export default defineConfig({
         ],
       },
       {
-        text: "BotCraft 开发",
-        link: "/botcraft-dev/",
+        text: "BotQraft 开发",
+        link: "/botqraft-dev/",
         items: [
-          { text: "框架结构", link: "/botcraft-dev/architecture" },
-          { text: "本地开发与验证", link: "/botcraft-dev/setup" },
-          { text: "代码与文档约定", link: "/botcraft-dev/conventions" },
-          { text: "文档站编写", link: "/botcraft-dev/docs" },
+          { text: "框架结构", link: "/botqraft-dev/architecture" },
+          { text: "本地开发与验证", link: "/botqraft-dev/setup" },
+          { text: "代码与文档约定", link: "/botqraft-dev/conventions" },
+          { text: "文档站编写", link: "/botqraft-dev/docs" },
         ],
       },
     ],
-    socialLinks: [{ icon: "github", link: "https://github.com/tanhHeng/BotCraftReforged" }],
+    socialLinks: [{ icon: "github", link: "https://github.com/tanhHeng/BotQraftReforged" }],
   },
 });

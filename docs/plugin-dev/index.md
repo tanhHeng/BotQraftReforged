@@ -2,7 +2,7 @@
 
 读完这一节，你能写一个可加载的插件，并把它接到 QQ 消息和命令上。
 
-BotCraft 独立运行，使用 MCDReforged 提供的插件、命令树和生命周期能力。插件通过 `botcraft.api` 接入 QQ 消息与事件。
+BotQraft 独立运行，使用 MCDReforged 提供的插件、命令树和生命周期能力。插件通过 `botqraft.api` 接入 QQ 消息与事件。
 
 ## 认识插件
 

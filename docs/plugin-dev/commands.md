@@ -5,14 +5,14 @@
 
 命令要在插件的 `on_load` 里注册。用户在 QQ 发送命令后，框架解析命令树，再调用对应的函数。
 
-命令节点和 Builder 都从 `botcraft.api.command` 导入。先认识回调的来源、参数和场景，再用 [SimpleCommandBuilder](simple-command-builder.md) 注册命令。
+命令节点和 Builder 都从 `botqraft.api.command` 导入。先认识回调的来源、参数和场景，再用 [SimpleCommandBuilder](simple-command-builder.md) 注册命令。
 
 ## 接收 source 和 context
 
 带参数的回调使用两个参数：
 
 ```python
-from botcraft.api.command import CommandContext, QQCommandSource
+from botqraft.api.command import CommandContext, QQCommandSource
 
 def echo(source: QQCommandSource, context: CommandContext) -> None:
     source.reply(context['text'])
@@ -76,7 +76,7 @@ def echo(source: QQCommandSource, context: CommandContext) -> None:
 
 ## 在真实 QQ 消息中执行
 
-插件命令要在 QQ 里验证。运维控制台执行的是内置的 `/botcraft` 命令树。
+插件命令要在 QQ 里验证。运维控制台执行的是内置的 `/botqraft` 命令树。
 
 需要从插件触发另一条命令时，调用 `server.execute_command(command, source)`。传入本实例真实的 `QQCommandSource`：可以用命令回调的来源，也可以用入站消息的 `event.get_command_source()`。来源的身份、消息 ID 和会话地址都来自真实收到的数据。
 

@@ -46,6 +46,6 @@ def load_state(server):
 
 ## 使用公开序列化工具
 
-从 `botcraft.api.utils` 导入 `Serializable`、`serialize`、`deserialize`，沿用 MCDR 的序列化接口。请选择与数据类型匹配的格式，在读取后恢复业务对象。公开模块列表见[API 索引](api.md)。
+从 `botqraft.api.utils` 导入 `Serializable`、`serialize`、`deserialize`，沿用 MCDR 的序列化接口。请选择与数据类型匹配的格式，在读取后恢复业务对象。公开模块列表见[API 索引](api.md)。
 
 接下来，阅读[后台任务与卸载](tasks.md)，安排插件的后台工作并做好收尾。

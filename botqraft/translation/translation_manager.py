@@ -1,0 +1,211 @@
+"""Native translation lookup/fallback with QQ text formatting and scoped evaluation."""
+import asyncio
+import copy
+import threading
+from contextlib import contextmanager
+from importlib.resources import files
+from typing import TYPE_CHECKING, Iterator, TypeAlias
+from typing_extensions import Self
+
+from mcdreforged.translation.language_fallback_handler import LanguageFallbackHandler
+from mcdreforged.translation.translation_manager import TranslationManager as NativeTranslationManager
+from mcdreforged.utils import translation_utils
+
+from botqraft.config import load_resource_yaml
+from botqraft.message.qtext.text import QTextBase, QText, QMarkdown, escape_markdown
+
+if TYPE_CHECKING:
+    from botqraft.runtime import Runtime
+    from botqraft.translation.translation_text import QQTranslationText
+
+TranslationParameter: TypeAlias = str | int | float | bool | None | QTextBase
+TranslationOption: TypeAlias = TranslationParameter | LanguageFallbackHandler
+
+
+class TranslationManager(NativeTranslationManager):
+    def __init__(self: Self, runtime: 'Runtime') -> None:
+        """Bind translation lookup to a standalone runtime.
+        
+        :param runtime: Runtime supplying the logger, language and plugin translations.
+        :return: Initialize the manager without loading plugin translations.
+        """
+        super().__init__(runtime.logger)
+        self.runtime = runtime
+        self._tls = threading.local()
+
+    def load_translations(self: Self) -> None:
+        """Load native and bundled BotQraft language resources.
+        
+        :return: Update the manager's translation storage and available languages.
+        """
+        # Reused native managers and plugins retain their native translated log keys.
+        super().load_translations()
+        for resource in files('botqraft').joinpath('resources/lang').iterdir():
+            if resource.name.endswith('.yml'):
+                language = resource.name[:-4]
+                translation_utils.update_storage(self.translations, language, load_resource_yaml('resources/lang/' + resource.name))
+                self.available_languages.add(language)
+
+    def _current_language(self: Self) -> str:
+        context = getattr(self._tls, 'context', None)
+        if context is not None:
+            if context['suspended']:
+                raise RuntimeError('Translation language context cannot cross await')
+            return context['language']
+        return self.language
+
+    @contextmanager
+    def language_context(self: Self, language: str | None) -> Iterator[None]:
+        """Temporarily select the language for synchronous translation.
+        
+        :param language: Language code, or None to use the configured runtime language.
+        :return: Context manager restoring the previous language on exit; awaiting inside it is forbidden.
+        """
+        if language is None:
+            language = self.runtime.get_language()
+        if not isinstance(language, str):
+            raise TypeError('Translation language must be str')
+        previous = getattr(self._tls, 'context', None)
+        context = {'language': language, 'suspended': False}
+        self._tls.context = context
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            handle = None
+        else:
+            handle = loop.call_soon(context.__setitem__, 'suspended', True)
+        try:
+            yield
+            if context['suspended']:
+                raise RuntimeError('Translation language context cannot cross await')
+        finally:
+            if handle is not None:
+                handle.cancel()
+            self._tls.context = previous
+
+    def _plugin_translations(self: Self) -> dict[str, dict[str, str]] | None:
+        manager = getattr(self.runtime, 'plugin_manager', None)
+        return manager.registry_storage.translations if manager is not None else None
+
+    def tr(self: Self, key: str, *args: TranslationParameter, language: str | None = None,
+           allow_failure: bool = True, fallback_handler: LanguageFallbackHandler | None = None,
+           **kwargs: TranslationParameter) -> str | QText | QMarkdown:
+        """Immediately translate a key and format QQ text parameters.
+        
+        :param key: Translation key looked up in framework and plugin resources.
+        :param args: Positional scalar or QQ text formatting values.
+        :param language: Explicit language, or the current synchronous language context.
+        :param allow_failure: Return the key on missing translation when True; otherwise raise KeyError.
+        :param fallback_handler: Native language fallback policy, or automatic fallback when omitted.
+        :param kwargs: Named formatting values; plain values are escaped when Markdown is present.
+        :return: Formatted text, preserving Markdown and at most one parameter keyboard.
+        """
+        return self._translate(False, key, *args, language=language, allow_failure=allow_failure,
+                               fallback_handler=fallback_handler, **kwargs)
+
+    def _translate(self: Self, force_markdown: bool, key: str, /, *args: TranslationParameter,
+                   language: str | None = None, allow_failure: bool = True,
+                   fallback_handler: LanguageFallbackHandler | None = None,
+                   **kwargs: TranslationParameter) -> str | QText | QMarkdown:
+        if not isinstance(key, str):
+            raise TypeError('Translation key must be str')
+        selected_language = self._current_language() if language is None else language
+        handler = fallback_handler or LanguageFallbackHandler.auto()
+        # Lookup exactly follows native framework-first / plugin-second fallback order.
+        try:
+            formatter = translation_utils.translate_from_dict(self.translations.get(key, {}), selected_language, fallback_handler=handler)
+        except KeyError:
+            formatter = translation_utils.translate_from_dict((self._plugin_translations() or {}).get(key, {}), selected_language,
+                                                              fallback_handler=handler, default=None)
+        missing_translation = formatter is None
+        if formatter is None:
+            if not allow_failure:
+                raise KeyError('Translation key not found: {}'.format(key))
+            self.logger.error('Error translating key {} to {}'.format(key, selected_language))
+            formatter = key
+        formatter = formatter.strip('\n\r')
+        resolved: dict[int, TranslationParameter] = {}
+        keyboard = None
+        has_text = False
+        has_markdown = force_markdown
+        for value in (*args, *kwargs.values()):
+            if id(value) in resolved:
+                continue
+            if isinstance(value, QTextBase):
+                evaluated = self.evaluate(value, language=selected_language)
+                if not isinstance(evaluated, (QText, QMarkdown)):
+                    raise TypeError('Translation parameters require QText or QMarkdown')
+                has_text = True
+                has_markdown |= isinstance(evaluated, QMarkdown)
+                value_keyboard = evaluated.get_keyboard()
+                if value_keyboard is not None:
+                    if keyboard is not None:
+                        raise ValueError('Translation parameters contain multiple keyboards')
+                    keyboard = value_keyboard
+                resolved[id(value)] = evaluated
+            elif isinstance(value, (str, int, float, bool)) or value is None:
+                resolved[id(value)] = value
+            else:
+                raise TypeError('Unsupported QQ translation parameter')
+
+        def convert(value: TranslationParameter) -> str | int | float | bool | None:
+            value = resolved[id(value)]
+            if isinstance(value, QTextBase):
+                text = value.to_plain_text()
+                return value._as_markdown() if has_markdown else text
+            if has_markdown and isinstance(value, str):
+                return escape_markdown(value)
+            return value
+
+        try:
+            formatted = formatter if missing_translation else formatter.format(*(convert(value) for value in args), **{name: convert(value) for name, value in kwargs.items()})
+        except Exception as error:
+            raise ValueError('Failed to format QQ translation {}'.format(key)) from error
+        if has_markdown:
+            return QMarkdown(formatted, keyboard=copy.deepcopy(keyboard))
+        if has_text:
+            result = QText(formatted, keyboard=copy.deepcopy(keyboard))
+            from string import Formatter
+            class MarkdownFormatter(Formatter):
+                def parse(self, template):
+                    for literal, field, spec, conversion in super().parse(template):
+                        yield escape_markdown(literal), field, spec, conversion
+                def format_field(self, value, spec):
+                    if isinstance(value, QTextBase):
+                        return value._as_markdown()
+                    return escape_markdown(super().format_field(value, spec))
+            markdown_formatted = formatter if missing_translation else MarkdownFormatter().vformat(
+                formatter, tuple(resolved[id(arg)] for arg in args),
+                {name: resolved[id(arg)] for name, arg in kwargs.items()})
+            result._remember_markdown(markdown_formatted)
+            return result
+        return formatted
+
+    def rtr(self: Self, key: str, *args: TranslationParameter, markdown: bool = False,
+            **kwargs: TranslationOption) -> 'QQTranslationText':
+        """Create a translation evaluated in the eventual sending language.
+        
+        :param key: Translation key; it is not looked up during construction.
+        :param args: Positional formatting values, including nested delayed translations.
+        :param markdown: Preserve the resource template as Markdown and escape plain formatting values.
+        :param kwargs: Named formatting values and native language, failure or fallback options.
+        :return: Delayed QQ text whose nested translations share the evaluation language.
+        """
+        from botqraft.translation.translation_text import QQTranslationText
+        return QQTranslationText(self, key, *args, markdown=markdown, **kwargs)
+
+    def evaluate(self: Self, message: str | QTextBase, language: str | None = None) -> str | QTextBase:
+        """Resolve delayed text or copy concrete text for a selected language.
+        
+        :param message: Plain, concrete or delayed QQ message.
+        :param language: Explicit evaluation language, or the current language context.
+        :return: Concrete message with delayed nested values resolved and keyboards preserved.
+        """
+        if isinstance(message, str):
+            return message
+        if not isinstance(message, QTextBase):
+            raise TypeError('QQ messages must be str or QTextBase')
+        selected = self._current_language() if language is None else language
+        if hasattr(message, '_evaluate_translation'):
+            return message._evaluate_translation(self, selected)
+        return message.copy()

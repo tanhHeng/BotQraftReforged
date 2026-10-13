@@ -13,7 +13,7 @@
 把权限条件放在命令节点上：
 
 ```python
-from botcraft.api.command import Literal
+from botqraft.api.command import Literal
 
 def show_status(source):
     source.reply('Ready')
@@ -63,7 +63,7 @@ server.set_permission_level(source, 2, global_scope=True)
 server.remove_permission(source, global_scope=True)
 ```
 
-等级可以传有效的整数、等级名称或 `botcraft.api.types.PermissionLevelItem`。`global_scope` 使用 bool。
+等级可以传有效的整数、等级名称或 `botqraft.api.types.PermissionLevelItem`。`global_scope` 使用 bool。
 
 等级传 bool 会抛出 `TypeError`，非法等级会被拒绝。请传入带真实身份和会话地址的对象。
 C2C 会话授权需要框架已经记录并验证过的真实私聊地址，未验证的地址会抛出 `ValueError`。

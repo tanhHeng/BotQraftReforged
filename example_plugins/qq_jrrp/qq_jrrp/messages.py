@@ -1,15 +1,15 @@
 """Native QQ Markdown adapted from LazyBot qq_jrrp (GPL-3.0-only).
 
 Source API: https://bot.q.qq.com/wiki/develop/api-v2/
-Modified 2026-10-05: delayed translated BotCraft output, without reference replies.
+Modified 2026-10-05: delayed translated BotQraft output, without reference replies.
 """
 
 from datetime import date
 
-from botcraft.api.qtext import QMarkdown, QText
-from botcraft.api.types import QQPluginServerInterface
-from botcraft.translation.translation_manager import TranslationParameter, TranslationOption
-from botcraft.translation.translation_text import QQTranslationText
+from botqraft.api.qtext import QMarkdown, QText
+from botqraft.api.types import QQPluginServerInterface
+from botqraft.translation.translation_manager import TranslationParameter, TranslationOption
+from botqraft.translation.translation_text import QQTranslationText
 
 from .fortune import luck_category
 from .storage import Sentence

@@ -1,0 +1,19 @@
+"""Process entrypoint; imports no runtime services until a start is requested."""
+import sys
+
+
+def entrypoint() -> None:
+    """Dispatch the process CLI and exit with its status, handling interruption and errors.
+    
+    :return: No return value.
+    """
+    from botqraft.cli.cli_entry import cli_dispatch
+    try:
+        status = cli_dispatch()
+    except KeyboardInterrupt:
+        status = 130
+    except Exception as error:
+        # Configuration deserialization sanitizes credentials before raising.
+        print('BotQraft: {}'.format(error), file=sys.stderr)
+        status = 1
+    raise SystemExit(status)

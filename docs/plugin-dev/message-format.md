@@ -6,7 +6,7 @@
 
 ## 读取事件的原始数据
 
-所有 QQ 入站事件都继承 `QQEvent`，从 `botcraft.api.event` 导入。
+所有 QQ 入站事件都继承 `QQEvent`，从 `botqraft.api.event` 导入。
 
 | 字段                 | 用途                                        |
 | -------------------- | ------------------------------------------- |
@@ -31,8 +31,8 @@
 `QQMessageReceived` 表示一条群聊或 C2C 消息。结构化消息字段在 `event.message_data` 里，它的类型是 `QQMessageReceivedData`。
 
 ```python
-from botcraft.api.event import QQMessageReceived
-from botcraft.api.types import QQPluginServerInterface
+from botqraft.api.event import QQMessageReceived
+from botqraft.api.types import QQPluginServerInterface
 
 def on_message(server: QQPluginServerInterface, event: QQMessageReceived):
     content = event.message_data.content
@@ -58,11 +58,11 @@ def on_message(server: QQPluginServerInterface, event: QQMessageReceived):
 
 `MessageAttachment` 提供 URL、文件名、宽高、大小和内容类型。它还提供语音 URL 和识别文本。
 
-`ARKData` 提供提示文字、卡片类型、名称和开放的 JSON 字段。`MsgElement` 提供 `msg_idx`、作者、类型、正文、附件、卡片和嵌套元素。相关模型和枚举都从 `botcraft.api.types` 导入。
+`ARKData` 提供提示文字、卡片类型、名称和开放的 JSON 字段。`MsgElement` 提供 `msg_idx`、作者、类型、正文、附件、卡片和嵌套元素。相关模型和枚举都从 `botqraft.api.types` 导入。
 
 ## 区分用户身份和会话地址
 
-`message_data.author` 是 `User` 类型。`message_data.mentions` 是 `MentionedUser` 类型，它继承 `User`。两者都从 `botcraft.api.types` 导入。
+`message_data.author` 是 `User` 类型。`message_data.mentions` 是 `MentionedUser` 类型，它继承 `User`。两者都从 `botqraft.api.types` 导入。
 
 | 字段                   | 用途                                                                |
 | ---------------------- | ------------------------------------------------------------------- |
@@ -92,7 +92,7 @@ def on_message(server: QQPluginServerInterface, event: QQMessageReceived):
 
 机器人提及列表和正文标签共同决定前缀。平台 AT 投递类型、正文是否含 AT 是两个不同的事实，请按各自的字段处理。
 
-临时修正的代码在 [`botcraft/event/dev_group_message_prefix.py`](https://github.com/BotCraftReforged/BotCraftReforged/blob/main/botcraft/event/dev_group_message_prefix.py)。解析器调用后会把正文写回模型，事件类型和调用次数保持原样。
+临时修正的代码在 [`botqraft/event/dev_group_message_prefix.py`](https://github.com/BotQraftReforged/BotQraftReforged/blob/main/botqraft/event/dev_group_message_prefix.py)。解析器调用后会把正文写回模型，事件类型和调用次数保持原样。
 
 这个模块只处理当前事件的正文。持久配置、机器人身份缓存和网络状态查询由各自的服务负责。
 

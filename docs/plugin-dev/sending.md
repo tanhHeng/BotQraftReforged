@@ -9,7 +9,7 @@
 主动发送使用真实的 `User` 或 `Group` 目标。目标里的 OpenID 必须来自平台推送的数据，不能自己编。下面这个函数向指定群主动发送：
 
 ```python
-from botcraft.api.types import Group, QQPluginServerInterface
+from botqraft.api.types import Group, QQPluginServerInterface
 
 def notify_group(server: QQPluginServerInterface, actual_group_openid: str):
     target = Group(group_openid=actual_group_openid)
@@ -30,7 +30,7 @@ def notify_group(server: QQPluginServerInterface, actual_group_openid: str):
 
 ## 选择目标与会话地址
 
-目标类型从 `botcraft.api.types` 导入：
+目标类型从 `botqraft.api.types` 导入：
 
 - 群目标使用 `Group(group_openid=actual_group_openid)`。
 - C2C 用户目标使用平台提供的 `User`，会话地址取 `user_openid`，场景为 `c2c`。只提供有效的 `user_openid` 时，`User` 也能识别 C2C 会话。
@@ -47,7 +47,7 @@ def notify_group(server: QQPluginServerInterface, actual_group_openid: str):
 引用展示用显式的 `refer_msg`，它和被动回复的资格是两回事。给 `say`、`tell`、`broadcast`、`reply` 或 `reply_event` 传入同会话的 `QQMessageReceived` 或 `QQMessageReceipt`，就能带上引用：
 
 ```python
-from botcraft.api.command import QQCommandSource
+from botqraft.api.command import QQCommandSource
 
 def reply_with_quote(source: QQCommandSource):
     return source.reply(
@@ -68,15 +68,15 @@ def reply_with_quote(source: QQCommandSource):
 
 引用对象必须和发送目标在同一会话，并且带非空索引。跨会话或缺少索引时，提交会抛出 `ValueError`。消息 ID、被动 `msg_id` / `event_id` 和引用索引各有用处。保留原事件或发送回执（发送成功后返回的结果），让框架自己读对应字段。
 
-发送成功后返回的 `QQMessageReceipt` 就是发送回执，从 `botcraft.api.types` 导入。它提供 `scene`、`conversation`、`raw_response` 和 `receipt_data`。`receipt_data` 包含 `id`、`timestamp` 以及可选的 `ext_info`。平台没给引用索引时，发送回执仍然可以用来读发送结果和消息 ID。
+发送成功后返回的 `QQMessageReceipt` 就是发送回执，从 `botqraft.api.types` 导入。它提供 `scene`、`conversation`、`raw_response` 和 `receipt_data`。`receipt_data` 包含 `id`、`timestamp` 以及可选的 `ext_info`。平台没给引用索引时，发送回执仍然可以用来读发送结果和消息 ID。
 
 ## 撤回消息
 
 优先传入原始消息或发送回执：
 
 ```python
-from botcraft.api.event import QQMessageReceived
-from botcraft.api.types import QQPluginServerInterface
+from botqraft.api.event import QQMessageReceived
+from botqraft.api.types import QQPluginServerInterface
 
 def remove_received_message(server: QQPluginServerInterface, event: QQMessageReceived):
     return server.delete_message(event, return_future=True)

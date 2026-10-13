@@ -1,13 +1,13 @@
 # 日志与运维
 
-读完这一页，你能看懂 BotCraft 的收件日志和诊断日志。
+读完这一页，你能看懂 BotQraft 的收件日志和诊断日志。
 你还会用运维命令管理实例，也知道停机前该备份哪些文件。
 
-本页的命令分成两类：QQ 消息和控制台里用带 `/` 的 `/botcraft` 命令，命令行工具用 `botcraft start` 这样的形式。两者中的 `botcraft` 都可以写成 `python -m botcraft`。
+本页的命令分成两类：QQ 消息和控制台里用带 `/` 的 `/botqraft` 命令，命令行工具用 `botqraft start` 这样的形式。两者中的 `botqraft` 都可以写成 `python -m botqraft`。
 
 ## 收件与诊断日志
 
-日志同时输出到控制台和 `logs/botcraft.log`。
+日志同时输出到控制台和 `logs/botqraft.log`。
 运行提示、异常说明和诊断日志里的硬编码文本使用英文。
 帮助和命令反馈等翻译键内容按语言配置输出，也可以是中文。
 收到的消息正文保持原文。
@@ -41,7 +41,7 @@
 希望关闭正常收件记录，可以设置 `log_received_messages: false`，然后执行：
 
 ```text
-/botcraft reload config
+/botqraft reload config
 ```
 
 消息处理、异常报告和网关阶段日志继续运行。
@@ -73,27 +73,27 @@ Raw response [HTTP] [send message] [http_code:200] {"id":"message-id"}
 
 ## 运维命令
 
-群聊、C2C 和运维控制台统一使用带 `/` 的 `/botcraft` 根命令。
-发行包的命令行工具则使用 `botcraft start` 这样的形式。
+群聊、C2C 和运维控制台统一使用带 `/` 的 `/botqraft` 根命令。
+发行包的命令行工具则使用 `botqraft start` 这样的形式。
 
 ```text
-/botcraft
-/botcraft help
-/botcraft pref
-/botcraft pref language set en_us
-/botcraft permission list
-/botcraft plugin list
-/botcraft plugin reload echo
-/botcraft reload config
-/botcraft reload permission
-/botcraft reload preference
-/botcraft exit
+/botqraft
+/botqraft help
+/botqraft pref
+/botqraft pref language set en_us
+/botqraft permission list
+/botqraft plugin list
+/botqraft plugin reload echo
+/botqraft reload config
+/botqraft reload permission
+/botqraft reload preference
+/botqraft exit
 ```
 
 ### 查看帮助与插件
 
-`/botcraft` 会输出 BotCraft 版本，以及已登记帮助项的输入框标签。
-`/botcraft help` 会输出 BotCraft 自身的这些指令帮助：
+`/botqraft` 会输出 BotQraft 版本，以及已登记帮助项的输入框标签。
+`/botqraft help` 会输出 BotQraft 自身的这些指令帮助：
 
 - `help`
 - `perm/permission`
@@ -102,11 +102,11 @@ Raw response [HTTP] [send message] [http_code:200] {"id":"message-id"}
 - `reload`
 - `exit`
 
-两者都使用当前来源的语言。内置面板登记的命令是 `/botcraft`。
+两者都使用当前来源的语言。内置面板登记的命令是 `/botqraft`。
 权限管理、插件操作、reload 和退出面向超级管理员及运维控制台开放。
 超级管理员身份通过 `permission.super_admins` 配置。普通权限等级用于普通权限判定。
 
-`/botcraft plugin list` 使用 MCDR 风格的纯文本分组。
+`/botqraft plugin list` 使用 MCDR 风格的纯文本分组。
 已加载项显示名称和 `id@version`，随后列出已禁用项、待加载插件文件名及数量。
 你可以通过名称、插件 ID 和状态找到需要管理的插件。
 
@@ -133,10 +133,10 @@ C2C 操作的前提是框架已经记录过该用户的真实私聊会话地址�
 - 插件文件
 
 `config/` 保存插件数据、用户语言等实例状态。
-尤其在执行 `/botcraft reload preference` 前，请先备份偏好文件。
+尤其在执行 `/botqraft reload preference` 前，请先备份偏好文件。
 这个命令对损坏 JSON 使用恢复语义，恢复时可能清空并重写偏好文件。
 
-执行 `/botcraft exit` 可以正常停止实例。
+执行 `/botqraft exit` 可以正常停止实例。
 插件自己的后台任务请按[后台任务与卸载](../plugin-dev/tasks.md)完成收尾。
 
 接下来，你可以回到[添加插件](./add-plugins.md)安装第一个插件，或直接进入[插件开发](../plugin-dev/index.md)编写自己的插件。

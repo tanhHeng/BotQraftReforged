@@ -10,7 +10,7 @@
 
 ```text
 greet/
-├── botcraft.plugin.json
+├── botqraft.plugin.json
 ├── greet_plugin/
 │   └── __init__.py
 └── lang/
@@ -59,9 +59,9 @@ def on_load(server, prev_module):
 
 ```python
 from typing import Any
-from botcraft.api.command import QQCommandSource
-from botcraft.api.qtext import QQTranslationText
-from botcraft.api.types import QQPluginServerInterface
+from botqraft.api.command import QQCommandSource
+from botqraft.api.qtext import QQTranslationText
+from botqraft.api.types import QQPluginServerInterface
 
 PLUGIN_ID = 'greet'
 
@@ -108,7 +108,7 @@ with source.preferred_language_context():
 
 上下文在退出时恢复原语言。请把作用范围留在同步调用内，在 `await` 前退出。跨异步边界的消息使用延迟文本。
 
-`botcraft.api.qtext` 同时导出 `tr`、`rtr`。这些模块级函数需要运行中的 BotCraft 接口。插件回调优先使用传入的 `server`。
+`botqraft.api.qtext` 同时导出 `tr`、`rtr`。这些模块级函数需要运行中的 BotQraft 接口。插件回调优先使用传入的 `server`。
 
 ## 处理翻译失败
 

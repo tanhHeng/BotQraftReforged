@@ -1,12 +1,12 @@
-# BotCraftReforged
+# BotQraftReforged
 
 [中文](README.md) | **English**
 
 > A framework for developing official QQ bots, built on [MCDReforged](https://github.com/MCDReforged/MCDReforged).
 
-BotCraftReforged builds on MCDR's plugin development, command management, permission management, and other capabilities. You can develop BotCraft plugins much like MCDR plugins, using message and event interfaces designed for QQ.
+BotQraftReforged builds on MCDR's plugin development, command management, permission management, and other capabilities. You can develop BotQraft plugins much like MCDR plugins, using message and event interfaces designed for QQ.
 
-“Reforged” describes BotCraft as a reforging of MCDR and expresses our appreciation for MCDR's design. The distribution name, Python import namespace, and command-line entry point are all `botcraft`.
+“Reforged” describes BotQraft as a reforging of MCDR and expresses our appreciation for MCDR's design. The distribution name, Python import namespace, and command-line entry point are all `botqraft`.
 
 ## Features
 
@@ -19,4 +19,4 @@ Requires **Python 3.10 or later**. MCDR 2.14.4 is a code dependency, not the run
 
 ## Documentation
 
-Check out the full documentation at [https://botcraft.tanh.moe/](https://botcraft.tanh.moe/).
+Check out the full documentation at [https://botqraft.tanh.moe/](https://botqraft.tanh.moe/).

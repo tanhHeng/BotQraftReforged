@@ -9,7 +9,7 @@
 
 ## 注册自动回调
 
-`on_load`、`on_unload`、`on_botcraft_start` 和 `on_botcraft_stop` 的触发时机与职责见[基本知识](basic.md#插件的生命周期)。
+`on_load`、`on_unload`、`on_botqraft_start` 和 `on_botqraft_stop` 的触发时机与职责见[基本知识](basic.md#插件的生命周期)。
 
 消息与交互回调同样由框架自动发现：
 
@@ -24,8 +24,8 @@
 例如，在入口模块中记录群消息：
 
 ```python
-from botcraft.api.event import QQMessageReceived
-from botcraft.api.types import QQPluginServerInterface
+from botqraft.api.event import QQMessageReceived
+from botqraft.api.types import QQPluginServerInterface
 
 def on_group_message(server: QQPluginServerInterface, event: QQMessageReceived):
     server.logger.info('Received group message: %s', event.message_data.content)
@@ -38,8 +38,8 @@ def on_group_message(server: QQPluginServerInterface, event: QQMessageReceived):
 在 `on_load` 中调用 `server.register_event_listener(event, callback)`。回调仍接收 `(server, event)`：
 
 ```python
-from botcraft.api.event import QQMessageReceived
-from botcraft.api.types import QQPluginServerInterface
+from botqraft.api.event import QQMessageReceived
+from botqraft.api.types import QQPluginServerInterface
 
 def handle_private_message(server: QQPluginServerInterface, event: QQMessageReceived):
     server.logger.info('Received C2C message: %s', event.message_data.content)
@@ -57,9 +57,9 @@ def on_load(server: QQPluginServerInterface, prev_module):
 只处理平台 AT 投递时，使用官方事件名：
 
 ```python
-from botcraft.api.decorator import qq_event_listener
-from botcraft.api.event import QQEvent
-from botcraft.api.types import QQPluginServerInterface
+from botqraft.api.decorator import qq_event_listener
+from botqraft.api.event import QQEvent
+from botqraft.api.types import QQPluginServerInterface
 
 @qq_event_listener('GROUP_AT_MESSAGE_CREATE')
 def handle_at_delivery(server: QQPluginServerInterface, event: QQEvent):
@@ -74,7 +74,7 @@ def handle_at_delivery(server: QQPluginServerInterface, event: QQEvent):
 
 ## 消息回调的调用顺序
 
-`on_group_message` 对应框架事件 `botcraft.group_message`。两个官方群事件 ID 各自保留。
+`on_group_message` 对应框架事件 `botqraft.group_message`。两个官方群事件 ID 各自保留。
 
 一条群消息到达后，框架会按固定顺序逐个调用处理。最先执行的是命令处理。命令处理结束后，才调用 `on_qq_event`。接着是 `on_message`，然后是 `on_group_message`。最后才轮到官方事件类型的精确监听。
 
@@ -86,7 +86,7 @@ C2C 消息不走这条链路，它使用自己的专用回调 `on_c2c_message`�
 
 ## 使用本地事件
 
-`botcraft.api.event` 导出 `Event`、`PluginEvents`、原生 `PluginEvent` / `LiteralEvent`，以及 QQ 入站类型 `QQEvent`、`QQInteraction`、`QQMessageReceived`。
+`botqraft.api.event` 导出 `Event`、`PluginEvents`、原生 `PluginEvent` / `LiteralEvent`，以及 QQ 入站类型 `QQEvent`、`QQInteraction`、`QQMessageReceived`。
 
 平台监听通常直接使用官方事件名字符串。本地自定义事件使用 `LiteralEvent('my_plugin.event')`，由本地事件系统处理。`on_qq_event` 负责平台推送。
 

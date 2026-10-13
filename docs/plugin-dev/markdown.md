@@ -2,14 +2,14 @@
 
 这一页讲怎么在插件里拼出 QQ 的 Markdown 消息、自定义键盘和文本交互。读完你能构造出可直接发送的消息数据。
 
-从 `botcraft.api.qtext` 导入消息和键盘对象。先构造消息数据，再把它传给[回复接口](reply.md)。实际发送需要账号拥有 Markdown 和键盘权限。
+从 `botqraft.api.qtext` 导入消息和键盘对象。先构造消息数据，再把它传给[回复接口](reply.md)。实际发送需要账号拥有 Markdown 和键盘权限。
 
 ## 构造 Markdown 消息
 
 `QMarkdown` 构造器中的字符串按 Markdown 处理。追加用户文本时使用 `append`，普通字符串和 `QText` 会按纯文本转义：
 
 ```python
-from botcraft.api.qtext import QMarkdown, QText
+from botqraft.api.qtext import QMarkdown, QText
 
 message = QMarkdown('**Echo**: ').append(QText('<hello>'))
 payload = message.to_payload()
@@ -28,7 +28,7 @@ assert payload['markdown']['content'] == '**Echo**: &lt;hello&gt;'
 把按钮按行排列，再附加到消息：
 
 ```python
-from botcraft.api.qtext import (
+from botqraft.api.qtext import (
     QMarkdown, QText, QKeyboardActionCommand, QKeyboardButton,
     QKeyboardCustom, QKeyboardPermission, QKeyboardRenderData,
 )
@@ -89,7 +89,7 @@ print('Markdown and keyboard payload verified')
 使用对象表达交互能力。普通字符串中的标签样式文字按文本处理。`QTextAt`、`QTextInput` 可以直接发送，也可以通过加法组合，或作为 `tr/rtr` 的格式化参数。交互对象的标签身份在 Markdown 转换、复制和延迟翻译中保留。
 
 ```python
-from botcraft.api.qtext import QTextAt, QTextInput, QMarkdown
+from botqraft.api.qtext import QTextAt, QTextInput, QMarkdown
 
 message = QMarkdown('**请选择：** ').append(
     QTextAt('actual_member_openid'), ' ',
@@ -113,6 +113,6 @@ message = QMarkdown('**请选择：** ').append(
 
 复制会隔离键盘，追加失败时保留原内容。直接重新赋值 `.text` 会按新的普通文本重建 Markdown 副本，旧交互片段的身份随旧副本一起替换。
 
-协议依据见仓库中的 [QQ 文本链文档](https://github.com/BotCraftReforged/BotCraftReforged/blob/main/reference/qq_docs/server-inter/message/trans/text-chain.md)。编码前 100 字符校验是本库自己的选择。客户端展示、点击填入和引用效果由 QQ 平台支持决定。
+协议依据见仓库中的 [QQ 文本链文档](https://github.com/BotQraftReforged/BotQraftReforged/blob/main/reference/qq_docs/server-inter/message/trans/text-chain.md)。编码前 100 字符校验是本库自己的选择。客户端展示、点击填入和引用效果由 QQ 平台支持决定。
 
 接下来，阅读[翻译与用户语言](translation.md)，让消息按用户的语言显示。

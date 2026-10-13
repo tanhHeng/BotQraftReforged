@@ -9,8 +9,8 @@
 下面的代码放在插件模块里。加载插件后，在 QQ 发送 `/echo Hello world`：
 
 ```python
-from botcraft.api.command import CommandContext, GreedyText, QQCommandSource, SimpleCommandBuilder
-from botcraft.api.types import QQPluginServerInterface
+from botqraft.api.command import CommandContext, GreedyText, QQCommandSource, SimpleCommandBuilder
+from botqraft.api.types import QQPluginServerInterface
 
 def echo(source: QQCommandSource, context: CommandContext) -> None:
     source.reply(context['text'])
@@ -32,7 +32,7 @@ def on_load(server: QQPluginServerInterface, prev_module) -> None:
 
 ## 选择参数类型
 
-公开参数节点从 `botcraft.api.command` 导入：
+公开参数节点从 `botqraft.api.command` 导入：
 
 | 节点           | 输入与结果                                   |
 | -------------- | -------------------------------------------- |
@@ -48,7 +48,7 @@ def on_load(server: QQPluginServerInterface, prev_module) -> None:
 `arg` 的第二个参数也可以是工厂函数。它接收参数名，返回参数节点。例如：
 
 ```python
-from botcraft.api.command import Integer
+from botqraft.api.command import Integer
 
 builder.arg('count', lambda name: Integer(name).at_min(1))
 ```

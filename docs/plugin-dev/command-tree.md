@@ -9,8 +9,8 @@
 命令根使用 `Literal`。`then(...)` 添加子节点，`runs(...)` 指定在当前节点结束时执行的回调：
 
 ```python
-from botcraft.api.command import CommandContext, GreedyText, Literal, QQCommandSource
-from botcraft.api.types import QQPluginServerInterface
+from botqraft.api.command import CommandContext, GreedyText, Literal, QQCommandSource
+from botqraft.api.types import QQPluginServerInterface
 
 def echo(source: QQCommandSource, context: CommandContext) -> None:
     source.reply(context['text'])
@@ -68,7 +68,7 @@ root.then(
 下面只允许权限达到 2 的用户执行 `/admin ping`：
 
 ```python
-from botcraft.api.command import Literal
+from botqraft.api.command import Literal
 
 root = Literal('/admin').requires(lambda source: source.has_permission(2))
 root.then(Literal('ping').runs(lambda source: source.reply('pong')))

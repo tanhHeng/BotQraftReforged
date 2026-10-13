@@ -1,7 +1,7 @@
 """JSON quote storage adapted from LazyAlienWS (GPL-3.0-only).
 
 Modified 2026-10-01: typed records, atomic writes and owner-only withdrawal.
-Modified 2026-10-05: stdlib validation and synchronous BotCraft command I/O.
+Modified 2026-10-05: stdlib validation and synchronous BotQraft command I/O.
 """
 
 import json

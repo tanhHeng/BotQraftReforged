@@ -2,7 +2,7 @@
 
 Source: https://github.com/UnknownBits/LazyAlienWS/blob/main/plugins/qq_jrrp.py
 Modified 2026-10-01 for NoneBot and non-numeric QQ OpenIDs.
-Modified 2026-10-05: BotCraft port; fortune wording moved to translations.
+Modified 2026-10-05: BotQraft port; fortune wording moved to translations.
 """
 
 import hashlib

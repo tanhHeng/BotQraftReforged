@@ -1,12 +1,12 @@
-# BotCraftReforged
+# BotQraftReforged
 
 **中文** | [English](README_en.md)
 
 > 一个基于 [MCDReforged](https://github.com/MCDReforged/MCDReforged) 的、适配官方 QQ 机器人的开发框架。
 
-BotCraftReforged 继承了 MCDR 的插件开发、指令管理、权限管理等方便的功能。你可以像开发 MCDR 插件一样开发 BotCraft 插件，同时使用面向 QQ 的消息与事件接口。
+BotQraftReforged 继承了 MCDR 的插件开发、指令管理、权限管理等方便的功能。你可以像开发 MCDR 插件一样开发 BotQraft 插件，同时使用面向 QQ 的消息与事件接口。
 
-“Reforged” 既指 BotCraft 是 MCDR 的“重铸”，也是感谢与赞美 MCDR 的优秀设计。发行包名、Python import 命名空间和命令行入口均为 `botcraft`。
+“Reforged” 既指 BotQraft 是 MCDR 的“重铸”，也是感谢与赞美 MCDR 的优秀设计。发行包名、Python import 命名空间和命令行入口均为 `botqraft`。
 
 ## 特点
 
@@ -19,4 +19,4 @@ BotCraftReforged 继承了 MCDR 的插件开发、指令管理、权限管理等
 
 ## 文档
 
-访问 [https://botcraft.tanh.moe/](https://botcraft.tanh.moe/) 查看完整文档。
+访问 [https://botqraft.tanh.moe/](https://botqraft.tanh.moe/) 查看完整文档。

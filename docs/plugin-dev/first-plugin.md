@@ -7,7 +7,7 @@
 先初始化实例，并确认实例插件目录是 `plugins/`：
 
 ```bash
-python -m botcraft init
+python -m botqraft init
 ```
 
 在实例目录创建 `plugins/echo.py`，写入以下内容：
@@ -16,15 +16,15 @@ python -m botcraft init
 """Reply passively with the text supplied to /echo."""
 from types import ModuleType
 
-from botcraft.api.command import CommandContext, GreedyText, QQCommandSource, SimpleCommandBuilder
-from botcraft.api.types import QQPluginServerInterface
+from botqraft.api.command import CommandContext, GreedyText, QQCommandSource, SimpleCommandBuilder
+from botqraft.api.types import QQPluginServerInterface
 
 PLUGIN_METADATA = {
     'id': 'echo',
     'version': '1.0.0',
     'name': 'Echo',
     'description': 'Passively echo the supplied text',
-    'dependencies': {'botcraft': '>=0.1.0'},
+    'dependencies': {'botqraft': '>=0.1.0'},
 }
 
 def echo(source: QQCommandSource, context: CommandContext) -> None:
@@ -55,20 +55,20 @@ secret: "YOUR_APP_SECRET"
 启动实例：
 
 ```bash
-python -m botcraft
+python -m botqraft
 ```
 
-看到 `BotCraft READY` 后，插件会随启动加载。已经运行的实例也可以刷新插件：
+看到 `BotQraft READY` 后，插件会随启动加载。已经运行的实例也可以刷新插件：
 
 ```text
-/botcraft plugin refresh
-/botcraft plugin list
+/botqraft plugin refresh
+/botqraft plugin list
 ```
 
-`/botcraft plugin refresh` 重新扫描插件目录，`/botcraft plugin list` 显示已加载的插件。修改 Echo 之后，执行：
+`/botqraft plugin refresh` 重新扫描插件目录，`/botqraft plugin list` 显示已加载的插件。修改 Echo 之后，执行：
 
 ```text
-/botcraft plugin reload echo
+/botqraft plugin reload echo
 ```
 
 每个插件 ID 只保留一个可加载副本。插件加载失败时，先看日志里的元数据错误、入口导入错误和依赖错误。
@@ -85,8 +85,8 @@ python -m botcraft
 
 - [ ] 机器人回复 `Hello world`。
 - [ ] `/echo Hello world` 保留 `Hello world` 里的空格。
-- [ ] 发送 `/botcraft`，列表中出现 `/echo`，说明文字是当前来源的语言。
-- [ ] `/botcraft help` 只展示内置的 BotCraft 运维命令。
+- [ ] 发送 `/botqraft`，列表中出现 `/echo`，说明文字是当前来源的语言。
+- [ ] `/botqraft help` 只展示内置的 BotQraft 运维命令。
 - [ ] 群聊和 C2C 私聊都能用，因为 Builder 和帮助登记都用了默认的 `('group', 'c2c')`。
 
 Echo 的回调通过 `source.reply(...)` 使用原消息的被动回复关联。更多来源字段见[命令系统](commands.md)，回复规则见[响应回复](reply.md)。

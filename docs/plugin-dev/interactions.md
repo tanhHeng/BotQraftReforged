@@ -11,8 +11,8 @@
 给插件的按钮分配稳定的 `button_id`。在回调里筛出这个 ID，再提交响应。下面示例接收 ID 为 `example_confirm` 的按钮，用响应码 `0` 确认成功：
 
 ```python
-from botcraft.api.event import QQInteraction
-from botcraft.api.types import QQPluginServerInterface
+from botqraft.api.event import QQInteraction
+from botqraft.api.types import QQPluginServerInterface
 
 def on_interaction(server: QQPluginServerInterface, event: QQInteraction):
     data = event.interaction_data.data
@@ -49,7 +49,7 @@ def on_interaction(server: QQPluginServerInterface, event: QQInteraction):
 - 反馈、选择和动作数据位于 `feedback_opt`、`checked`、`action`。
 - 来源扩展位于 `message_scene`，授权场景与范围位于 `authorize_data`。
 
-这些字段可能缺失或为 `None`，按当前交互实际带来的字段处理。`QQInteractionData`、`InteractionData`、`InteractionResolved` 和相应枚举从 `botcraft.api.types` 导入。
+这些字段可能缺失或为 `None`，按当前交互实际带来的字段处理。`QQInteractionData`、`InteractionData`、`InteractionResolved` 和相应枚举从 `botqraft.api.types` 导入。
 
 `on_interaction` 只接收解析成功的交互。想看解析失败的原始数据，在 `on_qq_event` 或官方 `INTERACTION_CREATE` 精确监听里检查 `model_parse_failed` 和 `parse_error`。
 

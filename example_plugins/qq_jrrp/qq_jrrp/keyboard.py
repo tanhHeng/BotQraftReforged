@@ -1,14 +1,14 @@
 """API v2 command buttons adapted from LazyBot qq_jrrp (GPL-3.0-only).
 
 Command buttons insert text in groups; auto-send is only supported in C2C.
-Modified 2026-10-05: native BotCraft keyboard classes and translated labels.
+Modified 2026-10-05: native BotQraft keyboard classes and translated labels.
 """
 
-from botcraft.api.qtext import (
+from botqraft.api.qtext import (
     QKeyboardActionCommand, QKeyboardButton, QKeyboardCustom,
     QKeyboardPermission, QKeyboardPermissionType, QKeyboardRenderData,
 )
-from botcraft.api.types import QQPluginServerInterface
+from botqraft.api.types import QQPluginServerInterface
 
 from .messages import COMMAND, submission_template
 

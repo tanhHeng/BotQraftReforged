@@ -13,10 +13,10 @@
 | 插件格式                  | 声明位置                                   |
 | ------------------------- | ------------------------------------------ |
 | 单文件 `.py`              | Python 模块顶层的 `PLUGIN_METADATA` 字典。 |
-| 目录插件                  | 插件根目录的 `botcraft.plugin.json`。      |
-| `.mcdr` / `.pyz` 压缩插件 | 归档根目录的 `botcraft.plugin.json`。      |
+| 目录插件                  | 插件根目录的 `botqraft.plugin.json`。      |
+| `.mcdr` / `.pyz` 压缩插件 | 归档根目录的 `botqraft.plugin.json`。      |
 
-JSON 元数据沿用 MCDR Metadata 格式，文件名使用 BotCraft 的约定。把单文件插件整理为目录插件时，把元数据统一放入 JSON，并移除入口 Python 文件中的 `PLUGIN_METADATA`。
+JSON 元数据沿用 MCDR Metadata 格式，文件名使用 BotQraft 的约定。把单文件插件整理为目录插件时，把元数据统一放入 JSON，并移除入口 Python 文件中的 `PLUGIN_METADATA`。
 
 ## 声明单文件元数据
 
@@ -29,7 +29,7 @@ PLUGIN_METADATA = {
     'name': 'Echo',
     'description': 'Reply with the supplied text',
     'author': ['Your Name'],
-    'dependencies': {'botcraft': '>=0.1.0'},
+    'dependencies': {'botqraft': '>=0.1.0'},
 }
 ```
 
@@ -37,7 +37,7 @@ PLUGIN_METADATA = {
 
 ## 声明目录与压缩插件元数据
 
-在插件根目录创建 `botcraft.plugin.json`：
+在插件根目录创建 `botqraft.plugin.json`：
 
 ```json
 {
@@ -52,7 +52,7 @@ PLUGIN_METADATA = {
   "link": "https://example.com/echo-plugin",
   "entrypoint": "echo_plugin",
   "dependencies": {
-    "botcraft": ">=0.1.0"
+    "botqraft": ">=0.1.0"
   },
   "resources": ["assets", "lang"],
   "archive_name": "{id}-v{version}"
@@ -88,12 +88,12 @@ ID 使用 `[a-z][a-z0-9_]{0,63}` 格式。它以小写英文字母开头，总�
 
 ### 依赖
 
-框架自身的插件 ID 写作 `botcraft`。`mcdr` 表示另一个依赖 ID，声明 BotCraft 版本要求时使用 `botcraft`。
+框架自身的插件 ID 写作 `botqraft`。`mcdr` 表示另一个依赖 ID，声明 BotQraft 版本要求时使用 `botqraft`。
 
 ```json
 {
   "dependencies": {
-    "botcraft": ">=0.1.0",
+    "botqraft": ">=0.1.0",
     "another_plugin": ">=1.0.0"
   }
 }

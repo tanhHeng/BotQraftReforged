@@ -4,7 +4,7 @@
 
 在 `on_load` 中调用 `server.register_help_message(...)`，为命令登记帮助文字和 QQ 指令面板项。命令树和帮助分开注册，互不影响。
 
-先分清两个词。**普通帮助列表**就是用户在 QQ 里发 `/botcraft` 看到的那张表，按查询者的权限和语言生成。**指令面板项**是 QQ 客户端里机器人指令面板上的一条入口，由框架同步到平台。
+先分清两个词。**普通帮助列表**就是用户在 QQ 里发 `/botqraft` 看到的那张表，按查询者的权限和语言生成。**指令面板项**是 QQ 客户端里机器人指令面板上的一条入口，由框架同步到平台。
 
 ## 登记命令帮助
 
@@ -37,7 +37,7 @@ server.register_help_message(
 
 `scope` 和 `only_admin` 是关键字参数。
 
-在 QQ 里发送 `/botcraft`，看到的就是当前来源可见的插件帮助列表，也就是前面说的普通帮助列表。`/botcraft help` 展示的是内置运维命令目录。
+在 QQ 里发送 `/botqraft`，看到的就是当前来源可见的插件帮助列表，也就是前面说的普通帮助列表。`/botqraft help` 展示的是内置运维命令目录。
 
 普通帮助按查询来源的用户语言解析。QQ 指令面板在同步时按实例配置的语言解析。需要翻译文件时，阅读[翻译与用户语言](translation.md)。
 
@@ -57,7 +57,7 @@ server.register_help_message(
 
 三项设置各管一件事：
 
-- `permission=2` 过滤普通帮助列表，也就是 `/botcraft` 那张表。
+- `permission=2` 过滤普通帮助列表，也就是 `/botqraft` 那张表。
 - `only_admin=True` 决定谁有 QQ 指令面板的管理员点击和操作资格。面板项是否可见由平台决定。
 - 命令节点上的 `requires(lambda source: source.has_permission(2))` 检查真正执行时的权限。
 
