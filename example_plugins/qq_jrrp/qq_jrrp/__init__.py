@@ -37,9 +37,9 @@ def parse_submission(payload: str, sender: str) -> Sentence | None:
 
 
 def _reply(server: QQPluginServerInterface, source: QQCommandSource, response,
-           *, submission_id: str | None = None) -> None:
+           *, submission_id: str | None = None, refer_msg: bool = False) -> None:
     response.set_keyboard(command_keyboard(server, is_c2c=source.scene == 'c2c', submission_id=submission_id))
-    source.reply(response)
+    source.reply(response, refer_msg=refer_msg)
 
 
 def jrrp_handler(server: QQPluginServerInterface, store: SentenceStore, source: QQCommandSource) -> None:
@@ -51,7 +51,7 @@ def jrrp_handler(server: QQPluginServerInterface, store: SentenceStore, source: 
         except (OSError, ValueError):
             server.logger.exception('qq_jrrp sentence storage failed')
             response = _rtr(server, 'storage_error', markdown=True)
-        _reply(server, source, response)
+        _reply(server, source, response, refer_msg=True)
 
 
 def help_handler(server: QQPluginServerInterface, source: QQCommandSource) -> None:
