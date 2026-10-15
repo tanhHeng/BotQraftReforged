@@ -28,15 +28,15 @@ def on_message(server: QQPluginServerInterface, event: QQMessageReceived):
 
 `QQCommandSource` 从 `botqraft.api.command` 导入。常用字段如下：
 
-| 字段或方法        | 用途                                 |
-| ----------------- | ------------------------------------ |
-| `user`            | 原始收到的消息里的真实用户。         |
-| `scene`           | `group` 或 `c2c`。                   |
-| `conversation`    | 原会话 OpenID。                      |
-| `msg_id`          | 原始消息 ID。                        |
-| `message_data`    | 和收到的消息共用的正文模型。         |
-| `origin_received` | 原始 `QQMessageReceived` 事件。      |
-| `get_server()`    | 返回所属实例的 `QQServerInterface`。 |
+| 字段或方法         | 用途                                 |
+| ------------------ | ------------------------------------ |
+| `user`             | 原始收到的消息里的真实用户。         |
+| `scene`            | `group` 或 `c2c`。                   |
+| `conversation`     | 原会话 OpenID。                      |
+| `msg_id`           | 原始消息 ID。                        |
+| `message_data`     | 和收到的消息共用的正文模型。         |
+| `message_received` | 原始 `QQMessageReceived` 事件。      |
+| `get_server()`     | 返回所属实例的 `QQServerInterface`。 |
 
 插件的 `on_load` 收到绑定插件的 `QQPluginServerInterface`。`server.reply` 只接收本实例真实消息产生的来源。
 

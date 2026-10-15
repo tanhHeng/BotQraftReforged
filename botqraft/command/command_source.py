@@ -37,7 +37,7 @@ class QQCommandSource(CommandSource):
         if not isinstance(msg_id, str) or not msg_id:
             raise ValueError('Received message has no valid msg_id')
         self._runtime = runtime
-        self.origin_received = message
+        self.message_received = message
         self.user = user
         self.scene = scene
         self.conversation = conversation

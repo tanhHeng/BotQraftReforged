@@ -341,7 +341,7 @@ class MessageSender:
         if not isinstance(source, QQCommandSource):
             raise TypeError('reply requires QQCommandSource')
         msg_id = self._string(source.msg_id, 'source msg_id')
-        origin = source.origin_received
+        origin = source.message_received
         if not isinstance(origin, QQMessageReceived):
             raise ValueError('source has no original incoming message')
         return self.send(origin.original_user, message, refer_msg=refer_msg, msg_id=msg_id, passive_context=origin)

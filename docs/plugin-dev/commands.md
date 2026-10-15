@@ -32,7 +32,7 @@ def echo(source: QQCommandSource, context: CommandContext) -> None:
 | `conversation`          | 查看当前会话地址。                   |
 | `msg_id`                | 查看原始入站消息 ID。                |
 | `message_data`          | 读取消息正文等解析结果。             |
-| `origin_received`       | 取得原始收到的事件。                 |
+| `message_received`      | 取得原始收到的消息事件。             |
 | `get_server()`          | 取得当前实例的 `QQServerInterface`。 |
 | `has_permission(level)` | 检查当前有效权限。                   |
 

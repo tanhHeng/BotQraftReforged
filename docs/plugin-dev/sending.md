@@ -54,7 +54,7 @@ from botqraft.api.command import QQCommandSource
 def reply_with_quote(source: QQCommandSource):
     return source.reply(
         'Quoted reply',
-        refer_msg=source.origin_received,
+        refer_msg=source.message_received,
         return_future=True,
     )
 ```
