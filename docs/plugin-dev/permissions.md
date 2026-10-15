@@ -6,7 +6,7 @@
 
 查询权限时传入真实用户对象。它要么是真实的 `User`，要么是命令回调里的 `QQCommandSource`。
 
-身份取 `User.id`，会话取对应的真实会话地址，也就是用来定位会话的 OpenID。每次执行受保护操作时都重新查询一次，权限变更才能及时生效。
+先记住两个用途：`User.id` 用来认出"是谁"，OpenID 用来认出"在哪个会话"。查询权限时，把框架从真实消息里拿到的用户对象直接传进去最稳妥。每次执行受保护操作时都重新查询一次，权限变更才能及时生效。
 
 ## 检查执行权限
 
@@ -65,14 +65,13 @@ server.remove_permission(source, global_scope=True)
 
 等级可以传有效的整数、等级名称或 `botqraft.api.types.PermissionLevelItem`。`global_scope` 使用 bool。
 
-等级传 bool 会抛出 `TypeError`，非法等级会被拒绝。请传入带真实身份和会话地址的对象。
-C2C 会话授权需要框架已经记录并验证过的真实私聊地址，未验证的地址会抛出 `ValueError`。
-传入的对象类型不对会抛出 `TypeError`，缺少身份或会话地址也会拒绝操作。
-直接把实际 `source` 传进去，这些事实就都保留了。
+等级传 bool 会抛出 `TypeError`，非法等级会被拒绝。请传入带真实身份和会话地址的对象。给 C2C 私聊授权时，请使用框架从真实私聊消息里记录过的地址。这样框架能确认这个会话确实存在；如果地址还没验证，会用 `ValueError` 提醒你。
+
+传入的对象类型不对会抛出 `TypeError`，缺少身份或会话地址也会拒绝操作。直接把实际 `source` 传进去，这些事实就都保留了。
 
 ## 保存用户语言
 
-用户语言保存在偏好里，默认跟随实例的 `language`。用 `source.get_preference()` 或 `server.get_preference(source)` 取得一份偏好副本。改完要显式保存：
+用户语言保存在偏好里，默认跟随实例的 `language`。用 `source.get_preference()` 或 `server.get_preference(source)` 取得一份偏好副本。偏好是拿出来的一份副本。先改这份副本，再调用 `set_preference`，设置才会真正留下来。可以把它想成：取出表单、修改表单、提交表单。
 
 ```python
 def set_english(server, source):
@@ -80,9 +79,5 @@ def set_english(server, source):
     preference.language = 'en_us'
     server.set_preference(source, preference)
 ```
-
-`language` 只能从框架已经加载的语言里选。设为 `None` 时跟随实例语言。`server.get_default_preference()` 返回一份基于当前实例语言的新偏好。
-
-保存时要传真实用户身份和 `PreferenceItem`。偏好对象类型不对会抛出 `TypeError`，语言未知会抛出 `ValueError`，缺少真实身份会拒绝保存。你拿到的是副本，改完之后调用 `set_preference` 才会真正保存。
 
 接下来阅读[翻译与用户语言](translation.md)，让反馈在真正发送或展示的时刻按用户语言生成。

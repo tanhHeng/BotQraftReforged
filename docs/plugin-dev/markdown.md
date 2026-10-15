@@ -17,11 +17,9 @@ assert payload['msg_type'] == 2
 assert payload['markdown']['content'] == '**Echo**: &lt;hello&gt;'
 ```
 
-- `QText` 编码普通文本。
-- `QMarkdown.append(str_or_QText)` 转义 HTML 和 Markdown 特殊字符。
-- 追加 `QMarkdown` 时保留其 Markdown。
-- `append`、`set_keyboard` 修改自身，`+` 生成副本，`copy()` 复制消息并隔离键盘。
-- `set_keyboard(None)` 移除键盘。每条组合消息最多包含一个键盘。重复组合会抛出 `ValueError`，原内容和键盘保持不变。
+`QText` 编码普通文本，`QMarkdown.append(str_or_QText)` 会自动转义 HTML 和 Markdown 特殊字符。追加另一个 `QMarkdown` 时保留其 Markdown 标记。
+
+`append`、`set_keyboard` 修改自身，`+` 生成副本，`copy()` 复制消息并隔离键盘。`set_keyboard(None)` 移除键盘。每条组合消息最多包含一个键盘。重复组合会抛出 `ValueError`，原内容和键盘保持不变。
 
 ## 添加自定义键盘
 
@@ -113,6 +111,6 @@ message = QMarkdown('**请选择：** ').append(
 
 复制会隔离键盘，追加失败时保留原内容。直接重新赋值 `.text` 会按新的普通文本重建 Markdown 副本，旧交互片段的身份随旧副本一起替换。
 
-协议依据见仓库中的 [QQ 文本链文档](https://github.com/BotQraftReforged/BotQraftReforged/blob/main/reference/qq_docs/server-inter/message/trans/text-chain.md)。编码前 100 字符校验是本库自己的选择。客户端展示、点击填入和引用效果由 QQ 平台支持决定。
+协议依据见仓库中的 [QQ 文本链文档](https://github.com/tanhHeng/BotQraftReforged/blob/main/reference/qq_docs/server-inter/message/trans/text-chain.md)。编码前 100 字符校验是本库自己的选择。客户端展示、点击填入和引用效果由 QQ 平台支持决定。
 
 接下来，阅读[翻译与用户语言](translation.md)，让消息按用户的语言显示。

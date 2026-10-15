@@ -1,7 +1,6 @@
 # 命令系统
 
-读完这一页，你会知道命令回调收到什么、命令在哪些场景生效。
-你还会明白为什么用户必须按你注册的写法来敲。
+读完这一页，你会知道命令回调收到什么、命令在哪些场景生效。你还会明白为什么用户必须按你注册的写法来敲。
 
 命令要在插件的 `on_load` 里注册。用户在 QQ 发送命令后，框架解析命令树，再调用对应的函数。
 
@@ -55,7 +54,7 @@ def echo(source: QQCommandSource, context: CommandContext) -> None:
 
 ## 命令名称要和注册时一致
 
-命令根做的是精确匹配，`/` 保留在名称里。也就是说：注册时写什么，用户就得发什么。
+命令根会按字面匹配，而且 `/` 也是名字的一部分。可以把它当成门牌号：你注册 `/echo`，用户就从 `/echo` 这扇门进来。
 
 比如注册 `/echo` 之后，在 QQ 发送：
 
@@ -68,7 +67,7 @@ def echo(source: QQCommandSource, context: CommandContext) -> None:
 群消息进入命令解析前，正文按下面的规则处理：
 
 - `GROUP_AT_MESSAGE_CREATE` 去掉前导 ASCII 空格。
-- 当前 dev 版本对 `GROUP_MESSAGE_CREATE` 做前缀修正：跳过前导 ASCII 空格后，正文开头必须是 `<@id>`，且对应的 `MentionedUser.is_you is True`。满足条件时，移除一个标签及其后的 ASCII 空格。
+- 当前 dev 版本会先整理 `GROUP_MESSAGE_CREATE` 的前缀。它会跳过开头的 ASCII 空格，然后检查正文是否以指向机器人的 `<@id>` 开头；只有对应的 `MentionedUser.is_you is True` 时，才会移除这个提及标签和后面的 ASCII 空格。
 - 其他正文保持原样，包括 `<@!id>`、正文中间的标签和重复的后续标签。内部与尾部空格、引用元素、完整 mentions、`raw_payload`、`data` 和原始收件日志也保持原样。
 - C2C 正文保持原样。
 

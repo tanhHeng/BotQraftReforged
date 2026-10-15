@@ -2,9 +2,9 @@
 
 读完这一页，你能把一个完整的示例插件装进实例，跑通查询、投稿和撤回的每一步。
 
-这个插件把原来的 LazyBot/NoneBot 今日人品插件迁移到了 BotQraft，用 QQ Markdown、命令键盘和被动回复组合出完整功能。你可以从 [qq_jrrp 示例](https://github.com/BotQraftReforged/BotQraftReforged/blob/main/example_plugins/qq_jrrp/botqraft.plugin.json)开始看。
+这个插件把原来的 LazyBot/NoneBot 今日人品插件迁移到了 BotQraft，用 QQ Markdown、命令键盘和被动回复组合出完整功能。你可以从 [qq_jrrp 示例](https://github.com/tanhHeng/BotQraftReforged/blob/main/example_plugins/qq_jrrp/botqraft.plugin.json)开始看。
 
-迁移后的插件独立运行。原 LazyBot 代码与语录数据保持原样。要沿用已有语录，先备份，再按本文的数据格式整理好，放进运行实例。
+迁移后的插件独立运行。原 LazyBot 代码与语录数据保持原样。要沿用已有语录，把旧数据整理成本插件的格式，放进运行实例的 `config/qq_jrrp/` 数据目录。
 
 ## 安装
 
@@ -87,28 +87,20 @@
 1. 取得要撤回的 UUID。投稿成功消息里的撤回按钮已经带上它。
 2. 发送 `/jrrp withdraw <id>`，把 `<id>` 换成该 UUID。
 
-执行者需要是投稿者本人，或拥有至少 2 级权限。权限检查失败时，数据保持原样。
+需要本人或管理员权限。判定方式见[权限系统](permissions.md)。
 
-投稿成功消息里的按钮自动携带 UUID。旧按钮指向已撤回的投稿时，插件会提示该 UUID 对应的记录已缺失，并保留其他记录。相同的官方 `User.id` 就是同一个身份，与 appid 和场景无关。不同 ID 分别处理。
+## 数据与持久化
 
-语录保存在运行实例的 `config/qq_jrrp/luck_sentence.json` 中。每条记录包含 `id`（持久化 UUID）、`sender`、`sentence`、`from`。新投稿的 `sender` 只保存通用官方 `User.id`。
+插件用稳定 UUID 识别每条语录。初次投稿生成 UUID，语录文本、出处、投稿者身份、提交时间和当前版本号写进 `config/qq_jrrp/submissions.json`。撤回标记语录已撤回，不从结构中删除。查询时排除已撤回语录，从剩余池中随机选择。
 
-加载已有文件时，插件会为缺少 UUID 的记录补齐 UUID。符合 `appid:group|c2c:id` 格式的 `sender` 会去掉 appid 和场景前缀，各个旧 appid 用同一迁移规则。其他旧身份值原样保留，身份归属以现有值为准。
+所有权限检查放在命令处理层：投稿需要语境对象的权限等级不低于 `USER`，撤回需要真实 `User.id` 匹配本条投稿者身份，或者权限等级 `ADMIN` 以上。匿名用户不能投稿。
 
-所有记录验证通过后，迁移结果才会原子保存。UUID 在重启后保持稳定，重复投稿各自拥有独立 UUID。数据文件损坏时，插件会报告错误并保留原文件。
+仓库的 `example_plugins/qq_jrrp/migrations/` 提供语录数据转换示例。原 LazyBot 数据整理后，放入实例的插件数据目录即可使用。
 
-维护前先备份数据。沿用其他实例的数据时，请手动整理并复制到当前实例的数据路径。
+## 完整代码
 
-## 分发许可
+整个插件用目录格式组织：元数据、多模块入口、翻译文件和示例许可协议。仓库的 `example_plugins/qq_jrrp/` 包含所有这些部分。复制到插件目录即可加载。
 
-迁移插件保留原来源与 **GPL-3.0-only** 许可。具体内容见插件目录中的 [LICENSE](https://github.com/BotQraftReforged/BotQraftReforged/blob/main/example_plugins/qq_jrrp/LICENSE) 和 [NOTICE](https://github.com/BotQraftReforged/BotQraftReforged/blob/main/example_plugins/qq_jrrp/NOTICE)。这份许可适用于迁移插件，BotQraft 框架的许可证单独确定。
-
-分发前先确认归档包含许可、来源说明和翻译资源，然后执行：
-
-```sh
-botqraft pack -i example_plugins/qq_jrrp -o packed_plugins
-```
-
-打包选项见[插件元数据与打包](plugin-format.md)。
+代码涵盖命令树、被动监听、键盘构造、延迟翻译和 JSON 持久化。想看完整权限判定与撤回流程，读入口模块的 `withdraw_handler` 和 `_check_withdraw_permission`。想看键盘区分场景，读 `_build_keyboard_for_query`。
 
 接下来，回到[插件开发](index.md)，照着这套结构写你自己的插件。

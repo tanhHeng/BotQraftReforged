@@ -29,18 +29,20 @@ def on_interaction(server: QQPluginServerInterface, event: QQInteraction):
 
 ## 读取交互数据
 
-`QQInteraction` 继承 `QQEvent`，保留 `event_type`、`event_id`、`raw_payload`、`data` 等字段。`raw_payload` 是平台推送的原始 JSON，`data` 是其中的原始事件数据。详见[读取事件的原始数据](message-format.md#读取事件的原始数据)。
+`QQInteraction` 继承 `QQEvent`，保留 `event_type`、`event_id`、`raw_payload`、`data` 等字段。`raw_payload` 是平台推送的原始 JSON，`data` 是其中的原始事件数据 `d`。详见[读取事件的原始数据](message-format.md#读取事件的原始数据)。
 
-交互专用字段如下：
+交互专用字段在 `QQInteraction` 解析后的两个位置：
 
-| 字段               | 用途                                |
-| ------------------ | ----------------------------------- |
-| `interaction_id`   | 原始事件数据 `d.id` 中的交互 ID。   |
-| `interaction_data` | 解析后的 `QQInteractionData` 对象。 |
+| 字段                    | 位置与用途                                                      |
+| ----------------------- | --------------------------------------------------------------- |
+| `interaction_id`        | `QQInteraction` 顶层字段，取自原始事件数据 `d.id` 中的交互 ID。 |
+| `interaction_data`      | `QQInteraction` 顶层字段，解析后的 `QQInteractionData` 对象。   |
+| `interaction_data.id`   | 交互 ID（和 `interaction_id` 一致）。                           |
+| `interaction_data.data` | 具体交互内容，包含 `resolved`、按钮数据、选择和授权等字段。     |
 
 `event_id` 是事件 ID，`interaction_id` 是交互 ID，两者不同。把收到的事件传进去，框架会从原始交互数据确定要响应哪次交互。
 
-`interaction_data` 包含 `id`、`type`、`scene`、`chat_type`、`timestamp`、`version`、`application_id`，以及平台提供的 `guild_id`、`channel_id`、`user_openid`、`group_openid` 和 `group_member_openid`。
+`interaction_data` 顶层包含 `id`、`type`、`scene`、`chat_type`、`timestamp`、`version`、`application_id`，以及平台提供的 `guild_id`、`channel_id`、`user_openid`、`group_openid` 和 `group_member_openid`。
 
 具体交互内容在 `interaction_data.data`：
 

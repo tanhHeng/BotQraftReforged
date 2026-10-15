@@ -1,66 +1,89 @@
 # 基本知识
 
-插件就是实例插件目录里的一个 Python 入口模块。你在里面声明元数据、定义回调，框架负责发现它、加载它，并在合适的时机调用你的函数。
+想象一下，如果你想给 BotQraft 添加新功能，其实就是写一个 Python 文件放进 `plugins/` 目录。在这个文件里，你声明一下"我是谁"（元数据），然后告诉框架"在什么时候做什么"（回调函数），剩下的事情框架会帮你搞定。
 
-BotQraft 独立运行，沿用 MCDR 的命令节点、插件元数据和生命周期，运行宿主是 QQ 机器人。
+BotQraft 独立运行，用 QQ 机器人作为运行环境，并且沿用了 MCDR 那套久经考验的插件系统，所以如果你用过 MCDR，会很熟悉。
 
-## 框架如何加载插件
+## 你的第一个插件长什么样
 
-框架默认扫描实例的 `plugins/` 目录，也可以用 `plugin_directories` 指定其他目录。
-单文件插件、目录插件和压缩插件都放在这里，每个插件 ID 保留一份可加载副本。
+来看一个最小化的插件代码。保存成 `plugins/hello.py`：
 
-启动实例时，框架读取插件元数据、导入入口模块，再依次触发下面的生命周期回调。
-实例运行中，你可以用 `/botqraft plugin refresh` 重新扫描插件目录，或用 `/botqraft plugin reload <id>` 重载单个插件。
+```python
+from types import ModuleType
 
-安装与验证的完整步骤见[第一个插件](first-plugin.md)，三种插件形态见[插件格式](plugin-format.md)。
+from botqraft.api.types import QQPluginServerInterface
+
+PLUGIN_METADATA = {
+    'id': 'hello',
+    'version': '1.0.0',
+}
+
+
+def on_load(server: QQPluginServerInterface, prev_module: ModuleType | None) -> None:
+    server.logger.info('Hello plugin loaded')
+```
+
+这就能用了。`PLUGIN_METADATA` 告诉框架这个插件的身份信息，`on_load` 是框架加载插件时会调用的函数，`server` 是你和框架沟通的"管道"。
+
+## 框架怎么找到并加载你的插件
+
+框架会定期扫描实例的 `plugins/` 目录（或你在配置里指定的其他位置）。无论是单个 `.py` 文件、整个文件夹、还是压缩包（`.mcdr`、`.pyz`），框架都能识别。如果同一个插件 ID 有多份，框架会按优先级选一个。
+
+启动实例的时候，框架会读取每个插件的元数据、导入代码，然后按顺序触发生命周期函数。实例启动后，你还可以用命令重新扫描目录或重载单个插件。
+
+完整的安装和测试步骤详见[第一个插件](first-plugin.md)，想了解三种插件形式的区别可以看[插件格式](plugin-format.md)。
 
 ## 插件的生命周期
 
-框架自动发现入口模块中约定名称的回调：
+框架会自动在你的入口模块里寻找这些约定好名字的函数。当它找到的时候，就会在对应的时机调用：
 
-| 回调                           | 什么时候触发                      | 适合在这里做什么                                                                                   |
-| ------------------------------ | --------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `on_load(server, prev_module)` | 插件加载或重载时                  | 登记命令、帮助、事件和翻译。首次加载时 `prev_module` 为 `None`，重载时可以从它迁移上次模块的状态。 |
-| `on_botqraft_start(server)`    | 本次实例启动并达到 READY 时       | 提交 QQ 操作，此时连接已经可用。                                                                   |
-| `on_botqraft_stop(server)`     | 曾达到 READY 的实例开始正常停止时 | 停止对外提交，准备收尾。                                                                           |
-| `on_unload(server)`            | 插件卸载时，包括重载时旧模块退出  | 停止后台工作、发出取消信号并关闭外部资源。                                                         |
+| 函数名                         | 什么时候被调用                     | 你可以在这里做什么                                                                                                 |
+| ------------------------------ | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `on_load(server, prev_module)` | 插件加载或重载时                   | 注册命令、帮助文本、事件监听和多语言翻译。首次加载时 `prev_module` 是 `None`，重载时可以用它来恢复上次保存的状态。 |
+| `on_botqraft_start(server)`    | QQ 连接建立后启动完成时            | 可以开始主动发消息了，连接已经稳定可用。                                                                           |
+| `on_botqraft_stop(server)`     | 实例即将关闭时                     | 停止发送消息，收拾好你的东西准备说再见。                                                                           |
+| `on_unload(server)`            | 插件即将卸载时，或重载时旧版本退出 | 停止后台任务、关闭连接、释放资源。                                                                                 |
 
-`on_load` 只表示插件加载完成，QQ 连接状态请用 `server.is_ready()` 查询。
-实例启动事件只在本次实例达到 READY 时触发。
-热加载走的是插件加载生命周期，所以把热加载需要的初始化放在 `on_load` 里。
+几个细节值得注意：
 
-注册的命令、帮助、事件和翻译随插件生命周期自动清除。
-插件自己创建的任务、计时器和连接需要你在 `on_unload` 中收尾，加载失败时也一样。
+- `on_load` 只表示"你的代码成功加载了"，不代表 QQ 连接已经就绪。如果你在 `on_load` 里需要发消息，先用 `server.is_ready()` 检查一下。
+- `on_botqraft_start` 只在实例真正启动的时候触发一次。如果你后来热加载或重载了某个插件，这个函数不会再被调用。所以热加载时需要做的初始化，放在 `on_load` 里比较安全。
+- 框架会自动清理你注册的命令、帮助、事件和翻译。但是你自己创建的后台任务、计时器、网络连接这些东西，需要在 `on_unload` 里手动收拾干净。
+- 特别提醒：如果插件在加载过程中出错了，有可能 `on_unload` 不会被调用。所以初始化代码要防守好——如果中途出异常，要立即释放已经申请的资源，别指望 `on_unload` 来救场。
 
-消息与交互回调见[插件事件](events.md)，后台工作的退出方式见[后台任务与卸载](tasks.md)。
+如果你想看事件和消息怎么处理，可以看[插件事件](events.md)。想知道后台任务怎么优雅地停止，看[后台任务与卸载](tasks.md)。
 
-## 你能用到的公开接口
+## 你能用到的工具和接口
 
-从 `botqraft.api` 的子模块导入插件需要的接口：
+从 `botqraft.api` 这几个子模块里导入你需要的东西：
 
-| 入口                     | 用途                                                            |
-| ------------------------ | --------------------------------------------------------------- |
-| `botqraft.api.types`     | `QQPluginServerInterface`、`QQServerInterface` 和 QQ 数据类型。 |
-| `botqraft.api.command`   | 命令来源、参数节点和命令构建器。                                |
-| `botqraft.api.event`     | 插件事件和 QQ 入站事件类型。                                    |
-| `botqraft.api.qtext`     | 文本、Markdown 和键盘。                                         |
-| `botqraft.api.exception` | 公开异常类型。                                                  |
+```python
+from botqraft.api.types import QQPluginServerInterface
+from botqraft.api.command import SimpleCommandBuilder, QQCommandSource
+```
 
-插件回调收到绑定当前插件的 `QQPluginServerInterface`。用它登记命令、帮助、事件和翻译，并获取日志、数据目录和任务调度服务。
+简单介绍一下各个模块都有什么：
 
-命令回调收到 `QQCommandSource`，它带有原消息的用户、场景和会话。
-`source.get_server()` 返回 `QQServerInterface`。
-需要插件专属服务时，用插件回调传入的 `server`。
+| 模块                     | 里面有什么                       |
+| ------------------------ | -------------------------------- |
+| `botqraft.api.types`     | 服务接口、QQ 数据类型。          |
+| `botqraft.api.command`   | 命令来源、参数节点、命令构建器。 |
+| `botqraft.api.event`     | 插件事件、QQ 消息和交互类型。    |
+| `botqraft.api.qtext`     | 纯文本、Markdown、按钮键盘。     |
+| `botqraft.api.exception` | 异常类型。                       |
 
-消息内容使用 `str`、`QText`、`QMarkdown` 或延迟翻译文本。
-通过公开接口访问框架服务，内部实现交给框架维护。
-完整模块列表见[API 索引](api.md)，消息来源与回复见[响应事件与回复消息](reply.md)。
+插件生命周期和事件回调里拿到的 `server` 是 `QQPluginServerInterface`。它绑定了当前插件，你用它来注册命令、获取插件数据目录、读日志——总之，凡是和你这个插件相关的事，都找它。
 
-## 动手试试
+命令回调里拿到的是 `QQCommandSource`。`source.get_server()` 返回的是实例级的 `QQServerInterface`，和上面的 `server` 不是一个东西。如果你需要注册功能、访问插件数据目录或打包资源，还是要用生命周期回调传给你的那个 `server`。回复用户的消息？直接用 `source.reply(...)` 最方便。
 
-仓库的 [`example_plugins/`](https://github.com/BotQraftReforged/BotQraftReforged/tree/main/example_plugins) 里有可以直接使用的插件示例，复制到实例的插件目录就能加载。
+想看完整的 API 列表，可以查[API 索引](api.md)。消息来源和回复的细节在[响应事件与回复消息](reply.md)里。
 
-想先跑通一条命令，就从[第一个插件](first-plugin.md)开始。
-想看功能更完整的多插件组合，读[今日人品插件](jrrp-plugin.md)。
+## 动手试试吧
 
-接下来，先为插件声明[元数据](metadata.md)。
+仓库的 [`example_plugins/`](https://github.com/BotQraftReforged/BotQraftReforged/tree/main/example_plugins) 里放着几个现成的插件示例，复制到你的 `plugins/` 目录就能直接用。
+
+想先跑通一条简单命令看看效果，从[第一个插件](first-plugin.md)开始最舒服。
+
+想看一个功能更完整的、真正能用的插件示例，里面有命令、Markdown、按钮、多语言翻译还有数据存储，看看[今日人品插件](jrrp-plugin.md)就有感觉了。
+
+准备好了？下一步是为你的插件写[元数据](metadata.md)。

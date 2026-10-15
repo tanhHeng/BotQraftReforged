@@ -87,7 +87,7 @@ QQ 消息、翻译与键盘。用法见[Markdown、文本交互与键盘](markdo
 
 聚合 `command`、`decorator`、`event`、`qtext`、`types`、`exception`、`utils` 的公开导出，并去重。想集中导入时，从这里选名称。常规插件按用途显式导入，接口来自哪里一眼能看清。
 
-## 与 MCDR 插件的差异
+## 从 MCDR 插件迁移
 
 把 MCDR 插件迁到 BotQraft 时，运行宿主换成了 QQ 机器人。命令节点、插件元数据和生命周期都能沿用，但输入、身份、消息和宿主操作都要跟着换。逐条对照：
 

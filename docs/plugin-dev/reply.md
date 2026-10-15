@@ -20,7 +20,7 @@ def on_message(server: QQPluginServerInterface, event: QQMessageReceived):
 
 群消息正文已经过[前缀处理](message-format.md#提及与前缀处理)。本例只处理 `/ping`。如果你同时为 `/ping` 注册了命令，就按职责选一条回复路径，保证一次响应只回一条。
 
-`source.reply(message)` 和 `server.reply(source, message)` 都使用原始消息 ID 和原会话，属于**被动回复**。被动回复的意思是：平台允许你在收到消息后一段时间内回复这条消息。
+这两个接口都会沿用原消息 ID 和原会话，所以叫"被动回复"。可以把它理解成在平台给出的回复窗口里，接着刚才那条消息回话；如果要晚些时候再发，就改用主动发送。
 
 `message` 支持 `str`、`QText`、`QMarkdown` 和延迟翻译文本。回复会按来源当前偏好的语言解析翻译。
 
@@ -68,9 +68,9 @@ def greet_new_group(server: QQPluginServerInterface, event: QQEvent):
 
 调用 `server.reply_event(event, message, return_future=True)` 可以拿到发送回执。发送回执就是发送成功后返回的结果对象。需要引用展示时，可以传入同会话、带有效索引的 `refer_msg`，规则见[引用消息](sending.md#引用消息)。
 
-## 等待平台结果
+## 确认发送结果
 
-发送、回复和撤回默认返回 `None`，表示操作已经提交。传入 `return_future=True` 后，接口返回 `concurrent.futures.Future`。发送或回复成功时，结果是 `QQMessageReceipt`。
+默认情况下，接口提交操作后就返回 `None`。如果你还想等平台确认，就传 `return_future=True`；这时拿到的是一个 `Future`，它像一张"结果取件单"，完成后可以取到回执或错误。
 
 异步协程用 `asyncio.wrap_future` 等待这个普通 Future：
 
@@ -109,4 +109,4 @@ async def reply_result(source: QQCommandSource):
 
 `ResultUnknownError` 表示平台可能已经执行了操作。再次提交前先核实结果，避免重复回复或重复撤回。
 
-接下来，读[命令系统](commands.md)，把消息变成用户能敲的命令。
+接下来，读[帮助消息与指令面板](help.md)，让命令出现在帮助列表里。

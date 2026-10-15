@@ -1,7 +1,6 @@
 # 插件事件
 
-读完这一页，你能为插件接上消息和交互回调。
-你还会知道多条回调同时命中时，框架按什么顺序调用它们。
+读完这一页，你能为插件接上消息和交互回调。你还会知道多条回调同时命中时，框架按什么顺序调用它们。
 
 在插件入口模块中定义事件回调。框架会自动发现回调，并传入绑定当前插件的 `QQPluginServerInterface`。
 
@@ -20,6 +19,8 @@
 | `on_group_message(server, event)` | 接收两种群消息投递：`GROUP_AT_MESSAGE_CREATE` 和 `GROUP_MESSAGE_CREATE`。        |
 | `on_c2c_message(server, event)`   | 接收解析成功的 C2C 消息。                                                        |
 | `on_interaction(server, event)`   | 接收解析成功的 `QQInteraction` 交互事件，处理方法见[交互事件](interactions.md)。 |
+
+大多数时候，你只需要知道 `on_message` 或 `on_group_message` 就够了。这两个回调会在消息成功解析后触发，你可以在里面读取消息正文、用户身份，并回复。
 
 例如，在入口模块中记录群消息：
 
@@ -50,7 +51,7 @@ def on_load(server: QQPluginServerInterface, prev_module):
 
 事件 ID 按大小写等价匹配。`'C2C_MESSAGE_CREATE'` 与 `'c2c_message_create'` 指向同一事件。可通过 `priority` 参数指定监听优先级，默认值为 `1000`。
 
-同一个处理只选自动回调或显式登记中的一种，让副作用只执行一次。
+一个处理逻辑选择一种登记方式就够了：要么使用自动回调，要么在 `on_load` 里显式注册。这样每条回复、写入或其他动作都有清楚的唯一入口。
 
 ## 精确监听官方事件
 
@@ -74,9 +75,9 @@ def handle_at_delivery(server: QQPluginServerInterface, event: QQEvent):
 
 ## 消息回调的调用顺序
 
-`on_group_message` 对应框架事件 `botqraft.group_message`。两个官方群事件 ID 各自保留。
+把它想成一条固定流水线：先处理命令，再进入 `on_qq_event`，然后是 `on_message`，接着是 `on_group_message`，最后才到官方事件的精确监听。每一步都共享同一个事件对象，但异步任务的完成时间仍可能不同。
 
-一条群消息到达后，框架会按固定顺序逐个调用处理。最先执行的是命令处理。命令处理结束后，才调用 `on_qq_event`。接着是 `on_message`，然后是 `on_group_message`。最后才轮到官方事件类型的精确监听。
+`on_group_message` 对应框架事件 `botqraft.group_message`。两个官方群事件 ID 各自保留。
 
 C2C 消息不走这条链路，它使用自己的专用回调 `on_c2c_message`。各入口共享同一个事件对象，异步处理的完成顺序由各自的运行时间决定。
 

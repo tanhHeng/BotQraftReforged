@@ -4,7 +4,7 @@
 
 在 `on_load` 中调用 `server.register_help_message(...)`，为命令登记帮助文字和 QQ 指令面板项。命令树和帮助分开注册，互不影响。
 
-先分清两个词。**普通帮助列表**就是用户在 QQ 里发 `/botqraft` 看到的那张表，按查询者的权限和语言生成。**指令面板项**是 QQ 客户端里机器人指令面板上的一条入口，由框架同步到平台。
+这里有两种帮助入口。**普通帮助列表**是用户发送 `/botqraft` 后看到的文字清单；**指令面板项**则是 QQ 客户端里的按钮入口。插件可以同时登记两者，它们各自服务不同的使用场景。
 
 ## 登记命令帮助
 
@@ -55,11 +55,11 @@ server.register_help_message(
 )
 ```
 
-三项设置各管一件事：
+这三个设置分别守着三扇门：
 
-- `permission=2` 过滤普通帮助列表，也就是 `/botqraft` 那张表。
-- `only_admin=True` 决定谁有 QQ 指令面板的管理员点击和操作资格。面板项是否可见由平台决定。
-- 命令节点上的 `requires(lambda source: source.has_permission(2))` 检查真正执行时的权限。
+- `permission=2` 控制谁能在普通帮助列表里看到项目。
+- `only_admin=True` 控制面板操作资格。
+- 命令节点上的 `requires(...)` 才负责真正执行时的权限检查。
 
 按[命令树](command-tree.md#用-requires-检查条件)给管理命令加上执行检查。权限等级和授权方式见[权限](permissions.md)。
 
@@ -90,4 +90,4 @@ server.logger.info('Undisplayed prefixes: %s', status.undisplayed_prefixes)
 
 查询私聊面板时改用 `server.get_panel_status('c2c')`。状态快照还提供 `reason`、`err_code`、`code`、`http_code` 和 `trace_id`，方便你查同步失败的原因。
 
-接下来，安装并验证[第一个插件](first-plugin.md)。
+接下来，了解[命令树](command-tree.md)，看看怎么用节点搭出更细致的命令结构。

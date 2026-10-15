@@ -66,13 +66,7 @@ builder.arg('text', GreedyText)
 builder.register(server)
 ```
 
-固定的子命令直接写在路径里。需要调整固定节点的行为时，用 `builder.literal(...)`：
-
-```python
-builder.literal('/echo').requires(lambda source: source.has_permission(2))
-```
-
-把这行放在注册前，就能为 `/echo` 根下的命令检查权限。权限规则见[权限](permissions.md)。
+固定的子命令直接写在路径里。需要调整固定节点的行为时，用 `builder.literal(...)`。更多用法见[命令树](command-tree.md)。
 
 ## 指定注册场景
 
@@ -85,4 +79,4 @@ for root in builder.build():
 
 用这段替换 `builder.register(server)`。为同一条命令登记[帮助](help.md)时，也填上 `scope=('group',)`。
 
-需要直接组织分支，或者把条件放在特定节点上时，继续阅读[命令树](command-tree.md)。
+接下来，把前面学到的串起来，写[第一个插件](first-plugin.md)。

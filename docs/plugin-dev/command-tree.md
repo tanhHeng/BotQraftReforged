@@ -2,7 +2,7 @@
 
 读完这一页，你能用节点自己搭出命令分支，让每条输入都在正确的位置结束。
 
-命令树直接用节点组织分支，和 [SimpleCommandBuilder](simple-command-builder.md) 使用同一套解析器。
+命令树就是把一条命令拆成一个个节点：固定词是分叉，参数是输入位置，回调是终点。它和 [SimpleCommandBuilder](simple-command-builder.md) 使用同一套解析规则，所以学会一种后，另一种也很好理解。
 
 ## 从 Literal 开始
 
@@ -63,7 +63,7 @@ root.then(
 
 ## 用 requires 检查条件
 
-`requires(...)` 在进入节点时检查条件。返回 `True` 就继续解析，返回 `False` 会产生 `RequirementNotMet` 命令错误。
+`requires(...)` 就像命令入口处的一道门。条件返回 `True`，用户继续往下走；返回 `False`，框架会用 `RequirementNotMet` 告诉用户这条分支当前不能执行。
 
 下面只允许权限达到 2 的用户执行 `/admin ping`：
 
@@ -81,4 +81,4 @@ server.register_command(root, scope=('group',))
 
 登记[帮助](help.md)时，`permission` 和 `scope` 要分别填写。帮助可见性和节点执行检查各自生效。
 
-接下来，为命令添加[帮助消息与指令面板](help.md)。
+接下来，把前面学到的串起来，写[第一个插件](first-plugin.md)。

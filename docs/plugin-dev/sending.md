@@ -16,7 +16,9 @@ def notify_group(server: QQPluginServerInterface, actual_group_openid: str):
     return server.say(target, 'Task completed', return_future=True)
 ```
 
-从插件事件或后台任务里调用它，并传入实际的群 OpenID。想拿到平台的确认结果，就用返回的 Future，见[等待平台结果](reply.md#等待平台结果)。主动发送要遵守账号与 QQ 平台的主动发送规则。
+从插件事件或后台任务里调用它，并传入实际的群 OpenID。想拿到平台的确认结果，就用返回的 Future，见[等待平台结果](reply.md#等待平台结果)。主动消息受 QQ 账号和平台规则约束。实际使用时，优先从真实事件或任务里取得目标，并把发送失败当作正常结果来处理。
+
+三种发送方式：
 
 | 接口                                                    | 目标与行为                                                                    |
 | ------------------------------------------------------- | ----------------------------------------------------------------------------- |
@@ -30,7 +32,7 @@ def notify_group(server: QQPluginServerInterface, actual_group_openid: str):
 
 ## 选择目标与会话地址
 
-目标类型从 `botqraft.api.types` 导入：
+目标类型从 `botqraft.api.types` 导入。这三个字段名字很像，但各自负责不同位置：`user_openid` 找 C2C 会话，`group_openid` 找群，`member_openid` 找群里的某位成员。先确定你要发给谁，再选对应字段。
 
 - 群目标使用 `Group(group_openid=actual_group_openid)`。
 - C2C 用户目标使用平台提供的 `User`，会话地址取 `user_openid`，场景为 `c2c`。只提供有效的 `user_openid` 时，`User` 也能识别 C2C 会话。
@@ -59,14 +61,14 @@ def reply_with_quote(source: QQCommandSource):
 
 本例要求原消息带有可用的引用索引。默认回复只关联被动上下文。传入 `refer_msg` 后，框架才会提交引用展示字段。
 
-引用索引来自平台推送的原始数据：
+这里有三种"编号"，不用一次记住全部：消息 ID 用来定位消息，被动关联字段用来回复原消息，引用索引用来显示引用卡片。保留原事件或发送回执，框架会帮你取对字段。
 
 | 引用对象            | 索引来源                                      |
 | ------------------- | --------------------------------------------- |
 | `QQMessageReceived` | 原始 `message_scene.ext` 中的 `msg_idx=...`。 |
 | `QQMessageReceipt`  | 原始发送响应 `ext_info.ref_idx`。             |
 
-引用对象必须和发送目标在同一会话，并且带非空索引。跨会话或缺少索引时，提交会抛出 `ValueError`。消息 ID、被动 `msg_id` / `event_id` 和引用索引各有用处。保留原事件或发送回执（发送成功后返回的结果），让框架自己读对应字段。
+引用对象必须和发送目标在同一会话，并且带非空索引。跨会话或缺少索引时，提交会抛出 `ValueError`。
 
 发送成功后返回的 `QQMessageReceipt` 就是发送回执，从 `botqraft.api.types` 导入。它提供 `scene`、`conversation`、`raw_response` 和 `receipt_data`。`receipt_data` 包含 `id`、`timestamp` 以及可选的 `ext_info`。平台没给引用索引时，发送回执仍然可以用来读发送结果和消息 ID。
 
@@ -81,6 +83,8 @@ from botqraft.api.types import QQPluginServerInterface
 def remove_received_message(server: QQPluginServerInterface, event: QQMessageReceived):
     return server.delete_message(event, return_future=True)
 ```
+
+两种撤回方式：
 
 | 接口                                                             | 用法                                                                                            |
 | ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
