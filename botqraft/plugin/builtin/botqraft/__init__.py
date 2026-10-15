@@ -1,4 +1,5 @@
 """Built-in administration commands using native MCDR nodes."""
+from datetime import datetime, timezone
 from copy import deepcopy
 from functools import partial
 from pathlib import Path
@@ -83,6 +84,7 @@ def register(server: QQPluginServerInterface) -> Literal:
             ('/botqraft plugin', 'plugin'),
             ('/botqraft pref', 'preference'),
             ('/botqraft reload', 'reload'),
+            ('/botqraft diagnose time', 'diagnose'),
             ('/botqraft exit', 'exit'),
         )
         message = QMarkdown(tr(src, 'help.title'))
@@ -91,6 +93,20 @@ def register(server: QQPluginServerInterface) -> Literal:
         src.reply(message)
     root.runs(root_command)
     root.then(Literal('help').runs(help_command))
+
+    def diagnose_time(src: QQCommandSource | ConsoleSource) -> None:
+        """Show the latest platform timestamp observation without probing external clocks."""
+        observation = runtime.sender.get_time_observation()
+        if observation is None:
+            src.reply(rtr('diagnose.time_empty'))
+            return
+        offset, observed_at, status = observation
+        observed = datetime.fromtimestamp(observed_at, timezone.utc).isoformat(timespec='seconds')
+        src.reply(rtr('diagnose.time', status, f'{offset:+.3f}', observed))
+
+    diagnose = Literal('diagnose').requires(allowed)
+    diagnose.then(Literal('time').runs(diagnose_time))
+    root.then(diagnose)
 
     def choose_target(src: QQCommandSource | ConsoleSource, target: str | None = None) -> User:
         """Resolve an explicit, mentioned or invoking permission target.

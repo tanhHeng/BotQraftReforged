@@ -51,8 +51,14 @@ class MessageSender:
         self._expiry_timer = None
         self._timer_generation = 0
         self._closed = False
+        self._time_observation = None
         self._time_warning_generation = 0
 
+
+    def get_time_observation(self):
+        """Return the latest valid receive-time clock observation."""
+        with self._lock:
+            return self._time_observation
 
     def _arm_expiry(self: Self) -> None:
         if not self._closed and self._expiry_timer is None and self._expirations:
@@ -180,6 +186,7 @@ class MessageSender:
         offset = platform_time - received_wall
         status = 'error' if offset > 15 else 'warning' if offset > 5 else 'normal'
         with self._lock:
+            self._time_observation = (offset, received_wall, status)
             generation = self.runtime.api_client.token_provider.refresh_generation
             warn = status == 'warning' and generation > self._time_warning_generation
             if warn:

@@ -1,4 +1,7 @@
 botqraft:
+  diagnose:
+    time_empty: "No timestamp observation available"
+    time: "Time status: {0}; platform minus local: {1}s; observed: {2}"
   permission:
     denied: "Only a configured super administrator or the BotQraft console may manage permissions."
     unknown_user: "Unknown C2C user; real identity and private conversation cannot be inferred."
@@ -28,4 +31,5 @@ botqraft:
       plugin: "Manage plugins"
       preference: "Manage language preferences"
       reload: "Reload configuration, permissions or preferences"
+      diagnose: "Show the latest QQ timestamp offset"
       exit: "Request BotQraft shutdown"

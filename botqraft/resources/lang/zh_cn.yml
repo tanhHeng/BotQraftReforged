@@ -1,4 +1,7 @@
 botqraft:
+  diagnose:
+    time_empty: "暂无时间戳观测记录"
+    time: "时间状态：{0}；平台时间减本机时间：{1} 秒；观测时间：{2}"
   permission:
     denied: "仅超级管理员或本库控制台可管理权限。"
     unknown_user: "未找到已知的 C2C 用户；不能推断真实身份或私聊路由。"
@@ -28,4 +31,5 @@ botqraft:
       plugin: "管理插件"
       preference: "管理语言偏好"
       reload: "重新加载配置、权限或偏好"
+      diagnose: "查看最近 QQ 消息的时间偏差"
       exit: "请求停止 BotQraft"
