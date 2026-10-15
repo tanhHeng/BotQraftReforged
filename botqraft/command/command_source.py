@@ -74,11 +74,11 @@ class QQCommandSource(CommandSource):
         with self._runtime.translation_manager.language_context(self.get_preference().language):
             yield
 
-    def reply(self: Self, message: str | QTextBase, *, refer_msg: QQMessageReceived | QQMessageReceipt | None = None, return_future: bool = False) -> Future[QQMessageReceipt] | None:
+    def reply(self: Self, message: str | QTextBase, *, refer_msg: QQMessageReceived | QQMessageReceipt | bool | None = None, return_future: bool = False) -> Future[QQMessageReceipt] | None:
         """Reply using the original received message's passive association.
         
         :param message: Plain or QQ text, evaluated in this source's preferred language.
-        :param refer_msg: Optional same-conversation message containing a reference index, not a passive msg_id.
+        :param refer_msg: True quotes the triggering message; False or None omits quoting. A same-conversation message or receipt selects another reference.
         :param return_future: Whether to expose the concurrent future; False does not wait for delivery.
         :return: A future resolving to the sent receipt when requested, otherwise None.
         """

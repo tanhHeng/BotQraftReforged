@@ -54,12 +54,14 @@ from botqraft.api.command import QQCommandSource
 def reply_with_quote(source: QQCommandSource):
     return source.reply(
         'Quoted reply',
-        refer_msg=source.message_received,
+        refer_msg=True,
         return_future=True,
     )
 ```
 
 本例要求原消息带有可用的引用索引。默认回复只关联被动上下文。传入 `refer_msg` 后，框架才会提交引用展示字段。
+
+回复触发命令的原消息时，`source.reply(..., refer_msg=True)` 就等同于传入 `source.message_received`，`server.reply(source, ..., refer_msg=True)` 也支持同样的简写。传 `False` 或省略参数时不展示引用。想引用另一条消息，继续传入消息事件或发送回执即可。这个布尔简写只用于 `reply`；其他发送接口仍需明确指定引用对象。原消息缺少引用索引时仍会抛出 `ValueError`，请按平台实际提供的信息选择引用。
 
 这里有三种"编号"，不用一次记住全部：消息 ID 用来定位消息，被动关联字段用来回复原消息，引用索引用来显示引用卡片。保留原事件或发送回执，框架会帮你取对字段。
 

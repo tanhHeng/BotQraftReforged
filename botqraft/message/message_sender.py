@@ -329,12 +329,12 @@ class MessageSender:
 
         return self.runtime.network_loop.submit(send_snapshot(), operation=f'send {scene} message')
 
-    def reply(self: Self, source: "QQCommandSource", message: str | QTextBase, *, refer_msg: QQMessageReceived | QQMessageReceipt | None = None) -> Future[QQMessageReceipt]:
+    def reply(self: Self, source: "QQCommandSource", message: str | QTextBase, *, refer_msg: QQMessageReceived | QQMessageReceipt | bool | None = None) -> Future[QQMessageReceipt]:
         """Submit a passive reply using the command source original message and target.
         
         :param source: QQ command source with an original incoming message and non-empty message ID.
         :param message: Literal or typed QQ text. Existing delayed translation objects are evaluated before payload snapshotting.
-        :param refer_msg: Optional received message or receipt reference from the same conversation.
+        :param refer_msg: True quotes the original message; False or None omits quoting, otherwise a same-conversation message or receipt.
         :return: A future yielding the successful receipt or the operation exception.
         """
         from botqraft.command.command_source import QQCommandSource
@@ -344,6 +344,10 @@ class MessageSender:
         origin = source.message_received
         if not isinstance(origin, QQMessageReceived):
             raise ValueError('source has no original incoming message')
+        if refer_msg is True:
+            refer_msg = origin
+        elif refer_msg is False:
+            refer_msg = None
         return self.send(origin.original_user, message, refer_msg=refer_msg, msg_id=msg_id, passive_context=origin)
 
     def reply_event(self: Self, event: QQEvent, message: str | QTextBase, *, refer_msg: QQMessageReceived | QQMessageReceipt | None = None) -> Future[QQMessageReceipt]:

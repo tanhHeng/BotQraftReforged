@@ -259,12 +259,12 @@ class ServerInterfaceMixin:
         self.logger.info('broadcast submitted: %s', message if isinstance(message, str) else type(message).__name__)
         return future if return_future else None
 
-    def reply(self: Self, source: QQCommandSource, message: str | QTextBase, *, refer_msg: QQMessageReceived | QQMessageReceipt | None = None, return_future: bool = False) -> Future[QQMessageReceipt] | None:
+    def reply(self: Self, source: QQCommandSource, message: str | QTextBase, *, refer_msg: QQMessageReceived | QQMessageReceipt | bool | None = None, return_future: bool = False) -> Future[QQMessageReceipt] | None:
         """Reply passively to a received QQ command using its original message association.
         
         :param source: Original QQ command source from this runtime. Its received message supplies the passive msg_id; the source's preferred language is used.
         :param message: Plain or QQ rich text, including delayed translations evaluated before submission.
-        :param refer_msg: Optional received message or receipt from the same conversation, using its reference index. This is a quoted reference, not a passive msg_id or event_id.
+        :param refer_msg: True quotes the source message; False or None omits quoting. Otherwise provide a same-conversation received message or receipt with a reference index.
         :param return_future: Whether to return the submitted concurrent future; False hides the future without waiting.
         :return: A concurrent future resolving to the sent-message receipt when requested, otherwise None.
         """
