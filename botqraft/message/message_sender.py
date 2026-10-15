@@ -51,6 +51,8 @@ class MessageSender:
         self._expiry_timer = None
         self._timer_generation = 0
         self._closed = False
+        self._time_warning_generation = 0
+
 
     def _arm_expiry(self: Self) -> None:
         if not self._closed and self._expiry_timer is None and self._expirations:
@@ -140,7 +142,7 @@ class MessageSender:
                 if parsed.tzinfo is None or parsed.utcoffset() is None:
                     raise ValueError
                 value = parsed.timestamp()
-            if not math.isfinite(value) or value <= 0 or value > time.time() + 5:
+            if not math.isfinite(value) or value <= 0:
                 raise ValueError
             return value
         except (ValueError, TypeError, OverflowError, OSError):
@@ -174,8 +176,22 @@ class MessageSender:
         except ValueError:
             event._passive_deadline = float('-inf')
             return
+        received_wall = time.time()
+        offset = platform_time - received_wall
+        status = 'error' if offset > 15 else 'warning' if offset > 5 else 'normal'
+        with self._lock:
+            generation = self.runtime.api_client.token_provider.refresh_generation
+            warn = status == 'warning' and generation > self._time_warning_generation
+            if warn:
+                self._time_warning_generation = generation
+        if warn:
+            self.runtime.logger.warning('Platform time ahead by %.1fs; check system clock.', offset)
+        event._timestamp_offset = offset
+        if status == 'error':
+            event._passive_deadline = float('-inf')
+            return
         deadline = min(getattr(event, 'received_at', now) + self.PASSIVE_RETENTION,
-                       now + platform_time + self.PASSIVE_RETENTION - time.time())
+                       now + self.PASSIVE_RETENTION - max(0, -offset))
         with self._lock:
             self._cleanup(now)
             if deadline <= now:
@@ -199,7 +215,8 @@ class MessageSender:
         expected = context.raw_payload.get('id') if field == 'event_id' else context.raw_payload['d'].get('id')
         if expected != association:
             raise ValueError('passive id does not match the original incoming event')
-        self._platform_time(context)
+        if getattr(context, '_timestamp_offset', 0) > 15:
+            raise ValueError('platform timestamp is more than 15 seconds ahead of local receive time')
         key = (scene, conversation, field, association)
         now = time.monotonic()
         with self._lock:

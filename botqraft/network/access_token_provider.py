@@ -29,6 +29,7 @@ class AccessTokenProvider:
         self._timer = None
         self._closed = False
         self._secrets = set()
+        self.refresh_generation = 0
 
     @property
     def secrets(self: Self) -> tuple[str, ...]:
@@ -95,6 +96,7 @@ class AccessTokenProvider:
             self._timer.cancel()
         self._timer = asyncio.get_running_loop().call_later(max(1, expires - 60), self._scheduled_refresh)
         self.runtime.logger.info('QQ access token refreshed (expires in %.2f seconds)', expires)
+        self.refresh_generation += 1
         return token
 
     def _scheduled_refresh(self: Self) -> None:
