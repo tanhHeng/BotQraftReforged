@@ -6,12 +6,12 @@
 
 ## 准备翻译文件
 
-目录和压缩插件在根目录 `lang/` 放置 `.json`、`.yml` 或 `.yaml` 文件。目录与 Python 包并列：
+目录和压缩插件在根目录 `lang/` 放置 `.json`、`.yml` 或 `.yaml` 文件。目录与 Python 包并列。下面的插件 ID 是 `greet`，所以源码包目录也叫 `greet`：
 
 ```text
 greet/
 ├── botqraft.plugin.json
-├── greet_plugin/
+├── greet/
 │   └── __init__.py
 └── lang/
     ├── en_us.yml
