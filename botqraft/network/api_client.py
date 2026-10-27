@@ -347,9 +347,12 @@ class ApiClient:
                 return 'invalid upload block_size'
             if len(parts) != -(-size // block_size):
                 return 'upload parts do not cover the file'
-        for expected, part in enumerate(sorted(parts, key=lambda part: part['index'])):
-            if part['index'] != expected:
-                return 'upload parts are not indexed contiguously from 0'
+        # Docs say parts start at 0, but the live platform starts at 1; accept either contiguous run.
+        ordered = sorted(parts, key=lambda part: part['index'])
+        first = ordered[0]['index'] if ordered else 0
+        for position, part in enumerate(ordered):
+            if first not in (0, 1) or part['index'] != first + position:
+                return 'upload parts are not indexed contiguously from 0 or 1'
             if not isinstance(part.get('presigned_url'), str) or not part['presigned_url'].startswith(('http://', 'https://')):
                 return 'invalid upload part URL'
         config = data.get('upload_config', {})

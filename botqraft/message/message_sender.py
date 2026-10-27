@@ -332,8 +332,9 @@ class MessageSender:
             retry_delay = config.get('retry_delay', 1)
             size = digest['size']
             block_size = int(plan['block_size']) if parts else 0
-            for part in parts:
-                offset = part['index'] * block_size
+            for position, part in enumerate(parts):
+                # Byte offsets follow plan order; part['index'] is only echoed back to the platform.
+                offset = position * block_size
                 chunk, chunk_md5 = await asyncio.to_thread(reader.read_part, offset, min(block_size, size - offset))
                 url = part['presigned_url']
                 await self._retry_upload_step(lambda timeout: api.upload_part(url, chunk, timeout), retry_timeout, retry_delay)
