@@ -26,7 +26,7 @@ python -m pip install -r 插件目录/requirements.txt
 
 ## 试试 Echo 插件
 
-仓库中提供了一个简单的 [Echo 示例](https://github.com/BotQraftReforged/BotQraftReforged/blob/main/example_plugins/echo.py)。它会复述你发送的文本，很适合检查插件是否正常工作。
+仓库中提供了一个简单的 [Echo 示例](https://github.com/BotQraftReforged/BotQraftReforged/blob/main/example_plugins/echo.py)。它会复述你发送的文本和图片，很适合检查插件是否正常工作。
 
 将仓库中的 `example_plugins/echo.py` 复制到运行实例的 `plugins/echo.py`。完成后，目录大致是这样的：
 
@@ -62,6 +62,15 @@ botqraft start
 ```
 
 也可以直接在与机器人的私聊中发送这条命令。收到 `Hello world` 的回复，就说明插件已经工作了。
+
+Echo 也能复述图片：
+
+| 发送                    | 机器人回复                                  |
+| ----------------------- | ------------------------------------------- |
+| `/echo` 并附带图片      | 把图片发回来。                              |
+| `/echo 你好` 并附带图片 | 先回复文字 `你好 [image]`，再单独发回图片。 |
+
+`[image]` 只是纯文字占位，标出原消息里有一张图片。BotQraft 的媒体消息不附带文字，所以图片会作为单独的消息发出。发送图片需要机器人账号具有富媒体消息权限。
 
 插件命令请在 QQ 中测试。运维控制台用于执行 `/botqraft` 管理命令。
 
