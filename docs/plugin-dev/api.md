@@ -53,7 +53,7 @@ QQ 消息、翻译与键盘。用法见[Markdown、文本交互与键盘](markdo
 | 分类       | 公开对象                                                                                                                                |
 | ---------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | 服务接口   | `QQServerInterface`、`QQPluginServerInterface`                                                                                          |
-| 身份与场景 | `User`、`MentionedUser`、`Group`、`Scene`、`MemberRole`                                                                                 |
+| 身份与场景 | `User`、`MentionedUser`、`Group`、`C2C`、`Scene`、`MemberRole`                                                                          |
 | 收件数据   | `QQMessageReceivedData`、`MessageScene`、`MessageAttachment`、`ARKData`、`MsgElement`                                                   |
 | 消息枚举   | `MessageType`、`MessageSceneSource`、`AttachmentContentType`、`ARKType`                                                                 |
 | 发送回执   | `QQMessageReceipt`、`QQMessageReceiptData`、`MessageExtInfo`                                                                            |

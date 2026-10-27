@@ -20,8 +20,8 @@ from botqraft.event.qq_event import QQEvent
 from botqraft.event.qq_interaction import QQInteraction
 from botqraft.message.message_received import QQMessageReceived
 from botqraft.message.message_receipt import QQMessageReceipt
-from botqraft.message.user import Group, User
-from botqraft.message.qtext.text import QTextBase, QText, QMarkdown
+from botqraft.message.user import C2C, Group
+from botqraft.message.qtext.text import QTextBase, QText
 from botqraft.network.exception import NetworkError, NotReadyError, ResultUnknownError
 from botqraft.utils.exception import PassiveReplyExpiredError
 
@@ -97,9 +97,9 @@ class MessageSender:
         return value
 
     @staticmethod
-    def _route(target: User | Group) -> tuple[str, str]:
-        if not isinstance(target, (User, Group)):
-            raise TypeError('target must be User or Group')
+    def _route(target: Group | C2C) -> tuple[str, str]:
+        if not isinstance(target, (Group, C2C)):
+            raise TypeError('target must be Group or C2C')
         scene, conversation = target.route()
         scene = getattr(scene, 'value', scene)
         if scene not in ('group', 'c2c'):
@@ -257,7 +257,7 @@ class MessageSender:
             raise ValueError('reference belongs to a different conversation')
         return {'message_id': self._string(index, 'reference index')}
 
-    def _content(self: Self, message: str | QTextBase, target: User | Group, mention: bool) -> dict[str, Any]:
+    def _content(self: Self, message: str | QTextBase) -> dict[str, Any]:
         if not isinstance(message, (str, QTextBase)):
             raise TypeError('message must be str or QTextBase')
         evaluated = self.runtime.translation_manager.evaluate(message)
@@ -267,40 +267,20 @@ class MessageSender:
         payload = deepcopy(text.to_payload())
         if not isinstance(payload, dict):
             raise TypeError('message encoder must return a dict')
-        if mention:
-            if not isinstance(target, User):
-                raise TypeError('mention target must be User')
-            scene, _ = self._route(target)
-            if scene == 'group':
-                identity = self._string(target.member_openid, 'member_openid for mention')
-                if any(char in identity for char in '<>\r\n"&'):
-                    raise ValueError('invalid mention identity')
-                if isinstance(text, QText):
-                    payload['content'] = f'<qqbot-at-user id="{identity}" /> ' + self._string(payload.get('content'), 'content')
-                elif isinstance(text, QMarkdown):
-                    markdown = payload.get('markdown')
-                    if not isinstance(markdown, dict):
-                        raise ValueError('invalid Markdown payload')
-                    markdown['content'] = f'<qqbot-at-user id="{identity}" /> ' + self._string(markdown.get('content'), 'markdown content')
-                else:
-                    raise TypeError('this content does not support a group mention')
         return payload
 
-    def send(self: Self, target: User | Group, message: str | QTextBase, *, refer_msg: QQMessageReceived | QQMessageReceipt | None = None, msg_id: str | None = None, event_id: str | None = None, passive_context: QQEvent | None = None, mention: bool = False) -> Future[QQMessageReceipt]:
+    def send(self: Self, target: Group | C2C, message: str | QTextBase, *, refer_msg: QQMessageReceived | QQMessageReceipt | None = None, msg_id: str | None = None, event_id: str | None = None, passive_context: QQEvent | None = None) -> Future[QQMessageReceipt]:
         """Validate routing and content synchronously, snapshot the payload, then submit the send operation.
         
-        :param target: User or group identifying a supported group or c2c conversation.
+        :param target: Group or C2C conversation target.
         :param message: Literal or typed QQ text. Existing delayed translation objects are evaluated before payload snapshotting.
         :param refer_msg: Optional received message or receipt reference from the same conversation.
         :param msg_id: Optional original message ID for a passive reply; mutually exclusive with event_id.
         :param event_id: Optional original GROUP_ADD_ROBOT or GROUP_MSG_RECEIVE event ID for a passive reply.
         :param passive_context: Original registered incoming event required when a passive association ID is supplied.
-        :param mention: Whether to prepend a mention for a User target; only supported group text formats receive a mention.
         :return: A future yielding the successful receipt or the network operation exception.
         """
         scene, conversation = self._route(target)
-        if not isinstance(mention, bool):
-            raise TypeError('mention must be bool')
         if msg_id is not None and event_id is not None:
             raise ValueError('msg_id and event_id are mutually exclusive')
         if msg_id is not None:
@@ -311,7 +291,7 @@ class MessageSender:
                 raise ValueError('event passive sending only supports GROUP_ADD_ROBOT/GROUP_MSG_RECEIVE')
         if passive_context is not None and msg_id is None and event_id is None:
             raise ValueError('passive context requires msg_id or event_id')
-        payload = self._content(message, target, mention)
+        payload = self._content(message)
         reference = self._reference(refer_msg, scene, conversation)
         if reference is not None:
             payload['message_reference'] = reference
@@ -348,7 +328,9 @@ class MessageSender:
             refer_msg = origin
         elif refer_msg is False:
             refer_msg = None
-        return self.send(origin.original_user, message, refer_msg=refer_msg, msg_id=msg_id, passive_context=origin)
+        scene, conversation = self._incoming_route(origin)
+        target = Group(conversation) if scene == 'group' else C2C(conversation)
+        return self.send(target, message, refer_msg=refer_msg, msg_id=msg_id, passive_context=origin)
 
     def reply_event(self: Self, event: QQEvent, message: str | QTextBase, *, refer_msg: QQMessageReceived | QQMessageReceipt | None = None) -> Future[QQMessageReceipt]:
         """Submit a passive group reply associated with an original supported relationship event.
@@ -386,10 +368,10 @@ class MessageSender:
         return self.runtime.network_loop.submit(self.runtime.api_client.delete_message(scene, conversation, id),
                                                 operation=f'delete {scene} message')
 
-    def delete_message_with_id(self: Self, target: User | Group, id: str) -> Future[None]:
+    def delete_message_with_id(self: Self, target: Group | C2C, id: str) -> Future[None]:
         """Validate a target and explicit message ID, then submit deletion.
         
-        :param target: User or group identifying the conversation containing the message.
+        :param target: Group or C2C conversation containing the message.
         :param id: Non-empty official message ID to delete.
         :return: A future completed with None on successful deletion or with the operation exception.
         """

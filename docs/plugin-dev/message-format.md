@@ -34,7 +34,7 @@ def on_message(server: QQPluginServerInterface, event: QQMessageReceived):
 
 `message_data.author` 是 `User` 类型。`message_data.mentions` 是 `MentionedUser` 类型，它继承 `User`。两者都从 `botqraft.api.types` 导入。
 
-记忆方法很简单：找会话，用对应的 OpenID；认用户，用 `User.id`。被动回复沿用收到的来源，主动发送则使用平台提供的真实目标。
+记忆方法很简单：找会话，用对应的 OpenID；认用户，用 `User.id`。被动回复沿用收到的来源；主动发送使用 `Group` 或 `C2C` 目标，最常用的是 `source.target`。
 
 | 字段                   | 用途                                                                |
 | ---------------------- | ------------------------------------------------------------------- |

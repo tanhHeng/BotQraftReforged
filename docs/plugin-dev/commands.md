@@ -25,16 +25,17 @@ def echo(source: QQCommandSource, context: CommandContext) -> None:
 
 `QQCommandSource` 的常用成员如下：
 
-| 成员                    | 用途                                 |
-| ----------------------- | ------------------------------------ |
-| `user`                  | 查看发起命令的用户。                 |
-| `scene`                 | 查看当前场景：`group` 或 `c2c`。     |
-| `conversation`          | 查看当前会话地址。                   |
-| `msg_id`                | 查看原始入站消息 ID。                |
-| `message_data`          | 读取消息正文等解析结果。             |
-| `message_received`      | 取得原始收到的消息事件。             |
-| `get_server()`          | 取得当前实例的 `QQServerInterface`。 |
-| `has_permission(level)` | 检查当前有效权限。                   |
+| 成员                    | 用途                                                         |
+| ----------------------- | ------------------------------------------------------------ |
+| `user`                  | 查看发起命令的用户。                                         |
+| `scene`                 | 查看当前场景：`group` 或 `c2c`。                             |
+| `conversation`          | 查看当前会话地址。                                           |
+| `target`                | 取得当前会话的 `Group` 或 `C2C` 目标，可传给 `server.send`。 |
+| `msg_id`                | 查看原始入站消息 ID。                                        |
+| `message_data`          | 读取消息正文等解析结果。                                     |
+| `message_received`      | 取得原始收到的消息事件。                                     |
+| `get_server()`          | 取得当前实例的 `QQServerInterface`。                         |
+| `has_permission(level)` | 检查当前有效权限。                                           |
 
 插件的 `on_load` 收到绑定插件的 `QQPluginServerInterface`。用这个接口登记命令、帮助和其他插件资源。回复细节见[响应事件与回复消息](reply.md)，权限规则见[权限](permissions.md)。
 

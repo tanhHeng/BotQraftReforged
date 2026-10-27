@@ -1,52 +1,65 @@
 # 主动发送、引用与撤回
 
-读完这一页，你能用真实用户或群发消息，给消息加上引用，并撤回已经发出的消息。
+读完这一页，你能主动向群聊或 C2C 私聊发消息，给消息加上引用，并撤回已经发出的消息。
 
 主动发送和被动回复是两条不同的路。被动回复跟在收到的消息后面，用它的消息 ID 回复。主动发送由你指定一个目标，随时发起。
 
 ## 主动发送
 
-主动发送使用真实的 `User` 或 `Group` 目标。目标里的 OpenID 必须来自平台推送的数据，不能自己编。下面这个函数向指定群主动发送：
+主动发送只有一个接口：
 
 ```python
-from botqraft.api.types import Group, QQPluginServerInterface
-
-def notify_group(server: QQPluginServerInterface, actual_group_openid: str):
-    target = Group(group_openid=actual_group_openid)
-    return server.say(target, 'Task completed', return_future=True)
+server.send(target, message, refer_msg=None, return_future=False)
 ```
 
-从插件事件或后台任务里调用它，并传入实际的群 OpenID。想拿到平台的确认结果，就用返回的 Future，见[等待平台结果](reply.md#等待平台结果)。主动消息受 QQ 账号和平台规则约束。实际使用时，优先从真实事件或任务里取得目标，并把发送失败当作正常结果来处理。
+`target` 说明消息发到哪个会话，只能是下面两种之一，都从 `botqraft.api.types` 导入：
 
-三种发送方式：
+| 目标                  | 发到哪里              |
+| --------------------- | --------------------- |
+| `Group(group_openid)` | 指定的群聊。          |
+| `C2C(user_openid)`    | 指定用户的 C2C 私聊。 |
 
-| 接口                                                    | 目标与行为                                                                    |
-| ------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| `server.say(target, message, return_future=True)`       | 向指定 `User` 或 `Group` 主动发送。                                           |
-| `server.tell(user, message, return_future=True)`        | 向 `User` 所在会话主动发送；群聊中附带对该用户的 AT。                         |
-| `server.broadcast(target, message, return_future=True)` | 向指定 `User` 或 `Group` 主动发送，并记录提交日志。目标范围由调用者明确提供。 |
+C2C 就是机器人和用户之间的一对一私聊。目标里的 OpenID 必须来自平台推送的数据，不能自己编。
 
-每次调用 `broadcast` 只使用传入的一个目标。要发给多个会话时，你列出所有目标，逐个调用。
+最常见的情况，是发回命令所在的会话。`source.target` 会根据收到的消息，直接给出对应的 `Group` 或 `C2C`，不用自己判断场景：
+
+```python
+from botqraft.api.command import QQCommandSource
+from botqraft.api.types import QQPluginServerInterface
+
+def notify_later(server: QQPluginServerInterface, source: QQCommandSource):
+    return server.send(source.target, 'Task completed', return_future=True)
+```
+
+目标只包含会话地址，可以先保存下来，等后台任务完成后再发送。想拿到平台的确认结果，就用返回的 Future，见[等待平台结果](reply.md#等待平台结果)。主动消息受 QQ 账号和平台规则约束，请把发送失败当作正常结果来处理。
 
 `message` 支持 `str`、`QText`、`QMarkdown` 和延迟翻译文本。富文本与翻译分别见 [Markdown、文本交互与键盘](markdown.md)和[翻译与用户语言](translation.md)。
 
-## 选择目标与会话地址
+## 目标、用户与 AT 是三件事
 
-目标类型从 `botqraft.api.types` 导入。这三个字段名字很像，但各自负责不同位置：`user_openid` 找 C2C 会话，`group_openid` 找群，`member_openid` 找群里的某位成员。先确定你要发给谁，再选对应字段。
+`send` 不接受 `User`。用户对象回答"是谁"，发送目标回答"发到哪里"，两者分开写，读代码时就不用猜消息会进群还是进私聊：
 
-- 群目标使用 `Group(group_openid=actual_group_openid)`。
-- C2C 用户目标使用平台提供的 `User`，会话地址取 `user_openid`，场景为 `c2c`。只提供有效的 `user_openid` 时，`User` 也能识别 C2C 会话。
-- 群用户目标的场景为 `group`，会话地址取 `group_openid`。`tell` 另外使用 `member_openid`，用来在群里 AT 该用户。
+- 发到群：使用 `Group`，或在群消息的命令里用 `source.target`。
+- 发到私聊：使用 `C2C`，或在 C2C 消息的命令里用 `source.target`。群消息里的用户不提供私聊地址，不能由此发起私聊。
+- 在群里 AT 某人：AT 属于消息内容，用 `QTextAt` 拼进消息，见[Markdown、文本交互与键盘](markdown.md)。
 
-`User.id` 用于真实身份、权限和偏好。按用途分别传入 `user_openid`、`group_openid` 和 `member_openid`，见[区分用户身份和会话地址](message-format.md#区分用户身份和会话地址)。收到的 `source.user` 可以提供真实的用户目标，但 `say`、`tell`、`broadcast` 仍然走主动发送规则。
+```python
+from botqraft.api.command import QQCommandSource
+from botqraft.api.types import QQPluginServerInterface
+from botqraft.api.qtext import QTextAt
 
-群内 `tell` 需要有效的 `member_openid`，消息内容使用 `QText` 或 `QMarkdown`。普通字符串按 `QText` 处理。提交时会检查 AT 字段与内容类型。
+def remind_member(server: QQPluginServerInterface, source: QQCommandSource):
+    message = QTextAt(source.user) + ' Task completed'
+    return server.send(source.target, message, return_future=True)
+```
 
-这些发送接口只在群聊和 C2C 中可用，请提供对应的真实目标。
+`User.id` 用于真实身份、权限和偏好，见[区分用户身份和会话地址](message-format.md#区分用户身份和会话地址)。
+
+要发给多个会话时，列出所有目标，逐个调用 `send`，并分别处理每个 Future 的结果。
 
 ## 引用消息
 
-引用展示用显式的 `refer_msg`，它和被动回复的资格是两回事。给 `say`、`tell`、`broadcast`、`reply` 或 `reply_event` 传入同会话的 `QQMessageReceived` 或 `QQMessageReceipt`，就能带上引用：
+引用展示用显式的 `refer_msg`，它和被动回复的资格是两回事。给 `send`、`reply` 或 `reply_event` 传入同会话的 `QQMessageReceived` 或 `QQMessageReceipt`，就能带上引用：
 
 ```python
 from botqraft.api.command import QQCommandSource
@@ -91,7 +104,7 @@ def remove_received_message(server: QQPluginServerInterface, event: QQMessageRec
 | 接口                                                             | 用法                                                                                            |
 | ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
 | `server.delete_message(received_or_receipt, return_future=True)` | 撤回 `QQMessageReceived` 或 `QQMessageReceipt` 指定的消息。会话地址和消息 ID 都从原始数据读取。 |
-| `server.delete_message_with_id(target, id, return_future=True)`  | 传入明确的 `User` / `Group` 目标和官方消息 ID，撤回该会话中的消息。                             |
+| `server.delete_message_with_id(target, id, return_future=True)`  | 传入明确的 `Group` / `C2C` 目标和官方消息 ID，撤回该会话中的消息。                              |
 
 `delete_message_with_id` 的 `id` 用官方消息 ID。引用索引只用于引用展示。能不能真的撤回、谁有权撤回，由平台决定，撤回收到的消息也一样。
 

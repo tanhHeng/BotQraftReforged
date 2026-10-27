@@ -84,3 +84,25 @@ class Group(QQSerializable):
         if not isinstance(self.group_openid, str) or not self.group_openid:
             raise ValueError('Group requires a non-empty group_openid')
         return 'group', self.group_openid
+
+
+class C2C(QQSerializable):
+    """A C2C (private chat) target identified by its official conversation OpenID."""
+    user_openid: Optional[str] = None
+
+    def __init__(self: Self, user_openid: str | None = None) -> None:
+        """Create a C2C target using its conversation OpenID.
+        
+        :param user_openid: The optional official C2C user OpenID; route requires it to be non-empty.
+        :return: The method returns no value.
+        """
+        super().__init__(user_openid=user_openid)
+
+    def route(self: Self) -> tuple[str, str]:
+        """Require a usable official C2C conversation route.
+        
+        :return: The c2c scene and non-empty user OpenID.
+        """
+        if not isinstance(self.user_openid, str) or not self.user_openid:
+            raise ValueError('C2C requires a non-empty user_openid')
+        return 'c2c', self.user_openid

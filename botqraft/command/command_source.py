@@ -8,6 +8,7 @@ from mcdreforged.preference.preference_manager import PreferenceItem
 from botqraft.message.message_received import QQMessageReceived
 from botqraft.message.message_receipt import QQMessageReceipt
 from botqraft.message.qtext.text import QTextBase
+from botqraft.message.user import C2C, Group
 
 if TYPE_CHECKING:
     from botqraft.plugin.si.server_interface import QQServerInterface
@@ -43,6 +44,14 @@ class QQCommandSource(CommandSource):
         self.conversation = conversation
         self.msg_id = msg_id
         self.message_data = message.message_data
+
+    @property
+    def target(self: Self) -> Group | C2C:
+        """Get a new active-send target for this source's conversation.
+        
+        :return: Group for group messages, or C2C for private messages.
+        """
+        return Group(self.conversation) if self.scene == 'group' else C2C(self.conversation)
 
     def get_server(self: Self) -> QQServerInterface:
         """Get the basic QQ interface owning this source.

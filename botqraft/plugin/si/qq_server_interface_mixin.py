@@ -21,7 +21,7 @@ from botqraft.logging.logger import Logger
 from botqraft.message.message_received import QQMessageReceived
 from botqraft.message.message_receipt import QQMessageReceipt
 from botqraft.message.qtext.text import QMarkdown, QText, QTextBase
-from botqraft.message.user import Group, Scene, User
+from botqraft.message.user import C2C, Group, Scene, User
 from botqraft.network.gateway_client import GatewayState
 from botqraft.panel.panel_synchronizer import PanelStatus
 from botqraft.plugin.meta.metadata import Metadata
@@ -219,44 +219,16 @@ class ServerInterfaceMixin:
         path.mkdir(parents=True, exist_ok=True)
         return str(path)
 
-    def tell(self: Self, user: User, message: str | QTextBase, *, refer_msg: QQMessageReceived | QQMessageReceipt | None = None, return_future: bool = False) -> Future[QQMessageReceipt] | None:
-        """Send a message to a QQ user, mentioning them in a group.
+    def send(self: Self, target: Group | C2C, message: str | QTextBase, *, refer_msg: QQMessageReceived | QQMessageReceipt | None = None, return_future: bool = False) -> Future[QQMessageReceipt] | None:
+        """Send an active message to a group or C2C conversation.
         
-        :param user: User to send to; group delivery mentions this user.
-        :param message: Plain or QQ rich text, including delayed translations evaluated before submission.
-        :param refer_msg: Optional received message or receipt from the same conversation, using its reference index. This is a quoted reference, not a passive msg_id or event_id.
-        :param return_future: Whether to return the submitted concurrent future; False hides the future without waiting.
-        :return: A concurrent future resolving to the sent-message receipt when requested, otherwise None.
-        """
-        from botqraft.message.user import User
-        if not isinstance(user, User):
-            raise TypeError('tell requires User')
-        future = self._runtime.sender.send(user, message, refer_msg=refer_msg, mention=True)
-        return future if return_future else None
-
-    def say(self: Self, target: User | Group, message: str | QTextBase, *, refer_msg: QQMessageReceived | QQMessageReceipt | None = None, return_future: bool = False) -> Future[QQMessageReceipt] | None:
-        """Send an active message to a QQ user or group.
-        
-        :param target: User or group that determines the destination route.
+        :param target: Group or C2C conversation, such as source.target. Mentions belong in the message, for example QTextAt.
         :param message: Plain or QQ rich text, including delayed translations evaluated before submission.
         :param refer_msg: Optional received message or receipt from the same conversation, using its reference index. This is a quoted reference, not a passive msg_id or event_id.
         :param return_future: Whether to return the submitted concurrent future; False hides the future without waiting.
         :return: A concurrent future resolving to the sent-message receipt when requested, otherwise None.
         """
         future = self._runtime.sender.send(target, message, refer_msg=refer_msg)
-        return future if return_future else None
-
-    def broadcast(self: Self, target: User | Group, message: str | QTextBase, *, refer_msg: QQMessageReceived | QQMessageReceipt | None = None, return_future: bool = False) -> Future[QQMessageReceipt] | None:
-        """Send an active message and log its submission.
-        
-        :param target: User or group that determines the destination route.
-        :param message: Plain or QQ rich text, including delayed translations evaluated before submission.
-        :param refer_msg: Optional received message or receipt from the same conversation, using its reference index. This is a quoted reference, not a passive msg_id or event_id.
-        :param return_future: Whether to return the submitted concurrent future; False hides the future without waiting.
-        :return: A concurrent future resolving to the sent-message receipt when requested, otherwise None.
-        """
-        future = self._runtime.sender.send(target, message, refer_msg=refer_msg)
-        self.logger.info('broadcast submitted: %s', message if isinstance(message, str) else type(message).__name__)
         return future if return_future else None
 
     def reply(self: Self, source: QQCommandSource, message: str | QTextBase, *, refer_msg: QQMessageReceived | QQMessageReceipt | bool | None = None, return_future: bool = False) -> Future[QQMessageReceipt] | None:
@@ -297,10 +269,10 @@ class ServerInterfaceMixin:
         future = self._runtime.sender.delete_message(message)
         return future if return_future else None
 
-    def delete_message_with_id(self: Self, target: User | Group, id: str, *, return_future: bool = False) -> Future[None] | None:
+    def delete_message_with_id(self: Self, target: Group | C2C, id: str, *, return_future: bool = False) -> Future[None] | None:
         """Delete a QQ message by route and message ID.
         
-        :param target: User or group identifying the conversation.
+        :param target: Group or C2C conversation containing the message.
         :param id: Message ID to delete, not a quoted-reference index.
         :param return_future: Whether to return the submitted concurrent future; False hides the future without waiting.
         :return: A concurrent future resolving to None when requested, otherwise None.
