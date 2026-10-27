@@ -97,7 +97,7 @@ message = QMarkdown('**请选择：** ').append(
 
 ### 提及用户
 
-`QTextAt(target)` 接收 `User` 或明确的提及 ID 字符串。传入 `User` 时，提及地址取 `member_openid`，真实身份取 `User.id`，昵称用于展示。
+`QTextAt(target)` 接收 `User` 或明确的提及 ID 字符串。传入 `User` 时只读取它的 `member_openid` 作为提及地址；`User.id` 和昵称不会参与生成提及，也不会写进消息。群消息里的 `source.user` 带有 `member_openid`，可以直接传入。
 
 请使用非空、可用的 `member_openid`。缺少该字段或目标类型错误会抛出 `TypeError`。空 ID 或包含协议分隔符的 ID 会抛出 `ValueError`。当前支持群聊文本与 Markdown 中的单用户提及，@全体成员不在当前支持范围内。
 
