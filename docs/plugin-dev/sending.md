@@ -1,6 +1,6 @@
 # 主动发送、引用与撤回
 
-读完这一页，你能主动向群聊或 C2C 私聊发消息，给消息加上引用，并撤回已经发出的消息。
+读完这一页，你能主动向群聊或 C2C 私聊发消息，发送图片、视频、语音和文件，给消息加上引用，并撤回已经发出的消息。
 
 主动发送和被动回复是两条不同的路。被动回复跟在收到的消息后面，用它的消息 ID 回复。主动发送由你指定一个目标，随时发起。
 
@@ -33,7 +33,7 @@ def notify_later(server: QQPluginServerInterface, source: QQCommandSource):
 
 目标只包含会话地址，可以先保存下来，等后台任务完成后再发送。想拿到平台的确认结果，就用返回的 Future，见[等待平台结果](reply.md#等待平台结果)。主动消息受 QQ 账号和平台规则约束，请把发送失败当作正常结果来处理。
 
-`message` 支持 `str`、`QText`、`QMarkdown` 和延迟翻译文本。富文本与翻译分别见 [Markdown、文本交互与键盘](markdown.md)和[翻译与用户语言](translation.md)。
+`message` 支持 `str`、`QText`、`QMarkdown`、延迟翻译文本，以及下文的[媒体消息](#发送图片视频语音和文件)。富文本与翻译分别见 [Markdown、文本交互与键盘](markdown.md)和[翻译与用户语言](translation.md)。
 
 ## 目标、用户与 AT 是三件事
 
@@ -56,6 +56,40 @@ def remind_member(server: QQPluginServerInterface, source: QQCommandSource):
 `User.id` 用于真实身份、权限和偏好，见[区分用户身份和会话地址](message-format.md#区分用户身份和会话地址)。
 
 要发给多个会话时，列出所有目标，逐个调用 `send`，并分别处理每个 Future 的结果。
+
+## 发送图片、视频、语音和文件
+
+媒体消息用 `QImage`、`QVideo`、`QVoice`、`QFile` 表示，从 `botqraft.api.qtext` 导入。它们和文字一样交给 `send` 或 `reply`，上传由框架完成：
+
+```python
+from pathlib import Path
+
+from botqraft.api.command import QQCommandSource
+from botqraft.api.qtext import QImage
+
+def send_chart(source: QQCommandSource):
+    return source.reply(QImage(Path('chart.png')), return_future=True)
+```
+
+媒体的来源有四种写法：
+
+| 来源               | 写法                                  | 说明                                                                   |
+| ------------------ | ------------------------------------- | ---------------------------------------------------------------------- |
+| 公网 URL           | `QImage('https://example.com/a.png')` | 平台自己下载。字符串只接受 `http://` 或 `https://` 开头的地址。        |
+| 本地文件           | `QImage(Path('a.png'))`               | 本地文件必须用 `pathlib.Path`，普通字符串会被当作错误的 URL 拒绝。     |
+| 内存数据           | `QImage(data, name='a.png')`          | `bytes` 会在构造时复制一份，之后改动原数据不影响发送。                 |
+| 可 seek 的二进制流 | `QFile(stream, name='report.pdf')`    | 从流的当前位置读到末尾。发送的 Future 完成前请保持流打开且不要改动它。 |
+
+内存数据和流必须提供 `name`，也就是对方看到的文件名；本地文件默认使用文件名。
+
+构造时就会检查来源：文件不存在、为空、超过 200 MiB，或者流不能 seek，都会立刻抛出异常。文件格式由平台判断，框架不做转换，例如语音需要你自己准备平台支持的格式。
+
+使用时有几点限制：
+
+- 一条媒体消息只有媒体本身，不能附带文字或键盘。`QText('说明') + QImage(...)` 会抛出 `TypeError`；需要说明文字时，单独再发一条。
+- 每次发送都会重新上传到目标会话。同一个 `QImage` 对象可以多次发送，但每次都会上传。
+- 上传需要时间。用 `reply` 回复时，如果上传结束时已经超过被动回复的有效期，框架不会再发出消息，Future 以 `PassiveReplyExpiredError` 结束。大文件建议改用 `send` 主动发送。
+- 上传失败、平台拒绝和网络错误都通过 Future 报告，处理方式与文字消息相同，见[处理发送结果](#处理发送结果)。
 
 ## 引用消息
 

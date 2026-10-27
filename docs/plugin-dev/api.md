@@ -40,6 +40,7 @@ from botqraft.api.types import QQPluginServerInterface
 QQ 消息、翻译与键盘。用法见[Markdown、文本交互与键盘](markdown.md)和[翻译与用户语言](translation.md)。
 
 - 文本：`QTextBase`、`QText`、`QMarkdown`、`QTextAt`、`QTextInput`。
+- 媒体：`QMediaBase`、`QImage`、`QVideo`、`QVoice`、`QFile`，见[发送图片、视频、语音和文件](sending.md#发送图片视频语音和文件)。
 - 翻译：`QQTranslationText`、`tr`、`rtr`。
 - 键盘：`QKeyboardBase`、`QKeyboardTemplate`、`QKeyboardCustom`、`QKeyboardButton`。
 - 键盘字段：`QKeyboardRenderData`、`QKeyboardPermission`、`QKeyboardModal`。

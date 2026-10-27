@@ -1,6 +1,6 @@
 """Synchronous validation/snapshot boundary for typed QQ operations."""
 from concurrent.futures import Future
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Awaitable, Callable
 from typing_extensions import Self
 
 if TYPE_CHECKING:
@@ -21,6 +21,7 @@ from botqraft.event.qq_interaction import QQInteraction
 from botqraft.message.message_received import QQMessageReceived
 from botqraft.message.message_receipt import QQMessageReceipt
 from botqraft.message.user import C2C, Group
+from botqraft.message.media import QMediaBase
 from botqraft.message.qtext.text import QTextBase, QText
 from botqraft.network.exception import NetworkError, NotReadyError, ResultUnknownError
 from botqraft.utils.exception import PassiveReplyExpiredError
@@ -259,7 +260,7 @@ class MessageSender:
 
     def _content(self: Self, message: str | QTextBase) -> dict[str, Any]:
         if not isinstance(message, (str, QTextBase)):
-            raise TypeError('message must be str or QTextBase')
+            raise TypeError('message must be str, QTextBase or QMediaBase')
         evaluated = self.runtime.translation_manager.evaluate(message)
         text = QText(evaluated) if isinstance(evaluated, str) else evaluated
         if not isinstance(text, QTextBase):
@@ -269,11 +270,11 @@ class MessageSender:
             raise TypeError('message encoder must return a dict')
         return payload
 
-    def send(self: Self, target: Group | C2C, message: str | QTextBase, *, refer_msg: QQMessageReceived | QQMessageReceipt | None = None, msg_id: str | None = None, event_id: str | None = None, passive_context: QQEvent | None = None) -> Future[QQMessageReceipt]:
+    def send(self: Self, target: Group | C2C, message: str | QTextBase | QMediaBase, *, refer_msg: QQMessageReceived | QQMessageReceipt | None = None, msg_id: str | None = None, event_id: str | None = None, passive_context: QQEvent | None = None) -> Future[QQMessageReceipt]:
         """Validate routing and content synchronously, snapshot the payload, then submit the send operation.
         
         :param target: Group or C2C conversation target.
-        :param message: Literal or typed QQ text. Existing delayed translation objects are evaluated before payload snapshotting.
+        :param message: Literal or typed QQ text, or media uploaded to the target conversation before sending. Existing delayed translation objects are evaluated before payload snapshotting.
         :param refer_msg: Optional received message or receipt reference from the same conversation.
         :param msg_id: Optional original message ID for a passive reply; mutually exclusive with event_id.
         :param event_id: Optional original GROUP_ADD_ROBOT or GROUP_MSG_RECEIVE event ID for a passive reply.
@@ -291,29 +292,80 @@ class MessageSender:
                 raise ValueError('event passive sending only supports GROUP_ADD_ROBOT/GROUP_MSG_RECEIVE')
         if passive_context is not None and msg_id is None and event_id is None:
             raise ValueError('passive context requires msg_id or event_id')
-        payload = self._content(message)
+        media = message if isinstance(message, QMediaBase) else None
+        payload = {} if media is not None else self._content(message)
         reference = self._reference(refer_msg, scene, conversation)
         if reference is not None:
             payload['message_reference'] = reference
         self._ready()
+        deadline = None
         if msg_id is not None or event_id is not None:
             field, association = ('msg_id', msg_id) if msg_id is not None else ('event_id', event_id)
             sequence = self._passive_seq(scene, conversation, field, association, passive_context)
+            deadline = passive_context._passive_deadline
             payload[field] = association
             if msg_id is not None:
                 payload['msg_seq'] = sequence
 
         async def send_snapshot() -> QQMessageReceipt:
+            if media is not None:
+                payload['msg_type'] = 7
+                payload['media'] = {'file_info': await self._upload_media(scene, conversation, media)}
+                if deadline is not None and time.monotonic() >= deadline:
+                    raise PassiveReplyExpiredError('passive reply window ended during media upload')
             raw = await self.runtime.api_client.send_message(scene, conversation, payload)
             return QQMessageReceipt(raw, scene, conversation)
 
         return self.runtime.network_loop.submit(send_snapshot(), operation=f'send {scene} message')
 
-    def reply(self: Self, source: "QQCommandSource", message: str | QTextBase, *, refer_msg: QQMessageReceived | QQMessageReceipt | bool | None = None) -> Future[QQMessageReceipt]:
+    async def _upload_media(self: Self, scene: str, conversation: str, media: QMediaBase) -> str:
+        api = self.runtime.api_client
+        if media.url is not None:
+            return (await api.upload_media_url(scene, conversation, media.file_type, media.url, media.name))['file_info']
+        reader = media._open()
+        try:
+            digest = await asyncio.to_thread(reader.digest)
+            plan = await api.upload_prepare(scene, conversation, media.file_type, media.name, digest)
+            parts = sorted(plan.get('parts', []), key=lambda part: part['index'])
+            config = plan.get('upload_config', {})
+            retry_timeout = config.get('retry_timeout', 300)
+            retry_delay = config.get('retry_delay', 1)
+            size = digest['size']
+            block_size = int(plan['block_size']) if parts else 0
+            for part in parts:
+                offset = part['index'] * block_size
+                chunk, chunk_md5 = await asyncio.to_thread(reader.read_part, offset, min(block_size, size - offset))
+                url = part['presigned_url']
+                await self._retry_upload_step(lambda timeout: api.upload_part(url, chunk, timeout), retry_timeout, retry_delay)
+                await self._retry_upload_step(
+                    lambda timeout: api.upload_part_finish(scene, conversation, plan['upload_id'], part['index'], len(chunk), chunk_md5, timeout),
+                    retry_timeout, retry_delay)
+            return (await api.upload_media_merge(scene, conversation, media.file_type, plan['upload_id'], media.name))['file_info']
+        finally:
+            await asyncio.to_thread(reader.close)
+
+    async def _retry_upload_step(self: Self, step: Callable[[float], Awaitable[None]], retry_timeout: int, retry_delay: int) -> None:
+        # Only per-chunk steps are retried: repeating them cannot produce a duplicate message.
+        # Cancellation propagates from these steps, so it is never mistaken for a retryable failure.
+        if retry_timeout <= 0:
+            return await step(self.runtime.get_config().http.timeout)
+        deadline = time.monotonic() + retry_timeout
+        while True:
+            try:
+                return await step(deadline - time.monotonic())
+            except NetworkError as error:
+                retry = isinstance(error, ResultUnknownError) or error.retryable or error.err_code == 40093001
+                # A 1 s floor prevents a tight request loop and leaves every retry a usable time budget.
+                delay = max(retry_delay, 1, error.retry_after or 0)
+                if not retry or time.monotonic() + delay >= deadline:
+                    raise
+                await asyncio.sleep(delay)
+
+    def reply(self: Self, source: "QQCommandSource", message: str | QTextBase | QMediaBase, *, refer_msg: QQMessageReceived | QQMessageReceipt | bool | None = None) -> Future[QQMessageReceipt]:
         """Submit a passive reply using the command source original message and target.
         
         :param source: QQ command source with an original incoming message and non-empty message ID.
-        :param message: Literal or typed QQ text. Existing delayed translation objects are evaluated before payload snapshotting.
+        :param message: Literal or typed QQ text, or media uploaded before the passive reply is sent.
         :param refer_msg: True quotes the original message; False or None omits quoting, otherwise a same-conversation message or receipt.
         :return: A future yielding the successful receipt or the operation exception.
         """
@@ -332,11 +384,11 @@ class MessageSender:
         target = Group(conversation) if scene == 'group' else C2C(conversation)
         return self.send(target, message, refer_msg=refer_msg, msg_id=msg_id, passive_context=origin)
 
-    def reply_event(self: Self, event: QQEvent, message: str | QTextBase, *, refer_msg: QQMessageReceived | QQMessageReceipt | None = None) -> Future[QQMessageReceipt]:
+    def reply_event(self: Self, event: QQEvent, message: str | QTextBase | QMediaBase, *, refer_msg: QQMessageReceived | QQMessageReceipt | None = None) -> Future[QQMessageReceipt]:
         """Submit a passive group reply associated with an original supported relationship event.
         
         :param event: Original GROUP_ADD_ROBOT or GROUP_MSG_RECEIVE event with a valid event ID.
-        :param message: Literal or typed QQ text. Existing delayed translation objects are evaluated before payload snapshotting.
+        :param message: Literal or typed QQ text, or media uploaded before the passive reply is sent.
         :param refer_msg: Optional received message or receipt reference from the same conversation.
         :return: A future yielding the successful receipt or the operation exception.
         """

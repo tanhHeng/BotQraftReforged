@@ -20,6 +20,7 @@ from botqraft.event.qq_interaction import QQInteraction
 from botqraft.logging.logger import Logger
 from botqraft.message.message_received import QQMessageReceived
 from botqraft.message.message_receipt import QQMessageReceipt
+from botqraft.message.media import QMediaBase
 from botqraft.message.qtext.text import QMarkdown, QText, QTextBase
 from botqraft.message.user import C2C, Group, Scene, User
 from botqraft.network.gateway_client import GatewayState
@@ -219,11 +220,11 @@ class ServerInterfaceMixin:
         path.mkdir(parents=True, exist_ok=True)
         return str(path)
 
-    def send(self: Self, target: Group | C2C, message: str | QTextBase, *, refer_msg: QQMessageReceived | QQMessageReceipt | None = None, return_future: bool = False) -> Future[QQMessageReceipt] | None:
+    def send(self: Self, target: Group | C2C, message: str | QTextBase | QMediaBase, *, refer_msg: QQMessageReceived | QQMessageReceipt | None = None, return_future: bool = False) -> Future[QQMessageReceipt] | None:
         """Send an active message to a group or C2C conversation.
         
         :param target: Group or C2C conversation, such as source.target. Mentions belong in the message, for example QTextAt.
-        :param message: Plain or QQ rich text, including delayed translations evaluated before submission.
+        :param message: Plain or QQ rich text, including delayed translations evaluated before submission, or media uploaded to the target conversation first.
         :param refer_msg: Optional received message or receipt from the same conversation, using its reference index. This is a quoted reference, not a passive msg_id or event_id.
         :param return_future: Whether to return the submitted concurrent future; False hides the future without waiting.
         :return: A concurrent future resolving to the sent-message receipt when requested, otherwise None.
@@ -231,11 +232,11 @@ class ServerInterfaceMixin:
         future = self._runtime.sender.send(target, message, refer_msg=refer_msg)
         return future if return_future else None
 
-    def reply(self: Self, source: QQCommandSource, message: str | QTextBase, *, refer_msg: QQMessageReceived | QQMessageReceipt | bool | None = None, return_future: bool = False) -> Future[QQMessageReceipt] | None:
+    def reply(self: Self, source: QQCommandSource, message: str | QTextBase | QMediaBase, *, refer_msg: QQMessageReceived | QQMessageReceipt | bool | None = None, return_future: bool = False) -> Future[QQMessageReceipt] | None:
         """Reply passively to a received QQ command using its original message association.
         
         :param source: Original QQ command source from this runtime. Its received message supplies the passive msg_id; the source's preferred language is used.
-        :param message: Plain or QQ rich text, including delayed translations evaluated before submission.
+        :param message: Plain or QQ rich text, including delayed translations evaluated before submission, or media uploaded before the reply is sent.
         :param refer_msg: True quotes the source message; False or None omits quoting. Otherwise provide a same-conversation received message or receipt with a reference index.
         :param return_future: Whether to return the submitted concurrent future; False hides the future without waiting.
         :return: A concurrent future resolving to the sent-message receipt when requested, otherwise None.
@@ -247,11 +248,11 @@ class ServerInterfaceMixin:
             future = self._runtime.sender.reply(source, message, refer_msg=refer_msg)
         return future if return_future else None
 
-    def reply_event(self: Self, event: QQEvent, message: str | QTextBase, *, refer_msg: QQMessageReceived | QQMessageReceipt | None = None, return_future: bool = False) -> Future[QQMessageReceipt] | None:
+    def reply_event(self: Self, event: QQEvent, message: str | QTextBase | QMediaBase, *, refer_msg: QQMessageReceived | QQMessageReceipt | None = None, return_future: bool = False) -> Future[QQMessageReceipt] | None:
         """Reply passively to a supported QQ relationship event.
         
         :param event: Original GROUP_ADD_ROBOT or GROUP_MSG_RECEIVE event whose event_id supplies the passive association.
-        :param message: Plain or QQ rich text, including delayed translations evaluated before submission.
+        :param message: Plain or QQ rich text, including delayed translations evaluated before submission, or media uploaded before the reply is sent.
         :param refer_msg: Optional received message or receipt from the same conversation, using its reference index. This is a quoted reference, not a passive msg_id or event_id.
         :param return_future: Whether to return the submitted concurrent future; False hides the future without waiting.
         :return: A concurrent future resolving to the sent-message receipt when requested, otherwise None.

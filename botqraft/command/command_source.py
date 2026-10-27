@@ -7,6 +7,7 @@ from typing_extensions import Self
 from mcdreforged.preference.preference_manager import PreferenceItem
 from botqraft.message.message_received import QQMessageReceived
 from botqraft.message.message_receipt import QQMessageReceipt
+from botqraft.message.media import QMediaBase
 from botqraft.message.qtext.text import QTextBase
 from botqraft.message.user import C2C, Group
 
@@ -83,10 +84,10 @@ class QQCommandSource(CommandSource):
         with self._runtime.translation_manager.language_context(self.get_preference().language):
             yield
 
-    def reply(self: Self, message: str | QTextBase, *, refer_msg: QQMessageReceived | QQMessageReceipt | bool | None = None, return_future: bool = False) -> Future[QQMessageReceipt] | None:
+    def reply(self: Self, message: str | QTextBase | QMediaBase, *, refer_msg: QQMessageReceived | QQMessageReceipt | bool | None = None, return_future: bool = False) -> Future[QQMessageReceipt] | None:
         """Reply using the original received message's passive association.
         
-        :param message: Plain or QQ text, evaluated in this source's preferred language.
+        :param message: Plain or QQ text, evaluated in this source's preferred language, or media uploaded before the reply is sent.
         :param refer_msg: True quotes the triggering message; False or None omits quoting. A same-conversation message or receipt selects another reference.
         :param return_future: Whether to expose the concurrent future; False does not wait for delivery.
         :return: A future resolving to the sent receipt when requested, otherwise None.

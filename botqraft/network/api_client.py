@@ -63,6 +63,14 @@ def _id(value: str, name: str) -> str:
     return quote(value, safe='')
 
 
+def _positive_size(value: object) -> int | None:
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, str) and value.isascii() and value.isdecimal():
+        value = int(value)
+    return value if isinstance(value, int) and value > 0 else None
+
+
 def _scene(scene: str | Scene) -> str:
     scene = getattr(scene, 'value', scene)
     if scene not in ('group', 'c2c'):
@@ -117,7 +125,8 @@ class ApiClient:
             await self._session.close()
 
     async def _request(self: Self, method: str, path: str, *, json: Mapping[str, Any] | None = None, params: Mapping[str, str | int | float] | None = None, credential: bool = False,
-                       operation: str, allow_empty: bool = False, required: Sequence[str] = (), validate: Callable[[dict[str, Any]], str | None] | None = None) -> dict[str, Any]:
+                       operation: str, allow_empty: bool = False, required: Sequence[str] = (), validate: Callable[[dict[str, Any]], str | None] | None = None,
+                       timeout: float | None = None, propagate_cancel: bool = False) -> dict[str, Any]:
         if self._session is None or self._closed:
             raise RuntimeError('ApiClient is not open')
         token = None if credential else await self.token_provider.get_token()
@@ -126,7 +135,7 @@ class ApiClient:
         if token is not None:
             headers['Authorization'] = 'QQBot ' + token
         config = self.runtime.get_config()
-        timeout = aiohttp.ClientTimeout(total=config.http.timeout)
+        timeout = aiohttp.ClientTimeout(total=config.http.timeout if timeout is None else timeout)
         context = SimpleNamespace(sent=False)
         status = None
         trace_id = None
@@ -190,7 +199,7 @@ class ApiClient:
         except (PlatformError, ResultUnknownError):
             raise
         except asyncio.CancelledError:
-            if modifying and context.sent:
+            if modifying and context.sent and not propagate_cancel:
                 raise ResultUnknownError(operation + ' interrupted after request headers were sent',
                                          http_code=status, trace_id=trace_id) from None
             raise
@@ -231,6 +240,126 @@ class ApiClient:
         kind = 'groups' if _scene(scene) == 'group' else 'users'
         await self._request('DELETE', f'/v2/{kind}/{_id(conversation, "conversation")}/messages/{_id(id, "message id")}',
                             operation='delete message', allow_empty=True)
+
+    async def upload_media_url(self: Self, scene: str | Scene, conversation: str, file_type: int, url: str, file_name: str | None) -> dict[str, Any]:
+        """Ask QQ to download a public URL into the conversation's media store without sending a message.
+
+        :param scene: Supported group or c2c conversation scene; uploads are bound to it.
+        :param conversation: Platform conversation OpenID.
+        :param file_type: QQ media type, 1 to 4.
+        :param url: Public http(s) media URL.
+        :param file_name: Optional file name shown by QQ.
+        :return: Validated upload response containing file_info.
+        """
+        body = {'file_type': file_type, 'url': url, 'srv_send_msg': False}
+        if file_name is not None:
+            body['file_name'] = file_name
+        return await self._request('POST', self._media_path(scene, conversation, 'files'), json=body,
+                                   operation='upload media', required=('file_info',))
+
+    async def upload_prepare(self: Self, scene: str | Scene, conversation: str, file_type: int, file_name: str, digest: Mapping[str, str | int]) -> dict[str, Any]:
+        """Start a chunked media upload and return its validated upload plan.
+
+        :param scene: Supported group or c2c conversation scene; uploads are bound to it.
+        :param conversation: Platform conversation OpenID.
+        :param file_type: QQ media type, 1 to 4.
+        :param file_name: File name shown by QQ.
+        :param digest: Whole-file size, md5, sha1 and md5_10m.
+        :return: Response with upload_id, ordered parts and optional upload_config.
+        """
+        body = {'file_type': file_type, 'file_size': str(digest['size']), 'file_name': file_name,
+                'md5': digest['md5'], 'sha1': digest['sha1'], 'md5_10m': digest['md5_10m']}
+        return await self._request('POST', self._media_path(scene, conversation, 'upload_prepare'), json=body,
+                                   operation='prepare media upload', required=('upload_id',),
+                                   validate=lambda data: self._validate_upload_plan(data, int(digest['size'])))
+
+    async def upload_part(self: Self, url: str, data: bytes, timeout: float) -> None:
+        """PUT one chunk to its presigned URL. The URL is a credential and never appears in logs or errors.
+
+        :param url: Presigned upload URL from upload_prepare.
+        :param data: Chunk bytes.
+        :param timeout: Total seconds allowed for this attempt.
+        :return: No return value.
+        """
+        if self._session is None or self._closed:
+            raise RuntimeError('ApiClient is not open')
+        context = SimpleNamespace(sent=False)
+        status = None
+        try:
+            async with self._session.put(url, data=data, timeout=aiohttp.ClientTimeout(total=timeout),
+                                         allow_redirects=False, trace_request_ctx=context) as response:
+                status = response.status
+                await response.read()
+                if not 200 <= status < 300:
+                    raise PlatformError('upload media part rejected', category=_category(status, None, False), http_code=status)
+        except PlatformError:
+            raise
+        # A chunk PUT cannot create a message, so cancellation stays cancellation instead of an unknown result.
+        except (aiohttp.ClientError, asyncio.TimeoutError, OSError) as error:
+            cls = ResultUnknownError if context.sent else NetworkError
+            raise cls(f'upload media part: {type(error).__name__}', http_code=status) from None
+
+    async def upload_part_finish(self: Self, scene: str | Scene, conversation: str, upload_id: str, index: int, size: int, md5: str, timeout: float) -> None:
+        """Confirm that one chunk was stored.
+
+        :param scene: Scene used by upload_prepare.
+        :param conversation: Conversation used by upload_prepare.
+        :param upload_id: Upload task identifier.
+        :param index: Part index from the upload plan.
+        :param size: Actual chunk size in bytes.
+        :param md5: Chunk MD5 hex digest.
+        :param timeout: Total seconds allowed for this attempt.
+        :return: No return value.
+        """
+        await self._request('POST', self._media_path(scene, conversation, 'upload_part_finish'),
+                            json={'upload_id': upload_id, 'part_index': index, 'block_size': str(size), 'md5': md5},
+                            operation='finish media part', allow_empty=True, timeout=timeout, propagate_cancel=True)
+
+    async def upload_media_merge(self: Self, scene: str | Scene, conversation: str, file_type: int, upload_id: str, file_name: str) -> dict[str, Any]:
+        """Merge uploaded chunks and return the response containing file_info.
+
+        :param scene: Scene used by upload_prepare.
+        :param conversation: Conversation used by upload_prepare.
+        :param file_type: QQ media type, 1 to 4.
+        :param upload_id: Upload task identifier.
+        :param file_name: File name shown by QQ.
+        :return: Validated upload response containing file_info.
+        """
+        return await self._request('POST', self._media_path(scene, conversation, 'files'),
+                                   json={'file_type': file_type, 'srv_send_msg': False,
+                                         'file_name': file_name, 'upload_id': upload_id},
+                                   operation='merge media upload', required=('file_info',))
+
+    @staticmethod
+    def _media_path(scene: str | Scene, conversation: str, endpoint: str) -> str:
+        kind = 'groups' if _scene(scene) == 'group' else 'users'
+        return f'/v2/{kind}/{_id(conversation, "conversation")}/{endpoint}'
+
+    @staticmethod
+    def _validate_upload_plan(data: dict[str, Any], size: int) -> str | None:
+        parts = data.get('parts', [])
+        if not isinstance(parts, list) or not all(isinstance(part, dict) and type(part.get('index')) is int for part in parts):
+            return 'invalid upload parts'
+        if parts:
+            # Chunks follow the top-level block_size; the final chunk carries the remainder.
+            block_size = _positive_size(data.get('block_size'))
+            if block_size is None:
+                return 'invalid upload block_size'
+            if len(parts) != -(-size // block_size):
+                return 'upload parts do not cover the file'
+        for expected, part in enumerate(sorted(parts, key=lambda part: part['index'])):
+            if part['index'] != expected:
+                return 'upload parts are not indexed contiguously from 0'
+            if not isinstance(part.get('presigned_url'), str) or not part['presigned_url'].startswith(('http://', 'https://')):
+                return 'invalid upload part URL'
+        config = data.get('upload_config', {})
+        if not isinstance(config, dict):
+            return 'invalid upload_config'
+        for key in ('retry_timeout', 'retry_delay'):
+            value = config.get(key)
+            if value is not None and (isinstance(value, bool) or not isinstance(value, int) or value < 0):
+                return 'invalid upload_config.' + key
+        return None
 
     async def respond_interaction(self: Self, id: str, code: int) -> None:
         """Submit a platform interaction response code.

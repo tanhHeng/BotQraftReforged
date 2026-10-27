@@ -82,6 +82,8 @@ class SecretFilter(logging.Filter):
             text = text.replace(secret, '<redacted>')
         text = re.sub(r'(?i)((?:access_token|auth_token|clientSecret|secret|authorization)[\"\']?\s*[=:]\s*[\"\']?)[^\s,;\"\'\]}]+', r'\1<redacted>', text)
         text = re.sub(r'(?i)(QQBot\s+|Bearer\s+)[^\s,;\"\']+', r'\1<redacted>', text)
+        # Presigned media URLs authorize uploads/downloads through their query string.
+        text = re.sub(r'(?i)((?:presigned_url|raw_url)[\"\']?\s*[=:]\s*[\"\']?)[^\s,;\"\'\]}]+', r'\1<redacted>', text)
         return text
 
     def sanitize_response(self: Self, body: str | bytes) -> str:
@@ -101,7 +103,7 @@ class SecretFilter(logging.Filter):
             if isinstance(value, dict):
                 return {key: '<redacted>' if key.lower() in {
                     'access_token', 'auth_token', 'token', 'clientsecret', 'client_secret',
-                    'secret', 'authorization', 'session_id',
+                    'secret', 'authorization', 'session_id', 'presigned_url', 'raw_url',
                 } else redact(item) for key, item in value.items()}
             if isinstance(value, list):
                 return [redact(item) for item in value]
