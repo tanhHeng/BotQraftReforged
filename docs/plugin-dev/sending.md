@@ -14,7 +14,7 @@
 server.send(target, message, refer_msg=None, return_future=False)
 ```
 
-`target` 说明消息发到哪个会话，只能是下面两种之一，都从 `botqraft.api.types` 导入：
+`refer_msg` 和 `return_future` 只能按关键字传入。`target` 说明消息发到哪个会话，只能是下面两种之一，都从 `botqraft.api.types` 导入：
 
 | 目标                  | 发到哪里              |
 | --------------------- | --------------------- |
@@ -43,7 +43,7 @@ def notify_later(server: QQPluginServerInterface, source: QQCommandSource):
 
 - 发到群：使用 `Group`，或在群消息的命令里用 `source.target`。
 - 发到私聊：使用 `C2C`，或在 C2C 消息的命令里用 `source.target`。群消息里的用户不提供私聊地址，不能由此发起私聊。
-- 在群里 AT 某人：AT 属于消息内容，用 `QTextAt` 拼进消息，见[提及用户](markdown.md#提及用户)。
+- 在群里 AT 某人：AT 属于消息内容，用 `QTextAt` 拼进消息，见[提及用户](markdown.md#提及用户)。`QTextAt(source.user)` 读取 `member_openid`，只有群消息的用户带这个字段，所以下面的例子只用于群消息命令。
 
 ```python
 from botqraft.api.command import QQCommandSource

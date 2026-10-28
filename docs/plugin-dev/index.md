@@ -59,11 +59,11 @@ BotQraft 独立运行在 QQ 机器人上，沿用 MCDReforged（MCDR）那套久
 
 迁移时逐条对照这些差异：
 
-- Minecraft 子进程、RCON 和服务端信息都属于 Minecraft 宿主能力。在 BotQraft 里调用它们会抛出 `UnsupportedOperationError`，请把业务改写成 QQ 事件和接口能完成的动作。
-- QQ 发送接口接受 `str`、`QText`、`QMarkdown`、媒体消息或延迟翻译文本。原生 `RText` 先转换成这些公开格式。
-- 公共 `execute_command(command, source)` 接收本实例真实的 `QQCommandSource`。从命令回调或入站消息的 `event.get_command_source()` 取来源。`get_plugin_command_source()` 会抛出 `UnsupportedOperationError`。
+- Minecraft 服务端进程的启停与执行命令、RCON、服务端信息、服务端处理器与 Info 过滤器注册、MCDR 配置读写都属于 Minecraft 宿主能力。在 BotQraft 里调用它们会抛出 `UnsupportedOperationError`，请把业务改写成 QQ 事件和接口能完成的动作。
+- QQ 发送接口接受 `str`、`QText`、`QMarkdown` 等 `QTextBase` 文本、媒体消息或延迟翻译文本。原生 `RText` 不是这些类型，传入会抛出 `TypeError`，先转换成这些公开格式。
+- 公共 `execute_command(command, source)` 只接收本实例真实的 `QQCommandSource`，其他来源会抛出 `TypeError`。从命令回调或入站消息的 `event.get_command_source()` 取来源。`get_plugin_command_source()` 会抛出 `UnsupportedOperationError`。
 - `QQServerInterface.si()` 需要 BotQraft 正在运行，实例没跑起来时会抛出 `RuntimeError`。可选访问用 `si_opt()`，没有接口时返回 `None`。插件回调优先用传入的 `server`。
-- `.mcdr` 是共享的压缩格式，迁到 QQ 时把输入事件、身份、消息和宿主操作一起改。格式与入口见[插件格式、打包与发布](./plugin-format.md)。
+- `.mcdr`（以及 `.pyz`）沿用 MCDR 的压缩包格式，但包里的元数据文件是 `botqraft.plugin.json`，不是 `mcdreforged.plugin.json`；原样的 MCDR 插件包会因找不到元数据而加载失败。迁到 QQ 时把元数据、输入事件、身份、消息和宿主操作一起改。格式与入口见[插件格式、打包与发布](./plugin-format.md)。
 
 ---
 

@@ -44,15 +44,15 @@ print('Markdown and keyboard payload verified')
 
 ## 选择按钮行为
 
-| 对象                      | 行为                                                                                   |
-| ------------------------- | -------------------------------------------------------------------------------------- |
-| `QKeyboardActionJump`     | 跳转，动作类型为 0。                                                                   |
-| `QKeyboardActionCallback` | 回调，动作类型为 1，`data` 必填。点击后推送交互事件，见[响应按钮点击](#响应按钮点击)。 |
-| `QKeyboardActionCommand`  | 命令，动作类型为 2，`data` 必填。点击后由用户发出命令文本，走普通命令流程。            |
+| 对象                      | 行为                                                                                           |
+| ------------------------- | ---------------------------------------------------------------------------------------------- |
+| `QKeyboardActionJump`     | 跳转，动作类型为 0。                                                                           |
+| `QKeyboardActionCallback` | 回调，动作类型为 1，`data` 必填。点击后推送交互事件，见[响应按钮点击](#响应按钮点击)。         |
+| `QKeyboardActionCommand`  | 命令，动作类型为 2，`data` 必填。点击后在输入框插入 `@机器人 data`，用户发出后走普通命令流程。 |
 
-`enter=True` 让命令按钮点击后自动发送 `data`。该能力按平台说明用于单聊。`reply=True` 让该指令引用回复键盘所在的消息。`anchor` 按平台语义可以覆盖 `enter`。这些效果受客户端版本和场景支持限制。发送接口的引用通过 `refer_msg` 单独设置。
+`enter=True` 让命令按钮点击后直接发送 `data`，按平台说明仅单聊可用。`reply=True` 让该指令引用回复键盘所在的消息。设置 `anchor` 后平台会忽略 `enter`；平台目前只定义了 `anchor=1`（唤起手机 QQ 选图器，仅手机端单聊）。这些效果受客户端版本和场景支持限制。发送接口的引用通过 `refer_msg` 单独设置。
 
-`QKeyboardPermission()` 默认允许所有人。使用 `QKeyboardPermissionType.SPECIFY` 和非空 `specify_user_ids` 列表指定用户。使用 `ADMIN` 限定管理员。`ADMIN`、`ALL` 使用省略的用户列表。切换权限类型时创建新对象。
+`QKeyboardPermission()` 默认允许所有人（`ALL`）。使用 `QKeyboardPermissionType.SPECIFY` 和非空的字符串列表 `specify_user_ids` 指定用户。使用 `ADMIN` 限定管理员。`ADMIN`、`ALL` 不能带用户列表。权限类型创建后不能用 `set_type` 切换，需要换类型时创建新对象。
 
 按钮权限控制平台交互资格。服务器端的执行权限通过命令节点单独检查，参见[权限系统](permissions.md)。
 
@@ -64,7 +64,7 @@ print('Markdown and keyboard payload verified')
 
 - `QKeyboardCustom` 接收按钮行列表，每行也是列表。全部按钮使用 `QKeyboardButton`，非 `None` 的按钮 ID 在整个键盘内保持唯一。
 - `QKeyboardRenderData.label` 最多 10 字符。`style` 使用 0、1、3、4。
-- `QKeyboardModal.content` 最多 40 字符，内容使用纯文本，含 URL 会被拒绝。`confirm_text`、`cancel_text` 各最多 4 字符。
+- `QKeyboardModal.content` 最多 40 字符，不能包含 URL（含 `://` 或 `www.` 的文本会被拒绝）。`confirm_text`、`cancel_text` 各最多 4 字符。
 - 动作与权限类型使用公开枚举或合法整数代码，bool 会被拒绝。动作子类保留自己的固定类型。
 
 最终长度、行列数量和账号能力还需符合 QQ 平台规则。客户端展示与点击效果由平台支持决定。
@@ -90,7 +90,7 @@ def on_interaction(server: QQPluginServerInterface, event: QQInteraction):
 
 给每类交互划好处理范围，保证同一个交互只由一个地方提交响应。
 
-`respond_interaction` 接收真实的 `QQInteraction`。响应码用整数 `0`–`5`，也可以传值为该范围整数的枚举。布尔值、其他类型和范围外的值都会被拒绝。
+`respond_interaction` 接收真实的 `QQInteraction`，传入其他对象抛出 `TypeError`。响应码用整数 `0`–`5`，也可以传值为该范围整数的枚举；按平台定义，0 成功、1 操作失败、2 操作频繁、3 重复操作、4 没有权限、5 仅管理员操作。布尔值、其他类型和范围外的值都会抛出 `ValueError`。
 
 这个接口直接返回 `concurrent.futures.Future`，成功结果为 `None`。调用形式是 `server.respond_interaction(event, code)`，Future 的用法见[确认发送结果](reply.md#确认发送结果)。
 
@@ -100,12 +100,12 @@ def on_interaction(server: QQPluginServerInterface, event: QQInteraction):
 
 交互专用字段在 `QQInteraction` 解析后的两个位置：
 
-| 字段                    | 位置与用途                                                      |
-| ----------------------- | --------------------------------------------------------------- |
-| `interaction_id`        | `QQInteraction` 顶层字段，取自原始事件数据 `d.id` 中的交互 ID。 |
-| `interaction_data`      | `QQInteraction` 顶层字段，解析后的 `QQInteractionData` 对象。   |
-| `interaction_data.id`   | 交互 ID（和 `interaction_id` 一致）。                           |
-| `interaction_data.data` | 具体交互内容，包含 `resolved`、按钮数据、选择和授权等字段。     |
+| 字段                    | 位置与用途                                                        |
+| ----------------------- | ----------------------------------------------------------------- |
+| `interaction_id`        | `QQInteraction` 顶层字段，取自原始事件数据 `d.id` 中的交互 ID。   |
+| `interaction_data`      | `QQInteraction` 顶层字段，解析后的 `QQInteractionData` 对象。     |
+| `interaction_data.id`   | 交互 ID（和 `interaction_id` 一致）。                             |
+| `interaction_data.data` | 具体交互内容，`InteractionData` 对象，包含 `type` 和 `resolved`。 |
 
 `event_id` 是事件 ID，`interaction_id` 是交互 ID，两者不同。把收到的事件传进去，框架会从原始交互数据确定要响应哪次交互。
 
@@ -114,9 +114,9 @@ def on_interaction(server: QQPluginServerInterface, event: QQInteraction):
 具体交互内容在 `interaction_data.data`：
 
 - `type` 表示交互种类。
-- `resolved` 提供 `button_id`、`button_data`、`user_id`、`feature_id` 和 `message_id` 等已解析字段。
-- 反馈、选择和动作数据位于 `feedback_opt`、`checked`、`action`。
-- 来源扩展位于 `message_scene`，授权场景与范围位于 `authorize_data`。
+- `resolved` 是 `InteractionResolved` 对象，提供 `button_id`、`button_data`、`user_id`、`feature_id` 和 `message_id`。
+- 反馈、选择和动作数据也在 `resolved` 里：`feedback_opt`、`checked`、`action`。
+- 来源扩展在 `resolved.message_scene`，授权场景与范围在 `resolved.authorize_data`。
 
 这些字段可能缺失或为 `None`，按当前交互实际带来的字段处理。`QQInteractionData`、`InteractionData`、`InteractionResolved` 和相应枚举从 `botqraft.api.types` 导入。
 

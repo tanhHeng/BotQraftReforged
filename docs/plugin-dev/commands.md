@@ -110,9 +110,9 @@ builder.register(server)
 
 群消息进入命令解析前，正文按下面的规则处理：
 
-- `GROUP_AT_MESSAGE_CREATE` 去掉前导 ASCII 空格。
-- 当前 dev 版本会先整理 `GROUP_MESSAGE_CREATE` 的前缀。它会跳过开头的 ASCII 空格，然后检查正文是否以指向机器人的 `<@id>` 开头；只有对应的 `MentionedUser.is_you is True` 时，才会移除这个提及标签和后面的 ASCII 空格。
-- 其他正文保持原样，包括 `<@!id>`、正文中间的标签和重复的后续标签。内部与尾部空格、引用元素、完整 mentions、`raw_payload`、`data` 和原始收件日志也保持原样。
+- `GROUP_AT_MESSAGE_CREATE`：解析时去掉正文的前导 ASCII 空格（写回 `message_data.content`）。匹配命令时，框架还会再去掉开头指向本机器人的一个 `<@机器人id>` 或 `<@!机器人id>` 以及它前后的空白；这一步只影响命令解析，不改 `message_data.content`。
+- `GROUP_MESSAGE_CREATE`：当前 dev 版本会整理正文前缀。它会跳过开头的 ASCII 空格，然后检查正文是否以 `<@id>` 开头；只有 mentions 里有同 id 且 `MentionedUser.is_you is True` 的项时，才会移除这个提及标签和后面的 ASCII 空格，结果写回 `message_data.content`，命令和回调看到的都是整理后的正文。条件不符时正文原样保留（包括前导空格）；`<@!id>`、正文中间的标签和重复的后续标签也不处理。
+- 内部与尾部空格、引用元素、完整 mentions、`raw_payload`、`data` 都保持原样。
 - C2C 正文保持原样。
 
 事件字段见[读取消息内容](message-format.md)。
@@ -134,7 +134,7 @@ for root in builder.build():
     server.register_command(root, scope=('group',))
 ```
 
-用这段替换 `builder.register(server)`。用命令树手写的根也一样，通过 `server.register_command(root, scope=...)` 指定场景。
+用这段替换 `builder.register(server)`。用命令树手写的根也一样，通过 `server.register_command(root, scope=...)` 指定场景。在没登记的场景里发送这条命令时，框架不会执行回调，而是回复一条命令错误提示 `Command is not available in this QQ scene`。
 
 命令和帮助分别登记 `scope`。为同一条命令登记[帮助](help.md)时，填上相同的场景。能不能执行由节点的 `requires(...)` 检查，帮助的权限只控制帮助显不显示。
 

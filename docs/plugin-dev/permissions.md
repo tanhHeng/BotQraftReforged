@@ -31,21 +31,21 @@ def on_load(server, prev_module):
 
 `source.has_permission(level)` 检查最低等级。`source.get_permission_level()` 和 `server.get_permission_level(subject)` 返回当前有效等级。这里的 `subject` 就是查询权限时传入的那个用户对象。
 
-帮助项的 `permission` 过滤帮助显示，执行权限由命令节点检查。平台面板的 `only_admin=True` 决定谁有管理员点击和操作资格，面板项是否可见由平台决定。具体用法见[命令树](command-tree.md)和[帮助消息与指令面板](help.md)。
+帮助项的 `permission` 过滤帮助显示，执行权限由命令节点检查。平台面板的 `only_admin=True` 只让群管理员能点击这个面板项，由 QQ 平台判断，和 BotQraft 的权限等级无关，也不代替执行检查。具体用法见[命令树](command-tree.md)和[帮助消息与指令面板](help.md)。
 
 ## 了解权限优先级
 
 有效权限按下面的顺序决定：
 
-1. `permission.super_admins` 里列出的真实 `User.id` 是超级管理员。
+1. `permission.super_admins` 里列出的真实 `User.id` 是超级管理员，直接按等级 4 处理。
 2. 然后看当前会话上的显式权限。
 3. 再看全局的显式权限。
 4. 最后看当前模式的默认权限。
 
-| 模式             | 默认权限                               |
-| ---------------- | -------------------------------------- |
-| `native`         | 0。                                    |
-| `role` / `mixed` | 群成员 0、管理员 2、群主 4。C2C 为 0。 |
+| 模式                             | 默认权限                               |
+| -------------------------------- | -------------------------------------- |
+| `native`                         | 0。                                    |
+| `role` / `mixed`（默认 `mixed`） | 群成员 0、管理员 2、群主 4。C2C 为 0。 |
 
 角色识别结果缺失时按 0 处理。显式授权优先于模式默认值。用 `server.is_super_admin(subject)` 查询超级管理员身份，`subject` 同样是查询权限时传入的用户对象。配置方法见[实例配置](../quick-start/configuration.md)。
 
@@ -67,8 +67,8 @@ server.remove_permission(source, global_scope=True)
 
 等级可以传有效的整数、等级名称或 `botqraft.api.types.PermissionLevelItem`。`global_scope` 使用 bool。
 
-等级传 bool 会抛出 `TypeError`，非法等级会被拒绝。请传入带真实身份和会话地址的对象。给 C2C 私聊授权时，请使用框架从真实私聊消息里记录过的地址。这样框架能确认这个会话确实存在；如果地址还没验证，会用 `ValueError` 提醒你。
+等级传 bool 会抛出 `TypeError`，非法等级会被拒绝。请传入带真实身份和会话地址的对象。操作 C2C 私聊的会话授权（不加 `global_scope=True`）时，这个用户必须已经从真实私聊消息里被框架记录过，而且私聊地址一致；否则会抛出 `ValueError`。私聊命令回调里的 `source` 来自刚收到的私聊消息，通常都满足这一点。全局授权不做这项检查。
 
-传入的对象类型不对会抛出 `TypeError`，缺少身份或会话地址也会拒绝操作。直接把实际 `source` 传进去，这些事实就都保留了。
+传入的对象类型不对会抛出 `TypeError`；缺少身份（`User.id`）会抛出 `ValueError`，操作会话授权时缺少会话地址也一样。直接把实际 `source` 传进去，这些事实就都保留了。
 
 接下来，命令需要更复杂的结构时，阅读[命令树](command-tree.md)。

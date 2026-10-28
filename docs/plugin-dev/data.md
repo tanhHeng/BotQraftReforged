@@ -16,13 +16,13 @@ def read_help(server):
         return stream.read().decode('utf-8')
 ```
 
-在插件元数据的 `resources` 中加入 `assets`，让资源随归档分发。翻译文件使用根目录 `lang/`，并将 `lang` 加入 `resources`。具体结构见[插件格式](plugin-format.md)和[多语言与用户偏好](translation.md)。
+目录插件直接读取目录中的文件。打包成 `.mcdr` / `.pyz` 时，打包命令只会自动带上元数据、`requirements.txt` 和以插件 ID 命名的源码目录，所以要在插件元数据的 `resources` 中加入 `assets`，让资源随归档分发。翻译文件使用根目录 `lang/`，并将 `lang` 加入 `resources`。具体结构见[插件格式](plugin-format.md)和[多语言与用户偏好](translation.md)。
 
-`open_bundled_file` 用于目录或压缩插件。单文件插件自行定位并读取外部文件。使用单文件插件或未绑定插件的接口调用该方法，会抛出 `FileNotFoundError`。目标资源也需要实际存在。
+`open_bundled_file` 用于目录或压缩插件。单文件插件自行定位并读取外部文件。使用单文件插件或未绑定插件的接口调用该方法，会抛出 `FileNotFoundError`。目标资源不存在时，目录插件抛出 `FileNotFoundError`，压缩插件抛出 `KeyError`。
 
 ## 保存可写数据
 
-调用 `server.get_data_folder()` 创建并获取实例的 `config/<plugin_id>` 路径。返回值是相对路径字符串。请使用插件回调传入的绑定接口：
+调用 `server.get_data_folder()` 获取实例的 `config/<plugin_id>` 路径，目录不存在时会自动创建。返回值是相对实例工作目录的路径字符串。请使用插件回调传入的绑定接口：
 
 ```python
 import json
@@ -48,6 +48,33 @@ def load_state(server):
 
 ## 使用公开序列化工具
 
-从 `botqraft.api.utils` 导入 `Serializable`、`serialize`、`deserialize`，沿用 MCDR 的序列化接口。请选择与数据类型匹配的格式，在读取后恢复业务对象。公开模块列表见[API 索引](api.md)。
+从 `botqraft.api.utils` 导入 `Serializable`、`serialize`、`deserialize`，它们就是 MCDR 的序列化工具。`Serializable` 子类用类型注解声明字段；`serialize()` 把对象转换成可以写入 JSON 的 dict、list 等数据，`deserialize()` 按注解恢复对象，缺少的字段使用默认值。模块级的 `serialize(obj)` 和 `deserialize(data, cls)` 是对应的函数写法：
+
+```python
+import json
+from pathlib import Path
+from typing import List
+
+from botqraft.api.utils import Serializable
+
+class Quote(Serializable):
+    text: str = ''
+    author: str = ''
+
+class QuoteStore(Serializable):
+    quotes: List[Quote] = []
+
+def save_quotes(server, store):
+    path = Path(server.get_data_folder()) / 'quotes.json'
+    path.write_text(json.dumps(store.serialize(), ensure_ascii=False), encoding='utf-8')
+
+def load_quotes(server):
+    path = Path(server.get_data_folder()) / 'quotes.json'
+    if not path.exists():
+        return QuoteStore()
+    return QuoteStore.deserialize(json.loads(path.read_text(encoding='utf-8')))
+```
+
+公开模块列表见[API 索引](api.md)。
 
 接下来，阅读[后台任务与卸载](tasks.md)，安排插件的后台工作并做好收尾。

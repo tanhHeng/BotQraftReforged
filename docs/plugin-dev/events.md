@@ -16,10 +16,10 @@
 
 | 回调                              | 时机与参数                                                                                        |
 | --------------------------------- | ------------------------------------------------------------------------------------------------- |
-| `on_qq_event(server, event)`      | 接收通用 `QQEvent` 平台事件。                                                                     |
+| `on_qq_event(server, event)`      | 接收所有 QQ 平台事件：`QQEvent` 及其子类，包括解析失败的通用 `QQEvent`。                          |
 | `on_message(server, event)`       | 接收解析成功的 `QQMessageReceived` 群聊和 C2C 消息。                                              |
-| `on_group_message(server, event)` | 接收两种群消息投递：`GROUP_AT_MESSAGE_CREATE` 和 `GROUP_MESSAGE_CREATE`。                         |
-| `on_c2c_message(server, event)`   | 接收解析成功的 C2C 消息。                                                                         |
+| `on_group_message(server, event)` | 接收解析成功的两种群消息投递：`GROUP_AT_MESSAGE_CREATE` 和 `GROUP_MESSAGE_CREATE`。               |
+| `on_c2c_message(server, event)`   | 接收解析成功的 C2C 消息（`C2C_MESSAGE_CREATE`）。                                                 |
 | `on_interaction(server, event)`   | 接收解析成功的 `QQInteraction` 交互事件，处理方法见[响应按钮点击](interactions.md#响应按钮点击)。 |
 
 大多数时候，你只需要知道 `on_message` 或 `on_group_message` 就够了。这两个回调会在消息成功解析后触发，你可以在里面读取消息正文、用户身份，并回复。
@@ -51,7 +51,7 @@ def on_load(server: QQPluginServerInterface, prev_module):
     server.register_event_listener('C2C_MESSAGE_CREATE', handle_private_message)
 ```
 
-事件 ID 按大小写等价匹配。`'C2C_MESSAGE_CREATE'` 与 `'c2c_message_create'` 指向同一事件。可通过 `priority` 参数指定监听优先级，默认值为 `1000`。
+事件 ID 按大小写等价匹配。`'C2C_MESSAGE_CREATE'` 与 `'c2c_message_create'` 指向同一事件。可通过 `priority` 参数指定监听优先级，默认值为 `1000`；同一事件的多个监听按数值从小到大调用。
 
 一个处理逻辑选择一种登记方式就够了：要么使用自动回调，要么在 `on_load` 里显式注册。这样每条回复、写入或其他动作都有清楚的唯一入口。
 
@@ -81,11 +81,11 @@ def handle_at_delivery(server: QQPluginServerInterface, event: QQEvent):
 
 ### 消息回调的调用顺序
 
-把它想成一条固定流水线：先处理命令，再进入 `on_qq_event`，然后是 `on_message`，接着是 `on_group_message`，最后才到官方事件的精确监听。每一步都共享同一个事件对象，但异步任务的完成时间仍可能不同。
+把它想成一条固定流水线：先同步执行匹配的命令，再进入 `on_qq_event`，然后是 `on_message`，接着是 `on_group_message`，最后才到官方事件的精确监听。每个回调都作为单独的任务按这个顺序排队，共享同一个事件对象；异步回调的完成时间仍可能不同。
 
 `on_group_message` 对应框架事件 `botqraft.group_message`。两个官方群事件 ID 各自保留。
 
-C2C 消息不走这条链路，它使用自己的专用回调 `on_c2c_message`。各入口共享同一个事件对象，异步处理的完成顺序由各自的运行时间决定。
+C2C 消息没有 `on_group_message` 这一步：命令之后依次是 `on_qq_event`、`on_message`，最后是官方事件 `c2c_message_create` 的监听。`on_c2c_message` 就登记在这个官方事件上，和它的精确监听一起按 `priority` 排序调用。`on_interaction` 同理，登记在 `interaction_create` 上，排在 `on_qq_event` 之后。
 
 统一回调与精确监听同时登记时，两者都会被调用。命令与消息回调也会同时收到符合条件的消息。按职责划分处理范围，让每项回复、写入或其他副作用只执行一次。
 
@@ -93,8 +93,8 @@ C2C 消息不走这条链路，它使用自己的专用回调 `on_c2c_message`�
 
 ### 使用本地事件
 
-`botqraft.api.event` 导出 `Event`、`PluginEvents`、原生 `PluginEvent` / `LiteralEvent`，以及 QQ 入站类型 `QQEvent`、`QQInteraction`、`QQMessageReceived`。
+`botqraft.api.event` 导出 `Event`、`PluginEvents`、原生 `PluginEvent` / `LiteralEvent` / `EventListener`，以及 QQ 入站类型 `QQEvent`、`QQInteraction`、`QQMessageReceived`。
 
-平台监听通常直接使用官方事件名字符串。本地自定义事件使用 `LiteralEvent('my_plugin.event')`，由本地事件系统处理。`on_qq_event` 负责平台推送。
+平台监听通常直接使用官方事件名字符串。本地自定义事件使用 `LiteralEvent('my_plugin.event')`，用 `server.register_event_listener(...)` 登记，再用 `server.dispatch_event(LiteralEvent('my_plugin.event'), (data,))` 派发，监听收到 `(server, data)`。以 `botqraft.` 开头、全大写或与内置事件同名的 ID 不能手动派发，会抛出 `UnsupportedOperationError`。`on_qq_event` 负责平台推送。
 
 接下来，按[读取消息内容](message-format.md)读取正文、用户身份和会话信息。

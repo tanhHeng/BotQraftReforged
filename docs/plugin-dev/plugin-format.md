@@ -18,7 +18,7 @@
 
 `.mcdr` 和 `.pyz` 都可以看成装插件的压缩包。包里面要按 BotQraft 约定放好元数据、入口代码和资源；这套摆放规则就是"归档约定"。两者使用同一套归档约定，互换后缀不影响加载。
 
-文件第一行以 `#!` 开头的解释器声明叫 shebang，例如 `#!/usr/bin/env python3`。加上 shebang 后，归档仍由 BotQraft 加载。运行时由实例提供框架和机器人凭据。制作独立机器人发行包时，另外准备这些内容。
+文件第一行以 `#!` 开头的解释器声明叫 shebang，例如 `#!/usr/bin/env python3`。加上 shebang 后，归档仍由 BotQraft 照常加载。打包结果里没有 `__main__.py`，不能当作独立程序直接运行；运行时由实例提供框架和机器人凭据。
 
 单文件写法见[第一个插件](first-plugin.md)，也可以复制 [Echo 示例](https://github.com/tanhHeng/BotQraftReforged/blob/main/example_plugins/echo.py)。
 
@@ -39,7 +39,7 @@ example/
     └── help.txt
 ```
 
-这里的插件 ID 和源码包目录都使用 `echo_plugin`。把插件回调放在 `echo_plugin/__init__.py`，并在元数据中设置 `"entrypoint": "echo_plugin"`。完整字段声明见[元数据](metadata.md)。
+这里的插件 ID 和源码包目录都使用 `echo_plugin`。把插件回调放在 `echo_plugin/__init__.py`，并在元数据中设置 `"entrypoint": "echo_plugin"`。插件根目录本身不要放 `__init__.py`，否则框架不会把这个目录识别为插件；根目录下也不能有其他 Python 包。完整字段声明见[元数据](metadata.md)。
 
 从单文件迁入代码时，把元数据统一放入 `botqraft.plugin.json`，并移除 Python 文件中的 `PLUGIN_METADATA`。再按需添加 `requirements.txt` 和资源目录。
 
@@ -47,7 +47,7 @@ example/
 
 把翻译文件放在插件根目录的 `lang/`，与 Python 包目录并列。框架会自动发现并注册其中的 `.json`、`.yml`、`.yaml` 文件。如果翻译原本在 Python 包内或 `resources/lang/` 中，把它们调整到根目录 `lang/`。
 
-翻译键使用插件 ID 作为命名空间。打包时，把 `lang` 加入元数据的 `resources`：
+翻译键在所有插件间共享，建议以插件 ID 作为前缀，避免和其他插件冲突。打包时，把 `lang` 加入元数据的 `resources`：
 
 ```json
 {
@@ -101,30 +101,32 @@ botqraft pack -i example -o packed_plugins --ignore-file .gitignore --shebang "/
 
 参数说明：
 
-1. **指定要打包的目录。** `-i` 使用带有 `botqraft.plugin.json` 的目录。打包单文件代码时，先按上面的目录结构整理入口和 JSON 元数据。
-2. **指定输出位置。** `-o` 指定输出目录，生成的文件放在这里。
+1. **指定要打包的目录。** `-i` 使用带有 `botqraft.plugin.json` 的目录，省略时为当前目录。打包单文件代码时，先按上面的目录结构整理入口和 JSON 元数据。
+2. **指定输出位置。** `-o` 指定输出目录，省略时为当前目录；目录不存在时会自动创建。
 3. **决定文件名。** `-n` 覆盖元数据中的默认文件名模板，可以使用 `{id}`、`{version}`。复制前确认实际生成的文件名和扩展名。
-4. **决定忽略哪些文件。** 默认读取输入目录的 `.gitignore`，忽略文件是可选的。忽略规则使用 gitignore 风格，相对插件输入目录匹配。`--ignore-patterns` 的优先级高于 `--ignore-file`，同时设置时使用前者。打包后检查归档内容，清理缓存、凭据和开发文件。
-5. **需要时设置解释器行。** `--shebang` 设置可选的解释器行。框架沿用 MCDR 2.14.4 的资源、requirements 和归档约定，直接使用当前安装的 MCDR 即可。
+4. **决定忽略哪些文件。** 默认读取输入目录的 `.gitignore`，文件不存在时只会提示一行并照常打包。忽略规则使用 gitignore 风格，相对插件输入目录匹配。`--ignore-patterns` 的优先级高于 `--ignore-file`，同时设置时使用前者。打包后检查归档内容，清理缓存、凭据和开发文件。
+5. **需要时设置解释器行。** `--shebang` 设置可选的解释器行，只写 `#!` 后面的部分。打包直接复用 BotQraft 依赖的 MCDReforged 2.14.4 的实现，资源、requirements 和归档约定与它一致，不需要另装 MCDR 命令行工具。
 
 ## 安装与更新
 
-将实际生成的 `.mcdr` 或 `.pyz` 直接放入实例配置的插件目录，保持压缩格式。启动实例，或在运行中的实例执行：
+将实际生成的 `.mcdr` 或 `.pyz` 直接放入实例配置的插件目录，保持压缩格式。启动实例，或在运行中的实例执行下面的命令（控制台或超级管理员可用）：
 
 ```text
 /botqraft plugin refresh
 /botqraft plugin list
 ```
 
-确认插件已经加载后，在 QQ 中使用插件功能。修改插件后，重新打包并替换归档，再执行：
+确认插件已经加载后，在 QQ 中使用插件功能。修改插件后，重新打包并替换归档。新归档的文件名和旧的相同时，执行：
 
 ```text
 /botqraft plugin reload echo_plugin
 ```
 
+`reload` 会从原来的文件路径重新加载。默认文件名带有版本号，版本变了文件名也会变；这时先删除旧归档，再执行 `/botqraft plugin refresh`，它会卸载文件已消失的插件，并加载新出现的文件。
+
 如果 Echo 没有加载，先打开日志。优先看看元数据、入口导入和依赖这三类提示，通常很快就能找到是哪一块还没准备好。
 
-每个插件 ID 保留一个可加载副本。切换到压缩插件时，将同 ID 的单文件或目录副本移出插件目录。
+每个插件 ID 保留一个可加载副本。插件目录里出现同 ID 的多个副本时，只有先加载的那个生效，其余副本加载失败并在日志中报告重复。切换到压缩插件时，将同 ID 的单文件或目录副本移出插件目录。
 
 BotQraft 与 Minecraft 插件共享部分打包格式，各自使用对应的输入和宿主 API。迁移时先阅读[MCDR 开发者路线](index.md#mcdr-开发者路线)。
 

@@ -4,55 +4,55 @@
 
 读完这一页，你能把一个完整的示例插件装进实例，跑通查询、投稿和撤回的每一步。
 
-这个插件把原来的 LazyBot/NoneBot 今日人品插件迁移到了 BotQraft，用 QQ Markdown、命令键盘和被动回复组合出完整功能。你可以从 [qq_jrrp 示例](https://github.com/tanhHeng/BotQraftReforged/blob/main/example_plugins/qq_jrrp/botqraft.plugin.json)开始看。
+这个插件移植自 [LazyAlienWS](https://github.com/UnknownBits/LazyAlienWS) 的今日人品插件（GPL-3.0-only），用 QQ Markdown、命令键盘和被动回复组合出完整功能，运行时只依赖 BotQraft。你可以从 [qq_jrrp 示例](https://github.com/tanhHeng/BotQraftReforged/blob/main/example_plugins/qq_jrrp/botqraft.plugin.json)开始看。
 
-迁移后的插件独立运行。原 LazyBot 代码与语录数据保持原样。要沿用已有语录，把旧的语录 JSON 列表放到运行实例的 `config/qq_jrrp/luck_sentence.json`，格式见[数据与持久化](#数据与持久化)。
+插件不自带语录。要沿用已有语录，把旧的语录 JSON 列表放到运行实例的 `config/qq_jrrp/luck_sentence.json`，格式见[数据与持久化](#数据与持久化)。
 
 ## 安装
 
 按下面三步操作：
 
-1. 把整个 `example_plugins/qq_jrrp` 目录复制到实例配置的插件目录。`botqraft.plugin.json`、入口包 `qq_jrrp/`、`lang/`、`LICENSE` 和 `NOTICE` 都要完整保留。
+1. 把整个 `example_plugins/qq_jrrp` 目录复制到实例的插件目录（默认是 `plugins/`）。`botqraft.plugin.json`、入口包 `qq_jrrp/` 和翻译目录 `lang/` 是插件运行需要的；`LICENSE` 和 `NOTICE` 是许可协议与来源说明，也请一起保留。
 2. 启动实例。BotQraft 会自动注册插件根目录 `lang/` 里的翻译文件。
 
-   如果你就在仓库根目录，已经初始化的测试实例在 `test/`，可以这样安装：
+   假设仓库在 `..\BotQraftReforged`，在实例目录里可以这样安装并启动：
 
    ```powershell
-   Copy-Item -Recurse .\example_plugins\qq_jrrp .\test\plugins\qq_jrrp
-   Set-Location .\test
+   Copy-Item -Recurse ..\BotQraftReforged\example_plugins\qq_jrrp .\plugins\qq_jrrp
    python -m botqraft start
    ```
 
 3. 实例已经在运行时，在运维控制台执行 `/botqraft plugin refresh` 加载新插件。
 
-插件只登记一个 `/jrrp` 帮助/面板项，远端面板由框架统一管理。ID 为 `qq_jrrp` 的目录插件与压缩插件只保留一个可加载副本。
+插件用 `register_help_message` 为群聊和 C2C 登记一个 `/jrrp` 帮助项，框架据此生成帮助和 QQ 面板条目。同一个插件 ID 只能加载一个插件，目录版和打包版的 `qq_jrrp` 只放一份。
 
 ## 查询与文字触发
 
 按下面三步查询：
 
-1. 确认接收设置。普通群消息需要 QQ 平台推送 `GROUP_MESSAGE_CREATE`，先给账号和群开启接收所有消息，插件才能收到这些正文。C2C 不用设置，直接发送查询文本即可。
+1. 确认接收设置。群里不 @ 机器人直接发文字时，需要 QQ 平台推送全量群消息 `GROUP_MESSAGE_CREATE`，这要求账号已开通接收所有群消息。群里 @ 机器人和 C2C 不用额外设置。
 2. 发送下面任意一种消息：
 
-| 输入               | 支持的消息场景                                     |
-| ------------------ | -------------------------------------------------- |
-| `/jrrp`            | 群聊和 C2C；群 AT 消息会按框架规则去掉正文前导空格 |
-| `@机器人 今日人品` | 群 AT 消息，平台去掉提及后匹配正文                 |
-| `今日人品`         | 普通群消息、群 AT 和 C2C                           |
-| `#今日人品`        | 普通群消息、群 AT 和 C2C                           |
+| 输入               | 支持的消息场景                                              |
+| ------------------ | ----------------------------------------------------------- |
+| `/jrrp`            | 群聊和 C2C；群 AT 消息会先由框架去掉正文前导空格            |
+| `@机器人 今日人品` | 群 AT 消息（平台已去掉提及），以及开头 @ 机器人的全量群消息 |
+| `今日人品`         | 普通群消息、群 AT 和 C2C                                    |
+| `#今日人品`        | 普通群消息、群 AT 和 C2C                                    |
 
-3. 读取回复。插件用原消息 ID 发送被动回复，并通过 `refer_msg=True` 引用你发的那条查询消息。发送仍然受平台被动回复的时效、次数和 Markdown/键盘权限约束。帮助、投稿和撤回的回复不带引用。
+3. 读取回复。插件用原消息发送被动回复，查询结果通过 `refer_msg=True` 引用你发的那条查询消息。帮助、投稿和撤回的回复不带引用。发送仍然受平台被动回复的时效和 Markdown/键盘权限约束。
 
-中文触发会先去掉真实正文两端的空白，再匹配完整的「今日人品」或「#今日人品」。匹配只看独立正文，「看看今日人品」、附加参数、卡片、附件和引用里的词语都不算。`/jrrp` 直接由命令树处理；消息监听 `on_message` 只负责把这两个中文别名转交给 `/jrrp` 命令，所以每条消息只会得到一次回复。
+中文触发由 `on_message` 处理：它取消息的文字正文 `event.message_data.content`，去掉两端空白后，只有完全等于「今日人品」或「#今日人品」才算命中。「看看今日人品」、后面带参数、没有文字正文的消息，以及引用消息里的文字都不会触发。命中后，它用 `server.execute_command('/jrrp', event.get_command_source())` 把消息转交给 `/jrrp` 命令。`/jrrp` 本身直接由命令树处理，不经过这两个别名，所以每条消息只会得到一次回复。
 
 ## 评分、语录与按钮
 
-- 每日评分沿用原算法。真实 `User.id` 和运行机器的本地日期共同决定结果。数字 ID 保留原数值种子，非数字 OpenID 使用 SHA-256。幸运指数为 0–100%，同一天、同一身份的结果固定。
-- 群聊与 C2C 用各自收到的真实 ID 计算身份。相同 ID 对应相同身份，不同 ID 分别处理。更换运行机器的时区，可能改变日期切换时间。
-- 初始语录池为空。语录池保持相同时，旧算法最多选择三种每日候选语录。
-- 投稿成功消息显示四个按钮，撤回按钮携带本条投稿的 UUID。所有人都可点击，执行权限由服务端检查。其他场景只显示一行「今日人品」「投稿」「帮助」。
-- 群聊按钮负责把命令填入输入框。C2C 的今日人品和帮助按钮允许自动发送。投稿模板和撤回按钮填入输入框后，由用户确认发送。
-- 用 `/botqraft pref language set en_us` 可以切换输出语言。中文和英文内容来自根目录 `lang/`。正文通过带插件命名空间的 `rtr` 封装延迟求值。键盘标签和模板在发送前生成字符串。代码注释、异常与硬编码日志使用英文。
+- 幸运指数沿用原算法：发送者的 `User.id` 和运行机器的本地日期共同决定结果。纯数字 ID 直接作为数值种子，其他 ID 先算 SHA-256。指数在 0–100% 之间，同一天、同一 ID 的结果固定；更换运行机器的时区，可能改变日期切换的时间。
+- 指数从高到低对应六档签文：大吉（85–100）、吉（68–84）、末吉（51–67）、末凶（35–50）、凶（18–34）、大凶（0–17）。
+- 群聊和 C2C 都按收到消息里的 `User.id` 计算。两边 ID 不同时，就按两个身份分别计算。
+- 语录池为空时，回复里提示用户投稿。语录池不变时，同一个人同一天最多会抽到三种语录，每次查询从中随机选一句。
+- 投稿成功的回复带两行四个按钮：「今日人品」「投稿」/「帮助」「撤回投稿」，撤回按钮携带本条投稿的 UUID。其他回复只带一行「今日人品」「投稿」「帮助」。按钮的点击权限对所有人开放，能否撤回由命令处理函数检查。
+- 群聊里所有按钮只把命令填入输入框。C2C 里「今日人品」和「帮助」点击后直接发送；「投稿」填入完整的多行模板，「撤回投稿」填入撤回命令，都要用户确认后再发送。
+- 每个用户可以在 QQ 里发送 `/botqraft pref language set en_us`，把自己的输出语言切换为英文。中文和英文内容来自根目录 `lang/`。回复正文用带 `qq_jrrp.` 命名空间的 `server.rtr(...)` 延迟翻译；按钮标签和投稿模板用 `server.tr(...)` 在发送前按当前用户的语言翻译成字符串。
 
 ## 投稿与撤回
 
@@ -71,50 +71,98 @@
 
    ```text
    /jrrp post '''
-   在此填写语录，可以换行
+   在此处填写文本 可换行
    '''
-   作者或出处
+   作者《出处》
    ```
 
-写法要求：`post` 后面保留一个空格，再写起始标记 `'''`。结束标记 `'''` 独占一行，作者或出处写在下一行。
+写法要求：`post` 后面用空格隔开，再写起始标记 `'''` 并立即换行。结束标记 `'''` 独占一行，作者或出处写在下一行。文本与出处都不能为空，否则回复「投稿参数错误」并附上投稿方法。
 
-正文内部的空格和换行会原样保留，普通引号和反斜杠可以直接输入。独占一行的 `'''` 专门作为结束标记，所以正文里出现同类文字时，请把它放在含其他内容的行上。还在用旧 `!文本` / `!出处` 模板的话，请改用上面的三引号格式。
+正文内部的空格和换行会原样保留，出处会去掉两端空白。普通引号和反斜杠可以直接输入。正文之后第一个独占一行的 `'''` 就是结束标记，所以正文里出现同样的内容时，请把它放在含其他文字的行上。
 
-命令树分别注册 `jrrp_handler`、`help_handler`、`post_handler` 和 `withdraw_handler`。`GreedyText` 只收集 `post` 的投稿内容。投稿解析函数负责检查标记及非空字段，其他命令各自由命令树调用。
-
-文本与出处都需要填写。
+`/jrrp`、`/jrrp help`、`/jrrp post` 和 `/jrrp withdraw` 分别由 `jrrp_handler`、`help_handler`、`post_handler` 和 `withdraw_handler` 处理。`post` 后面的投稿内容用 `GreedyText` 整段收集，再交给 `parse_submission` 检查标记和非空字段；`withdraw` 后面的 ID 用 `Text` 读取一个词。
 
 撤回按下面两步：
 
 1. 取得要撤回的 UUID。投稿成功消息里的撤回按钮已经带上它。
-2. 发送 `/jrrp withdraw <id>`，把 `<id>` 换成该 UUID。
+2. 发送 `/jrrp withdraw <id>`，把 `<id>` 换成该 UUID。只发 `/jrrp withdraw` 会回复撤回方法。
 
-需要本人或管理员权限。判定方式见[权限系统](permissions.md)。
+只有投稿者本人，或权限等级不低于 2 的用户可以撤回。等级怎么来见[权限系统](permissions.md#了解权限优先级)。
 
 ## 数据与持久化
 
-语录保存在 `config/qq_jrrp/luck_sentence.json`，内容是一个 JSON 列表，每条记录有四个字段：
+语录保存在实例的 `config/qq_jrrp/luck_sentence.json`，目录由 `server.get_data_folder()` 得到。文件是 UTF-8 编码的 JSON 列表，每条记录有四个字段：
 
 | 字段       | 内容                          |
 | ---------- | ----------------------------- |
 | `id`       | 语录的 UUID，撤回时用它定位。 |
-| `sender`   | 投稿者的真实 `User.id`。      |
+| `sender`   | 投稿者的 `User.id`。          |
 | `sentence` | 语录正文。                    |
 | `from`     | 作者或出处。                  |
 
-写入时先写临时文件，再整体替换原文件，避免写到一半损坏数据。撤回会把这条记录从列表中删除。
+```json
+[
+  {
+    "id": "9a529ca0-3aea-4724-992e-8214217f8864",
+    "sender": "投稿者的 User.id",
+    "sentence": "语录正文",
+    "from": "作者《出处》"
+  }
+]
+```
 
-沿用旧数据时，只要每条记录有 `sender`、`sentence` 和 `from` 就能读取。缺少 `id` 的记录会在第一次读取时补上 UUID，`群号:group:用户` 这类带场景前缀的旧 `sender` 也会只保留最后的用户部分，然后自动写回文件。文件不是 JSON 列表、缺少字段或 `id` 重复时，插件会回复存储错误，不会改动文件。
+写入时先在同一目录写临时文件，再整体替换原文件，避免写到一半损坏数据。读写由一把锁串行化。撤回会把这条记录从列表中删除。
+
+沿用旧数据时，只要每条记录有 `sender`、`sentence` 和 `from` 就能读取。缺少 `id` 的记录会补上 UUID；形如 `前缀:group:用户` 或 `前缀:c2c:用户` 的旧 `sender` 只保留最后的用户部分。整个文件校验通过后，这些改动会在第一次读取时自动写回文件。旧数据里数字形式的 `sender` 会原样保留，它和任何 `User.id` 字符串都不相等，所以这类记录只有权限等级不低于 2 的用户能撤回。
+
+文件不是合法 JSON、不是列表、记录缺少字段、正文或出处为空、`id` 不是标准 UUID 或者 `id` 重复时，插件记录日志并回复「语录数据读写失败」，不会改动文件。
 
 权限检查放在命令处理层：
 
-- 投稿需要真实的 `User.id`，用来记录投稿者。
-- 撤回需要 `User.id` 与这条投稿的 `sender` 相同，或者权限等级不低于 2。不满足时回复无权撤回。
+- 投稿时用发送者的 `User.id` 作为 `sender` 记录投稿者。
+- 撤回时先按 `id` 查找。找不到回复「撤回失败」；找到后，`sender` 与你的 `User.id` 相同，或者你的权限等级不低于 2，才会删除，否则回复「无权撤回」。
 
 ## 完整代码
 
-整个插件用目录格式组织：元数据、多模块入口、翻译文件和示例许可协议。仓库的 `example_plugins/qq_jrrp/` 包含所有这些部分。复制到插件目录即可加载。
+整个插件用目录格式组织，仓库的 [`example_plugins/qq_jrrp/`](https://github.com/tanhHeng/BotQraftReforged/tree/main/example_plugins/qq_jrrp) 就是完整代码，复制到插件目录即可加载：
 
-代码涵盖命令树、被动监听、键盘构造、延迟翻译和 JSON 持久化。入口模块 `qq_jrrp/__init__.py` 里是命令树和各个处理函数，撤回流程看 `withdraw_handler` 和 `storage.py` 的 `SentenceStore.withdraw`。按钮如何按群聊和 C2C 区分，看 `keyboard.py` 的 `command_keyboard`。
+| 文件                               | 内容                                                                                           |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `botqraft.plugin.json`             | 元数据：ID `qq_jrrp`、入口 `qq_jrrp`、资源 `lang`/`LICENSE`/`NOTICE`、依赖 `botqraft>=0.1.0`。 |
+| `qq_jrrp/__init__.py`              | `on_load` 命令树、`on_message` 文字别名、四个处理函数和 `parse_submission`。                   |
+| `qq_jrrp/fortune.py`               | `daily_luck` 每日指数和 `luck_category` 分档。                                                 |
+| `qq_jrrp/storage.py`               | `Sentence` 记录，以及 `SentenceStore` 的 `choose`、`add`、`withdraw` 和原子写入。              |
+| `qq_jrrp/messages.py`              | 带插件命名空间的 `_rtr`、Markdown 转义和各条回复的拼装。                                       |
+| `qq_jrrp/keyboard.py`              | `command_keyboard`，按群聊/C2C 和是否有投稿 ID 生成按钮。                                      |
+| `lang/zh_cn.yml`、`lang/en_us.yml` | 所有回复、按钮标签和投稿模板的中英文文本。                                                     |
+| `LICENSE`、`NOTICE`                | GPL-3.0 许可协议与来源说明。                                                                   |
+
+入口模块里注册命令和文字别名的部分如下（摘自 `qq_jrrp/__init__.py`）：
+
+```python
+def on_load(server: QQPluginServerInterface, prev_module: ModuleType | None) -> None:
+    store = SentenceStore(Path(server.get_data_folder()) / 'luck_sentence.json')
+    root = Literal(COMMAND).requires(lambda source: source.has_permission(0))
+    root.runs(lambda source: jrrp_handler(server, store, source))
+    root.then(Literal('help').runs(lambda source: help_handler(server, source)))
+    root.then(Literal('post').runs(lambda source: post_handler(server, store, source)).then(
+        GreedyText('payload').runs(lambda source, context: post_handler(server, store, source, context['payload']))
+    ))
+    root.then(Literal('withdraw').runs(lambda source: withdraw_handler(server, store, source)).then(
+        Text('id').runs(lambda source, context: withdraw_handler(server, store, source, context['id']))
+    ))
+    server.register_command(root, scope=('group', 'c2c'))
+    server.register_help_message(COMMAND, _rtr(server, 'panel_description'), scope=('group', 'c2c'))
+
+
+def on_message(server: QQPluginServerInterface, event: QQMessageReceived) -> None:
+    # Exact aliases only: command-tree execution already handles /jrrp.
+    # Do not remove apparent mentions or guess identities from message text.
+    content = event.message_data.content
+    if isinstance(content, str) and content.strip() in _ALIASES:
+        server.execute_command(COMMAND, event.get_command_source())
+```
+
+撤回流程看 `withdraw_handler` 和 `SentenceStore.withdraw`，按钮如何按群聊和 C2C 区分看 `command_keyboard`。
 
 接下来，回到[插件开发](index.md)，照着这套结构写你自己的插件。

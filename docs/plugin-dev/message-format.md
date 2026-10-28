@@ -30,7 +30,7 @@ def on_message(server: QQPluginServerInterface, event: QQMessageReceived):
 | `id`                | 官方消息 ID，用于被动关联和撤回。          |
 | `timestamp`         | 平台原始时间字符串。                       |
 
-这些字段可能缺失，也可能是 `None`。请按消息实际包含的字段处理正文、附件和其他内容。
+这些字段都可选：平台没给的字段值为 `None`。请按消息实际包含的字段处理正文、附件和其他内容。
 
 ## 区分用户身份和会话地址
 
@@ -38,15 +38,15 @@ def on_message(server: QQPluginServerInterface, event: QQMessageReceived):
 
 记忆方法很简单：找会话，用对应的 OpenID；认用户，用 `User.id`。被动回复沿用收到的来源；主动发送使用 `Group` 或 `C2C` 目标，最常用的是 `source.target`。
 
-| 字段                   | 用途                                                                |
-| ---------------------- | ------------------------------------------------------------------- |
-| `User.id`              | 真实用户身份，用于权限和偏好。                                      |
-| `user_openid`          | C2C 会话地址。                                                      |
-| `group_openid`         | 群会话地址。                                                        |
-| `member_openid`        | 群内 AT 对象的会话地址。                                            |
-| `scene`                | 场景，取值为 `group` 或 `c2c`。入站消息会为作者和提及对象补上场景。 |
-| `member_role`          | 平台群角色，用于对应的角色权限模式。                                |
-| `MentionedUser.is_you` | 该提及是否指向当前机器人。                                          |
+| 字段                   | 用途                                                                                               |
+| ---------------------- | -------------------------------------------------------------------------------------------------- |
+| `User.id`              | 真实用户身份，用于权限和偏好。                                                                     |
+| `user_openid`          | C2C 会话地址。                                                                                     |
+| `group_openid`         | 群会话地址。                                                                                       |
+| `member_openid`        | 群成员在该群里的 OpenID，`QTextAt` 用它 AT 这个成员。                                              |
+| `scene`                | 场景，取值为 `group` 或 `c2c`。入站消息会为作者和提及对象补上场景，群消息还会补上 `group_openid`。 |
+| `member_role`          | 平台群角色，用于对应的角色权限模式。                                                               |
+| `MentionedUser.is_you` | 该提及是否指向当前机器人。                                                                         |
 
 具体用法见[回复消息](reply.md)和[发送消息](sending.md)。
 
@@ -91,13 +91,14 @@ def on_message(server: QQPluginServerInterface, event: QQMessageReceived):
 
 ## 提及与前缀处理
 
-框架在解析阶段统一处理正文前缀。命令和所有回调读到的都是同一个 `message_data.content`：
+框架在解析阶段统一处理正文前缀。所有回调和命令来源读到的都是同一个 `message_data.content`：
 
 - `GROUP_AT_MESSAGE_CREATE` 移除正文前导 ASCII 空格。
 - 当前 dev 版本对 `GROUP_MESSAGE_CREATE` 做临时修正。正文可以先有 ASCII 空格，之后必须是匹配某个 `MentionedUser.id` 的 `<@id>`，且该对象的 `is_you is True`。满足条件时，框架移除一个标签及其后的 ASCII 空格。
 - `<@!id>`、正文中间的标签、重复出现的后续标签以及其他条件之外的正文均保持原样。
 - 内部和尾部空格、引用元素、完整 mentions、`raw_payload` 和 `data` 保持原样。临时修正也保留原始收件日志。
 - C2C 正文保持原样。
+- 匹配命令时，`GROUP_AT_MESSAGE_CREATE` 还会再去掉开头一个指向机器人自身（连接 READY 时获得的机器人 ID）的 `<@id>` 或 `<@!id>` 及前后空白。这一步只作用于命令匹配，`message_data.content` 不变。
 
 机器人提及列表和正文标签共同决定前缀。平台 AT 投递类型、正文是否含 AT 是两个不同的事实，请按各自的字段处理。
 
@@ -109,6 +110,6 @@ def on_message(server: QQPluginServerInterface, event: QQMessageReceived):
 
 ## 获取消息来源
 
-调用 `event.get_command_source()`，取得这条消息对应的原始 `QQCommandSource`。第一次调用会检查真实身份、消息 ID 和会话地址，然后缓存结果。缺少任何一项时会拒绝创建。
+调用 `event.get_command_source()`，取得这条消息对应的原始 `QQCommandSource`。调用时会检查真实身份、消息 ID 和会话地址，缺少任何一项都会抛出 `ValueError`；检查通过后缓存结果，之后的调用返回同一个对象。
 
 接下来，读[主动发送、引用与撤回](sending.md)，在回复之外主动发出消息。

@@ -23,17 +23,17 @@ from botqraft.api.types import QQPluginServerInterface
 
 ## `botqraft.api.event`
 
-本地事件和 QQ 入站事件。用法见[监听消息与事件](events.md)、[读取消息内容](message-format.md)和[按钮：键盘与点击响应](interactions.md)。
+事件定义、监听器和 QQ 入站事件。用法见[监听消息与事件](events.md)、[读取消息内容](message-format.md)和[按钮：键盘与点击响应](interactions.md)。
 
-- 本地事件：`Event`、`PluginEvents`、`PluginEvent`、`LiteralEvent`、`EventListener`。
+- 事件定义与监听器：`Event`、`PluginEvents`、`PluginEvent`、`LiteralEvent`、`EventListener`。`PluginEvents` 同时列出 BotQraft 生命周期事件和 QQ 消息、交互事件。
 - QQ 入站对象：`QQEvent`、`QQInteraction`、`QQMessageReceived`。
 
 ## `botqraft.api.decorator`
 
-- `event_listener`：本地插件事件监听。
-- `qq_event_listener`：QQ 官方事件监听。
-- `new_thread`、`FunctionThread`：沿用 MCDR 的线程装饰器与线程类型。
-- `spam_proof`：沿用 MCDR 的防重复调用装饰器。
+- `qq_event_listener`：把回调注册为当前插件的事件监听器，事件可以是 `PluginEvents` 中的事件、QQ 事件类型或自定义事件 ID。
+- `event_listener`：`qq_event_listener` 的别名，行为完全相同。
+- `new_thread`、`FunctionThread`：沿用 MCDR 的线程装饰器与线程类型，被装饰的函数在新的守护线程中运行，调用后返回 `FunctionThread`。
+- `spam_proof`：沿用 MCDR 的防并发装饰器，同一时刻已有调用在执行时，后来的调用会被跳过。
 
 创建后台工作后，要在卸载时安排停止和资源关闭，参见[后台任务与卸载](tasks.md)。
 
@@ -70,15 +70,16 @@ QQ 消息、翻译与键盘。用法见[Markdown 消息与文本交互](markdown
 
 ## `botqraft.api.exception`
 
-| 公开对象                                         | 用途                                      |
-| ------------------------------------------------ | ----------------------------------------- |
-| `UnsupportedOperationError`                      | 操作需要 Minecraft 等其他宿主能力时抛出。 |
-| `RuntimeNotReadyError`                           | 实例状态不接受当前操作。                  |
-| `PassiveReplyExpiredError`                       | 被动回复上下文过期。                      |
-| `NetworkError`                                   | 网络和平台失败的公开异常基类。            |
-| `PlatformError`、`GatewayError`、`NotReadyError` | 平台、网关和发送连接状态相关的失败。      |
-| `ResultUnknownError`                             | 平台可能已经执行操作，结果尚未确认。      |
-| `ErrorCategory`                                  | 稳定的失败分类枚举。                      |
+| 公开对象                        | 用途                                                                                                    |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `UnsupportedOperationError`     | 调用的 MCDR 接口在 QQ 侧没有对应能力时抛出，例如 Minecraft 服务端操作、插件命令来源、手动派发内置事件。 |
+| `RuntimeNotReadyError`          | 实例状态不接受当前操作，例如停止后注册或调度任务。                                                      |
+| `PassiveReplyExpiredError`      | 被动回复上下文过期（超过框架保留的 10 分钟）或未登记。                                                  |
+| `NetworkError`                  | 网络和平台失败的公开异常基类，表示操作确定没有完成。                                                    |
+| `PlatformError`、`GatewayError` | `NetworkError` 的子类：平台有证据地明确拒绝、网关连接失败。                                             |
+| `NotReadyError`                 | 运行时或网关未就绪时同步拒绝 QQ 操作。它是 `RuntimeNotReadyError` 的子类，不属于 `NetworkError`。       |
+| `ResultUnknownError`            | `NetworkError` 的子类：平台可能已经执行操作，结果尚未确认，不要自动重试。                               |
+| `ErrorCategory`                 | 稳定的失败分类枚举。                                                                                    |
 
 用 `NetworkError` 的 `category`、`http_code`、`err_code`、`code`、`trace_id` 判断失败。异常文字用于阅读和诊断。遇到 `ResultUnknownError` 先核实结果，再决定要不要提交，保证每项操作只执行一次。结果处理见[回复消息](reply.md#处理提交与网络错误)。
 

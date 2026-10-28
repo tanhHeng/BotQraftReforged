@@ -20,40 +20,48 @@ def send_chart(source: QQCommandSource):
     return source.reply(QImage(Path('chart.png')), return_future=True)
 ```
 
-主动发送的写法相同，只是换成目标。例如发回命令所在的会话：
+主动发送的写法相同，只是换成目标。下面在 `on_load` 里注册 `/clip` 命令，把插件数据目录里的 `clip.mp4` 发回命令所在的会话：
 
 ```python
 from pathlib import Path
 
-from botqraft.api.command import QQCommandSource
+from botqraft.api.command import QQCommandSource, SimpleCommandBuilder
 from botqraft.api.qtext import QVideo
 from botqraft.api.types import QQPluginServerInterface
 
 def send_clip(server: QQPluginServerInterface, source: QQCommandSource):
-    return server.send(source.target, QVideo(Path('clip.mp4')), return_future=True)
+    clip = Path(server.get_data_folder()) / 'clip.mp4'
+    return server.send(source.target, QVideo(clip), return_future=True)
+
+def on_load(server: QQPluginServerInterface, prev_module):
+    builder = SimpleCommandBuilder()
+    builder.command('/clip', lambda source: send_clip(server, source))
+    builder.register(server)
 ```
+
+相对路径按机器人的工作目录解析。`server.get_data_folder()` 返回 `config/<plugin_id>`，先把视频放进这个目录；文件不存在时，`QVideo(...)` 会在命令执行时抛出 `ValueError`。
 
 ## 选择媒体来源
 
 媒体的来源有四种写法：
 
-| 来源               | 写法                                  | 说明                                                                   |
-| ------------------ | ------------------------------------- | ---------------------------------------------------------------------- |
-| 公网 URL           | `QImage('https://example.com/a.png')` | 平台自己下载。字符串只接受 `http://` 或 `https://` 开头的地址。        |
-| 本地文件           | `QImage(Path('a.png'))`               | 本地文件必须用 `pathlib.Path`，普通字符串会被当作错误的 URL 拒绝。     |
-| 内存数据           | `QImage(data, name='a.png')`          | `bytes` 会在构造时复制一份，之后改动原数据不影响发送。                 |
-| 可 seek 的二进制流 | `QFile(stream, name='report.pdf')`    | 从流的当前位置读到末尾。发送的 Future 完成前请保持流打开且不要改动它。 |
+| 来源               | 写法                                  | 说明                                                                                           |
+| ------------------ | ------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| 公网 URL           | `QImage('https://example.com/a.png')` | 平台自己下载。字符串只接受 `http://` 或 `https://` 开头的地址。                                |
+| 本地文件           | `QImage(Path('a.png'))`               | 本地文件必须用 `pathlib.Path` 等 `os.PathLike`，普通字符串会被当作错误的 URL 拒绝。            |
+| 内存数据           | `QImage(data, name='a.png')`          | `bytes`、`bytearray` 或 `memoryview` 会在构造时复制一份，之后改动原数据不影响发送。            |
+| 可 seek 的二进制流 | `QFile(stream, name='report.pdf')`    | 从流的当前位置读到末尾。发送的 Future 完成前请保持流打开且不要改动它；框架不会替你关闭这个流。 |
 
 内存数据和流必须提供 `name`，也就是对方看到的文件名；本地文件默认使用文件名。
 
-构造时就会检查来源：文件不存在、为空、超过 200 MiB，或者流不能 seek，都会立刻抛出异常。文件格式由平台判断，框架不做转换，例如语音需要你自己准备平台支持的格式。
+构造时就会检查来源：文件不存在、为空、超过 200 MiB，或者流不能 seek，都会立刻抛出 `ValueError`；文本流等不支持的来源类型抛出 `TypeError`。URL 的大小由平台判断。文件格式由平台判断，框架不做转换，例如语音需要你自己准备平台支持的格式。
 
 ## 使用限制
 
 - 一条媒体消息只有媒体本身，不能附带文字或键盘。`QText('说明') + QImage(...)` 会抛出 `TypeError`；需要说明文字时，单独再发一条。
 - 每次发送都会重新上传到目标会话。同一个 `QImage` 对象可以多次发送，但每次都会上传。
 - 上传需要时间。用 `reply` 回复时，如果上传结束时已经超过被动回复的有效期，框架不会再发出消息，Future 以 `PassiveReplyExpiredError` 结束。大文件建议改用 `send` 主动发送。
-- 发送图片和视频需要机器人账号具有对应的富媒体消息权限。
+- 格式和大小由平台把关。官方文档写的是：视频只支持 mp4，超过 30 MB 会降级为文件上传；图片超过 20 MB 同样降级。
 - 上传失败、平台拒绝和网络错误都通过 Future 报告，处理方式与文字消息相同，见[处理发送结果](sending.md#处理发送结果)。
 
 想看一个完整的例子，仓库里的 [Echo 示例](https://github.com/tanhHeng/BotQraftReforged/blob/main/example_plugins/echo.py)会把用户发来的图片逐张回复出去。

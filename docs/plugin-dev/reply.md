@@ -22,9 +22,9 @@ def on_message(server: QQPluginServerInterface, event: QQMessageReceived):
 
 群消息正文已经过[前缀处理](message-format.md#提及与前缀处理)。本例只处理 `/ping`。如果你同时为 `/ping` 注册了命令，就按职责选一条回复路径，保证一次响应只回一条。
 
-这两个接口都会沿用原消息 ID 和原会话，所以叫"被动回复"。可以把它理解成在平台给出的回复窗口里，接着刚才那条消息回话；如果要晚些时候再发，就改用主动发送。
+`source.reply(...)` 和 `server.reply(source, ...)` 都会沿用原消息 ID 和原会话，所以叫"被动回复"。可以把它理解成在平台给出的回复窗口里，接着刚才那条消息回话；如果要晚些时候再发，就改用主动发送。
 
-`message` 支持 `str`、`QText`、`QMarkdown` 和延迟翻译文本。回复会按来源当前偏好的语言解析翻译。
+`message` 支持 `str`、`QText`、`QMarkdown`、延迟翻译文本，以及[图片、视频和文件](media.md)。回复会按来源当前偏好的语言解析翻译。
 
 ## 使用原始来源
 
@@ -47,9 +47,11 @@ def on_message(server: QQPluginServerInterface, event: QQMessageReceived):
 
 ## 在有效期内回复
 
-被动上下文大约有 600 秒有效期，同时还受原始平台时间和账号发送规则限制。收到消息后请及时回复，并把原始来源留给相关操作用。
+框架为每条收到的消息保留最多 600 秒的被动上下文，从本机收到消息时算起。如果消息里的平台时间早于本机收到时间（比如推送有延迟），窗口会相应缩短，相当于从平台时间起算 600 秒。消息缺少可用的平台时间时，不能被动回复；平台时间比本机时间超前 15 秒以上时，提交会抛出 `ValueError`，超前 5 秒以上时框架会在日志里提醒你检查系统时钟。
 
-过期或上下文已失效时，提交会抛出 `PassiveReplyExpiredError`，从 `botqraft.api.exception` 导入。需要长期发送时，改用真实目标和平台允许的[主动发送接口](sending.md#主动发送)。
+这只是框架这一侧的窗口，平台另有自己的被动回复时效和次数限制：官方文档写的是群聊 5 分钟、每条消息最多回复 5 次，C2C 60 分钟、每条最多 4 次。群聊的平台时效比框架窗口短，超出时由平台拒绝，错误通过 Future 报告；C2C 消息过了 600 秒，即使平台仍允许，框架也会拒绝。收到消息后请及时回复，并把原始来源留给相关操作用。
+
+超过框架窗口或上下文未登记时，提交会抛出 `PassiveReplyExpiredError`，从 `botqraft.api.exception` 导入。需要长期发送时，改用真实目标和平台允许的[主动发送接口](sending.md#主动发送)。
 
 默认回复只提供被动关联。需要展示引用时，显式传入 `refer_msg`。引用索引和同会话的要求见[引用消息](sending.md#引用消息)。
 
@@ -104,7 +106,7 @@ async def reply_result(source: QQCommandSource):
 
 - 类型不对时，处理 `TypeError`。
 - 缺少身份、消息 ID、会话地址或引用索引等参数错误时，处理 `ValueError`。
-- 被动上下文过期时，处理 `PassiveReplyExpiredError`。
+- 被动上下文过期时，处理 `PassiveReplyExpiredError`。它是 `ValueError` 的子类，要单独处理时写在 `except ValueError` 前面。
 - 连接还没 READY 或已经变化时，处理 `NotReadyError`。
 - HTTP 和平台失败时，读取 `NetworkError` 的 `category`、`http_code`、`err_code`、`code` 和 `trace_id`。异常文字用于阅读和诊断。
 

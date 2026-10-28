@@ -8,7 +8,7 @@
 
 ## 准备翻译文件
 
-目录和压缩插件在根目录 `lang/` 放置 `.json`、`.yml` 或 `.yaml` 文件。目录与 Python 包并列。下面的插件 ID 是 `greet`，所以源码包目录也叫 `greet`：
+目录和压缩插件在根目录 `lang/` 放置 `.json`、`.yml` 或 `.yaml` 文件，文件名（去掉后缀）就是语言代码。目录与 Python 包并列。多文件插件里唯一的 Python 包必须以插件 ID 命名，下面的插件 ID 是 `greet`，所以源码包目录也叫 `greet`：
 
 ```text
 greet/
@@ -20,9 +20,9 @@ greet/
     └── zh_cn.yml
 ```
 
-框架自动发现并注册根目录 `lang/` 中的翻译。把 Python 包内或 `resources/lang/` 中的翻译挪到这个位置。打包时将 `lang` 加入元数据的 `resources`，参见[元数据](metadata.md)和[插件格式](plugin-format.md)。
+框架在插件加载时自动发现并注册根目录 `lang/` 中的翻译；Python 包内或 `resources/lang/` 中的翻译不会被发现，请挪到这个位置。打包时将 `lang` 加入元数据的 `resources`，参见[元数据](metadata.md)和[插件格式](plugin-format.md)。
 
-翻译键使用插件 ID 作为命名空间。插件 ID 为 `greet` 时，`lang/en_us.yml` 写为：
+翻译键使用插件 ID 作为命名空间。框架不强制这一点，但所有插件共用一张翻译表，且框架自带的同名键优先，所以请务必加上前缀。插件 ID 为 `greet` 时，`lang/en_us.yml` 写为：
 
 ```yaml
 greet:
@@ -93,7 +93,7 @@ source.reply(message)
 
 ## 获取即时文本
 
-键盘标签、按钮数据、异常文本和明确的同步查询需要即时值，使用 `server.tr`。纯字符串参数的翻译返回字符串，QQ 文本参数可能使结果成为 `QText` 或 `QMarkdown`。
+键盘标签、按钮数据、异常文本和明确的同步查询需要即时值，使用 `server.tr`。参数全是字符串、数字、布尔值或 `None` 时返回字符串；含 QQ 文本参数时结果可能是 `QText` 或 `QMarkdown`。
 
 只接受字符串的构造器参数使用普通文本翻译，并明确选择来源语言：
 
@@ -108,13 +108,13 @@ with source.preferred_language_context():
     label = server.tr('greet.help')
 ```
 
-上下文在退出时恢复原语言。请把作用范围留在同步调用内，在 `await` 前退出。跨异步边界的消息使用延迟文本。
+上下文在退出时恢复原语言。请把作用范围留在同步调用内，在 `await` 前退出；上下文跨越 `await` 会抛出 `RuntimeError`。跨异步边界的消息使用延迟文本。
 
-`botqraft.api.qtext` 同时导出 `tr`、`rtr`。这些模块级函数需要运行中的 BotQraft 接口。插件回调优先使用传入的 `server`。
+`botqraft.api.qtext` 同时导出 `tr`、`rtr`。这些模块级函数需要运行中的 BotQraft 接口，否则抛出 `RuntimeError`。插件回调优先使用传入的 `server`。
 
 ## 保存用户语言
 
-用户语言保存在偏好里，默认跟随实例的 `language`。用 `source.get_preference()` 或 `server.get_preference(source)` 取得一份偏好副本。偏好是拿出来的一份副本。先改这份副本，再调用 `set_preference`，设置才会真正留下来。可以把它想成：取出表单、修改表单、提交表单。
+用户语言保存在偏好里；用户没有保存过偏好时，使用实例当前的 `language`。用 `source.get_preference()` 或 `server.get_preference(source)` 取得一份偏好副本。先改这份副本，再调用 `server.set_preference(source, preference)`，设置才会真正留下来。可以把它想成：取出表单、修改表单、提交表单。
 
 ```python
 def set_english(server, source):
@@ -123,10 +123,10 @@ def set_english(server, source):
     server.set_preference(source, preference)
 ```
 
-保存后，`source.reply` 发送的延迟文本和 `preferred_language_context()` 都会使用新语言。
+`language` 必须是框架已加载的语言（例如 `en_us`、`zh_cn`），否则 `set_preference` 抛出 `ValueError`；插件 `lang/` 里新增的语言不会扩充这个列表。保存后，`source.reply` 发送的延迟文本和 `preferred_language_context()` 都会使用新语言。
 
 ## 处理翻译失败
 
-缺少键时，默认记录英文错误并显示键。设置 `allow_failure=False`，缺键会抛出 `KeyError`。参数类型错误会抛出 `TypeError`，格式化失败会抛出 `ValueError`。即时 `tr` 在调用时暴露这些错误，延迟 `rtr` 在真正发送或展示时暴露它们。
+缺少键时，默认记录英文错误日志，并把键本身作为文本返回（不做格式化）。设置 `allow_failure=False`，缺键会抛出 `KeyError`。参数类型不受支持时抛出 `TypeError`，格式化失败（例如缺少 `{name}` 对应的参数）抛出 `ValueError`。即时 `tr` 在调用时暴露这些错误，延迟 `rtr` 在真正发送或展示时暴露它们。
 
 接下来，阅读[插件数据与打包资源](data.md)，把资源与运行状态放到正确的位置。

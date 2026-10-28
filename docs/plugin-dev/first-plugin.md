@@ -6,7 +6,7 @@
 
 ## 创建插件文件
 
-先初始化实例，并确认实例插件目录是 `plugins/`：
+先在准备用作实例目录的文件夹里初始化实例。它会在当前目录创建 `config.yml`、`permissions.yml` 以及 `plugins/`、`config/botqraft/`、`logs/` 目录，其中 `plugins/` 就是默认的插件目录（由 `config.yml` 的 `plugin_directories` 决定）：
 
 ```bash
 python -m botqraft init
@@ -47,7 +47,7 @@ def on_load(server: QQPluginServerInterface, prev_module: ModuleType | None) -> 
 
 ## 启动并加载
 
-在实例目录填写 QQ 开放平台凭据：
+在实例目录的 `config.yml` 里填写 QQ 开放平台凭据：
 
 ```yaml
 appid: "YOUR_APPID"
@@ -60,24 +60,24 @@ secret: "YOUR_APP_SECRET"
 python -m botqraft
 ```
 
-看到 `BotQraft READY` 后，插件会随启动加载。已经运行的实例也可以刷新插件：
+启动时框架会先加载插件，再连接 QQ；看到 `BotQraft READY` 就说明连接已经就绪，Echo 也已经随启动加载好了。已经运行的实例也可以刷新插件。下面这些命令在运维控制台输入；在 QQ 里只有 `permission.super_admins` 中的超级管理员能用：
 
 ```text
 /botqraft plugin refresh
 /botqraft plugin list
 ```
 
-`/botqraft plugin refresh` 重新扫描插件目录，`/botqraft plugin list` 显示已加载的插件。修改 Echo 之后，执行：
+`/botqraft plugin refresh` 重新扫描插件目录：加载新放进去的插件、卸载文件已删除的插件，并重载已加载的插件。`/botqraft plugin list` 列出已加载、已禁用和未加载的插件。修改 Echo 之后，执行：
 
 ```text
 /botqraft plugin reload echo
 ```
 
-每个插件 ID 只保留一个可加载副本。如果 Echo 没有加载，先打开日志。优先看看元数据、入口导入和依赖这三类提示，通常很快就能找到是哪一块还没准备好。
+插件目录里每个插件 ID 只放一份：同一个 ID 出现多份时只会加载其中一份，其余的会在日志里报重复错误。如果 Echo 没有加载，先打开日志。优先看看元数据、入口导入和依赖这三类提示，通常很快就能找到是哪一块还没准备好。
 
 ## 在 QQ 中验证
 
-在群聊或 C2C 私聊发送：
+在 C2C 私聊直接发送，或在群聊里 @机器人 后发送（群里通常只有 @机器人 的消息才会推送给机器人，开头的这个提及会在匹配命令前去掉）：
 
 ```text
 /echo Hello world
