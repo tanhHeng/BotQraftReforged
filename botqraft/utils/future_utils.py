@@ -12,6 +12,19 @@ _lock = RLock()
 _observed = WeakSet()
 
 
+def claim_report(error: BaseException) -> bool:
+    """Mark an error as reported so shared failures are logged only once.
+
+    :param error: Failure about to be logged.
+    :return: False when another reporter already logged this error.
+    """
+    with _lock:
+        if getattr(error, '_botqraft_reported', False):
+            return False
+        error._botqraft_reported = True
+    return True
+
+
 def report_error(error: BaseException, logger: logging.Logger, operation: str = 'task') -> None:
     """Report a shared exception once while keeping independent request failures distinct.
     
@@ -20,11 +33,8 @@ def report_error(error: BaseException, logger: logging.Logger, operation: str = 
     :param operation: Human-readable operation label.
     :return: No return value.
     """
-    with _lock:
-        if getattr(error, '_botqraft_reported', False):
-            return
-        error._botqraft_reported = True
-    logger.warning('%s: %s', operation, error)
+    if claim_report(error):
+        logger.warning('%s: %s', operation, error)
 
 
 def observe_future(future: Future[T], logger: logging.Logger, operation: str = 'task') -> Future[T]:

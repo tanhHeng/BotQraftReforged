@@ -15,7 +15,7 @@ import time
 from urllib.parse import urlsplit
 
 import aiohttp
-from botqraft.utils.future_utils import report_error
+from botqraft.utils.future_utils import claim_report, report_error
 from botqraft.logging.logger import log_raw_response
 from .exception import ErrorCategory, GatewayError, NetworkError, PlatformError
 
@@ -137,6 +137,7 @@ class GatewayClient:
         try:
             while not self._closing:
                 self.state = GatewayState.CONNECTING
+                failure = None
                 try:
                     if self._gateway_url is None:
                         delay = self._last_discovery + 30 - time.monotonic()
@@ -157,31 +158,34 @@ class GatewayClient:
                     if not error.recoverable:
                         self._fatal(error)
                         raise
-                    if not self._closing and not self._config_reconnect:
-                        report_error(error, self.runtime.logger, 'QQ gateway disconnected')
+                    failure = error
                 except PlatformError as error:
                     if not error.retryable:
                         self._fatal(error)
                         raise
-                    report_error(error, self.runtime.logger, 'QQ gateway connection')
+                    failure = error
                 except NetworkError as error:
-                    report_error(error, self.runtime.logger, 'QQ gateway connection')
+                    failure = error
                 except aiohttp.WSServerHandshakeError as error:
                     failure = GatewayError('gateway HTTP handshake rejected', http_code=error.status,
                                            recoverable=error.status == 429 or error.status >= 500)
                     if not failure.recoverable:
                         self._fatal(failure)
                         raise failure from None
-                    report_error(failure, self.runtime.logger, 'QQ gateway connection')
                 except (aiohttp.ClientError, asyncio.TimeoutError, OSError) as error:
-                    report_error(NetworkError('gateway ' + type(error).__name__), self.runtime.logger, 'QQ gateway connection')
+                    failure = NetworkError('gateway ' + type(error).__name__)
                 if self._closing:
                     break
                 self.state = GatewayState.OFFLINE
                 attempts += 1
                 delay = min(60, 5 * 2 ** min(attempts - 1, 4)) + random.uniform(0, 1)
-                self.runtime.logger.info('QQ gateway offline; reconnecting in %.2f seconds (attempt %s, intents changed=%s)',
-                                         delay, attempts, self._config_reconnect)
+                # One line per outage: the cause (unless already logged elsewhere, e.g. token refresh) plus the retry plan.
+                if self._config_reconnect and isinstance(failure, GatewayError):
+                    self.runtime.logger.info('QQ gateway reconnecting in %.1fs to apply new intents', delay)
+                elif claim_report(failure):
+                    self.runtime.logger.warning('QQ gateway offline, reconnecting in %.1fs (attempt %d): %s', delay, attempts, failure)
+                else:
+                    self.runtime.logger.info('QQ gateway offline, reconnecting in %.1fs (attempt %d)', delay, attempts)
                 deadline = time.monotonic() + delay
                 while not self._closing and time.monotonic() < deadline:
                     await asyncio.sleep(min(0.25, max(0, deadline - time.monotonic())))
@@ -219,7 +223,7 @@ class GatewayClient:
                 if isinstance(interval, bool) or not isinstance(interval, (int, float)) or not math.isfinite(interval) or interval <= 0:
                     raise GatewayError('invalid heartbeat interval')
                 interval /= 1000
-                self.runtime.logger.info('QQ gateway connected (heartbeat interval=%.2f seconds)', interval)
+                self.runtime.logger.debug('QQ gateway connected (heartbeat interval=%.2f seconds)', interval)
                 # IDENTIFY cannot be a tight loop even when the server closes immediately.
                 delay = self._last_identify + 5 - time.monotonic()
                 if delay > 0:
