@@ -1,7 +1,7 @@
 """Native QQ Markdown adapted from LazyBot qq_jrrp (GPL-3.0-only).
 
 Source API: https://bot.q.qq.com/wiki/develop/api-v2/
-Modified 2026-10-05: delayed translated BotQraft output, without reference replies.
+Modified 2026-10-05: delayed translated BotQraft output.
 """
 
 from datetime import date

@@ -24,6 +24,8 @@ message templates and nested Markdown translations are evaluated on sending.
 persistent submission UUIDs and migration of composite senders to official user IDs.
 Withdrawal now targets a submission UUID, checks author ownership or permission
 level 2, and exposes unrestricted withdrawal buttons only after successful posts.
+2026-10-15 modifications: fortune query replies quote the triggering message;
+help, submission and withdrawal replies remain unquoted.
 
 This plugin is distributed under GNU GPL version 3 only, without any
 warranty. See LICENSE for the complete license text, obtained verbatim

@@ -4,6 +4,7 @@ Source: https://github.com/UnknownBits/LazyAlienWS/blob/main/plugins/qq_jrrp.py
 Modified 2026-10-01: native QQ Markdown, command keyboards and safe JSON persistence.
 Modified 2026-10-05: public BotQraft group/C2C APIs, translations, exact aliases,
 stdlib record validation and help registration; reference replies are omitted.
+Modified 2026-10-15: fortune query replies quote the triggering message.
 """
 
 from datetime import date
