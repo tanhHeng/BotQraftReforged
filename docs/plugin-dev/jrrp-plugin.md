@@ -1,5 +1,7 @@
 # 今日人品插件
 
+> **场景**：我已经会写命令和回复了，想看一个真正能用的插件，是怎么把命令、按钮、翻译和数据存储组合在一起的。
+
 读完这一页，你能把一个完整的示例插件装进实例，跑通查询、投稿和撤回的每一步。
 
 这个插件把原来的 LazyBot/NoneBot 今日人品插件迁移到了 BotQraft，用 QQ Markdown、命令键盘和被动回复组合出完整功能。你可以从 [qq_jrrp 示例](https://github.com/tanhHeng/BotQraftReforged/blob/main/example_plugins/qq_jrrp/botqraft.plugin.json)开始看。

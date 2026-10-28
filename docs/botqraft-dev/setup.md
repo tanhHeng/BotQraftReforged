@@ -67,7 +67,7 @@ python -m build
 
 ### 消息烟测
 
-[Markdown、文本交互与键盘](../plugin-dev/markdown.md)里的代码是离线消息构造烟测。把它保存为 `message_smoke.py` 后执行：
+[按钮：键盘与点击响应](../plugin-dev/interactions.md)里“添加自定义键盘”一节的代码是离线消息构造烟测。把它保存为 `message_smoke.py` 后执行：
 
 ```bash
 python message_smoke.py

@@ -1,27 +1,46 @@
-# 命令系统
+# 注册命令
 
-读完这一页，你会知道命令回调收到什么、命令在哪些场景生效。你还会明白为什么用户必须按你注册的写法来敲。
+> **场景**：我想加一条 `/roll <次数>` 命令，用户发 `/roll 3` 时机器人掷三次骰子，而且这条命令只在群里能用。该怎么注册？
 
-命令要在插件的 `on_load` 里注册。用户在 QQ 发送命令后，框架解析命令树，再调用对应的函数。
+读完这一页，你能用 `SimpleCommandBuilder` 注册带参数的命令，知道命令回调收到什么，还能把命令限定在群聊或私聊里。
 
-命令节点和 Builder 都从 `botqraft.api.command` 导入。先认识回调的来源、参数和场景，再用 [SimpleCommandBuilder](simple-command-builder.md) 注册命令。
+命令要在插件的 `on_load` 里注册。用户在 QQ 发送命令后，框架解析命令，再调用对应的函数。命令相关的类都从 `botqraft.api.command` 导入。
+
+## 用 SimpleCommandBuilder 注册命令
+
+用 `SimpleCommandBuilder` 注册命令只要三步：先声明路径，再定义参数，最后登记到实例。下面的代码放在插件模块里。加载插件后，在 QQ 发送 `/echo Hello world`：
+
+```python
+from botqraft.api.command import CommandContext, GreedyText, QQCommandSource, SimpleCommandBuilder
+from botqraft.api.types import QQPluginServerInterface
+
+def echo(source: QQCommandSource, context: CommandContext) -> None:
+    source.reply(context['text'])
+
+def on_load(server: QQPluginServerInterface, prev_module) -> None:
+    builder = SimpleCommandBuilder()
+    builder.command('/echo <text>', echo)
+    builder.arg('text', GreedyText)
+    builder.register(server)
+```
+
+1. 先声明路径：`command('/echo <text>', echo)` 告诉框架这条命令长什么样，并指定路径末尾执行哪个回调。
+2. 再定义参数：`arg('text', GreedyText)` 说明 `<text>` 这个占位符该收什么内容，这里收一段文本。
+3. 最后登记到实例：`register(server)` 把前面的声明构建成命令树，注册到插件上。默认群聊和 C2C 都能用。
+
+路径按空格分段。普通片段是固定词，`<参数名>` 是参数节点。每个参数都要用 `arg(...)` 定义一次，名字要和回调里读的 `context` 键一致。
+
+这里的 `GreedyText` 接收剩余文本，并保留文本里的空格。完整可安装的版本见[第一个插件](first-plugin.md)。
 
 ## 接收 source 和 context
 
 带参数的回调使用两个参数：
 
-```python
-from botqraft.api.command import CommandContext, QQCommandSource
-
-def echo(source: QQCommandSource, context: CommandContext) -> None:
-    source.reply(context['text'])
-```
-
 - `source` 是这次命令的真实 QQ 消息来源。
-- `context` 保存命令节点解析出的参数。参数节点名叫 `text` 时，就用 `context['text']` 取值。
+- `context` 保存命令解析出的参数。参数名叫 `text` 时，就用 `context['text']` 取值。
 - `source.reply(...)` 回复触发命令的那条消息。回复关联使用原始消息 ID 和原会话。
 
-只用来源的回调可以写成 `def ping(source): ...`。节点回调支持零到两个参数，依次是来源和上下文。
+只用来源的回调可以写成 `def ping(source): ...`。回调支持零到两个参数，依次是来源和上下文。
 
 `QQCommandSource` 的常用成员如下：
 
@@ -37,21 +56,45 @@ def echo(source: QQCommandSource, context: CommandContext) -> None:
 | `get_server()`          | 取得当前实例的 `QQServerInterface`。                         |
 | `has_permission(level)` | 检查当前有效权限。                                           |
 
-插件的 `on_load` 收到绑定插件的 `QQPluginServerInterface`。用这个接口登记命令、帮助和其他插件资源。回复细节见[响应事件与回复消息](reply.md)，权限规则见[权限](permissions.md)。
+插件的 `on_load` 收到绑定插件的 `QQPluginServerInterface`。用这个接口登记命令、帮助和其他插件资源。回复细节见[回复消息](reply.md)，权限规则见[权限](permissions.md)。
 
-## 选择 scope
+## 选择参数类型
 
-`scope` 决定命令在哪种 QQ 场景里可用：
+公开参数节点从 `botqraft.api.command` 导入：
 
-| 注册值             | 场景                      |
-| ------------------ | ------------------------- |
-| `('group', 'c2c')` | 群聊和 C2C 私聊，默认值。 |
-| `('group',)`       | 群聊。                    |
-| `('c2c',)`         | C2C 私聊。                |
+| 节点           | 输入与结果                                   |
+| -------------- | -------------------------------------------- |
+| `Text`         | 单个文本片段。                               |
+| `QuotableText` | 单个文本片段，或者引号包起来、含空格的文本。 |
+| `GreedyText`   | 命令剩余的整段文本，要放在路径末尾。         |
+| `Integer`      | 解析为整数。                                 |
+| `Float`        | 解析为浮点数。                               |
+| `Boolean`      | 解析为布尔值。                               |
 
-原生命令树通过 `server.register_command(root, scope=('group',))` 指定场景。Builder 的 `register(server)` 使用默认场景。要指定场景，方法见[下一页](simple-command-builder.md#指定注册场景)。
+例如把上例的 `GreedyText` 换成 `QuotableText`，就要用 `/echo "Hello world"` 传入含空格的文本。选择 `GreedyText` 时，直接发送 `/echo Hello world` 就行。
 
-命令和帮助分别登记 `scope`。同一条命令要填相同的场景。能不能执行由节点的 `requires(...)` 检查，帮助的权限只控制帮助显不显示。
+`arg` 的第二个参数也可以是工厂函数。它接收参数名，返回参数节点。例如：
+
+```python
+from botqraft.api.command import Integer
+
+builder.arg('count', lambda name: Integer(name).at_min(1))
+```
+
+把 `<count>` 写进对应的命令路径，再从 `context['count']` 取得整数。
+
+## 为一个根声明多条路径
+
+多次调用 `command(...)`，共用同一个根名称，就能挂多条路径。Builder 会合并相同的路径节点：
+
+```python
+builder.command('/echo <text>', echo)
+builder.command('/echo help', lambda source: source.reply('Usage: /echo <text>'))
+builder.arg('text', GreedyText)
+builder.register(server)
+```
+
+固定的子命令直接写在路径里。需要调整固定节点的行为时，用 `builder.literal(...)`。更复杂的结构见[命令树](command-tree.md)。
 
 ## 命令名称要和注册时一致
 
@@ -72,7 +115,28 @@ def echo(source: QQCommandSource, context: CommandContext) -> None:
 - 其他正文保持原样，包括 `<@!id>`、正文中间的标签和重复的后续标签。内部与尾部空格、引用元素、完整 mentions、`raw_payload`、`data` 和原始收件日志也保持原样。
 - C2C 正文保持原样。
 
-事件字段见[事件消息格式](message-format.md)。
+事件字段见[读取消息内容](message-format.md)。
+
+## 选择 scope
+
+`scope` 决定命令在哪种 QQ 场景里可用：
+
+| 注册值             | 场景                      |
+| ------------------ | ------------------------- |
+| `('group', 'c2c')` | 群聊和 C2C 私聊，默认值。 |
+| `('group',)`       | 群聊。                    |
+| `('c2c',)`         | C2C 私聊。                |
+
+`builder.register(server)` 只接收 `server`，用的是默认场景。要限定为群聊，先 `build()`，再用插件接口逐个注册每个根：
+
+```python
+for root in builder.build():
+    server.register_command(root, scope=('group',))
+```
+
+用这段替换 `builder.register(server)`。用命令树手写的根也一样，通过 `server.register_command(root, scope=...)` 指定场景。
+
+命令和帮助分别登记 `scope`。为同一条命令登记[帮助](help.md)时，填上相同的场景。能不能执行由节点的 `requires(...)` 检查，帮助的权限只控制帮助显不显示。
 
 ## 在真实 QQ 消息中执行
 
@@ -80,4 +144,4 @@ def echo(source: QQCommandSource, context: CommandContext) -> None:
 
 需要从插件触发另一条命令时，调用 `server.execute_command(command, source)`。传入本实例真实的 `QQCommandSource`：可以用命令回调的来源，也可以用入站消息的 `event.get_command_source()`。来源的身份、消息 ID 和会话地址都来自真实收到的数据。
 
-接下来，用 [SimpleCommandBuilder](simple-command-builder.md) 声明命令路径。
+接下来，读[回复消息](reply.md)，把结果回给用户。

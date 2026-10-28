@@ -1,5 +1,7 @@
 # 权限系统
 
+> **场景**：我有一条清空数据的 `/reset` 命令，只想让管理员能用，还想单独给某位用户开放权限。该怎么做？
+
 读完这一页，你能给命令加上权限检查，并为用户设置或移除授权。
 
 ## 查询权限时传入真实用户对象
@@ -69,15 +71,4 @@ server.remove_permission(source, global_scope=True)
 
 传入的对象类型不对会抛出 `TypeError`，缺少身份或会话地址也会拒绝操作。直接把实际 `source` 传进去，这些事实就都保留了。
 
-## 保存用户语言
-
-用户语言保存在偏好里，默认跟随实例的 `language`。用 `source.get_preference()` 或 `server.get_preference(source)` 取得一份偏好副本。偏好是拿出来的一份副本。先改这份副本，再调用 `set_preference`，设置才会真正留下来。可以把它想成：取出表单、修改表单、提交表单。
-
-```python
-def set_english(server, source):
-    preference = server.get_preference(source)
-    preference.language = 'en_us'
-    server.set_preference(source, preference)
-```
-
-接下来阅读[翻译与用户语言](translation.md)，让反馈在真正发送或展示的时刻按用户语言生成。
+接下来，命令需要更复杂的结构时，阅读[命令树](command-tree.md)。

@@ -10,7 +10,7 @@
 面向用户的文字不硬编码，写成翻译键，由翻译文件提供各语言版本。
 
 翻译键以插件 ID 作为命名空间。插件 ID 为 `greet` 时，键写作 `greet.hello`，`lang/en_us.yml` 与 `lang/zh_cn.yml` 里都放这个键。
-框架自己的键放在 `botqraft/resources/lang/`。完整写法见[翻译与用户语言](../plugin-dev/translation.md)。
+框架自己的键放在 `botqraft/resources/lang/`。完整写法见[多语言与用户偏好](../plugin-dev/translation.md)。
 
 ## 公开 API 用英文 Sphinx 字段式 docstring
 

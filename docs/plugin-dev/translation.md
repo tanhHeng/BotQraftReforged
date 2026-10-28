@@ -1,6 +1,8 @@
-# 翻译与用户语言
+# 多语言与用户偏好
 
-这一页讲怎么让插件的提示文字跟随用户的语言。读完你能准备翻译文件、注册翻译，并选对翻译接口。
+> **场景**：我的插件既有中文用户也有英文用户，想让他们各自看到自己语言的提示，还想让用户自己切换语言。该怎么做？
+
+这一页讲怎么让插件的提示文字跟随用户的语言。读完你能准备翻译文件、注册翻译、选对翻译接口，并保存用户自己选的语言。
 
 把面向用户的文字写成翻译键。用 `server.rtr` 可以创建延迟文本。延迟文本就像一张提货单：现在先记下"要说什么"和"填什么参数"，等到真正发送或展示时才决定用哪种语言把它变成实际文字。插件里硬编码的日志、异常和注释使用英文，中文用户反馈通过翻译键提供。
 
@@ -87,7 +89,7 @@ message = server.rtr('greet.hello', markdown=True, name=name)
 source.reply(message)
 ```
 
-`markdown=True` 保留模板的 Markdown。普通字符串和 `QText` 参数按纯文本转义，`QMarkdown` 参数保留自己的 Markdown，交互对象保留交互标签。嵌套的延迟文本按同一语言解析。消息组合方式见[Markdown、文本交互与键盘](markdown.md)。
+`markdown=True` 保留模板的 Markdown。普通字符串和 `QText` 参数按纯文本转义，`QMarkdown` 参数保留自己的 Markdown，交互对象保留交互标签。嵌套的延迟文本按同一语言解析。消息组合方式见[Markdown 消息与文本交互](markdown.md)。
 
 ## 获取即时文本
 
@@ -110,10 +112,21 @@ with source.preferred_language_context():
 
 `botqraft.api.qtext` 同时导出 `tr`、`rtr`。这些模块级函数需要运行中的 BotQraft 接口。插件回调优先使用传入的 `server`。
 
+## 保存用户语言
+
+用户语言保存在偏好里，默认跟随实例的 `language`。用 `source.get_preference()` 或 `server.get_preference(source)` 取得一份偏好副本。偏好是拿出来的一份副本。先改这份副本，再调用 `set_preference`，设置才会真正留下来。可以把它想成：取出表单、修改表单、提交表单。
+
+```python
+def set_english(server, source):
+    preference = server.get_preference(source)
+    preference.language = 'en_us'
+    server.set_preference(source, preference)
+```
+
+保存后，`source.reply` 发送的延迟文本和 `preferred_language_context()` 都会使用新语言。
+
 ## 处理翻译失败
 
 缺少键时，默认记录英文错误并显示键。设置 `allow_failure=False`，缺键会抛出 `KeyError`。参数类型错误会抛出 `TypeError`，格式化失败会抛出 `ValueError`。即时 `tr` 在调用时暴露这些错误，延迟 `rtr` 在真正发送或展示时暴露它们。
-
-用户语言的读取和保存见[权限系统](permissions.md)。
 
 接下来，阅读[插件数据与打包资源](data.md)，把资源与运行状态放到正确的位置。

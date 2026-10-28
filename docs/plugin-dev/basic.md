@@ -1,10 +1,12 @@
-# 基本知识
+# 插件是怎么运行的
 
-想象一下，如果你想给 BotQraft 添加新功能，其实就是写一个 Python 文件放进 `plugins/` 目录。在这个文件里，你声明一下"我是谁"（元数据），然后告诉框架"在什么时候做什么"（回调函数），剩下的事情框架会帮你搞定。
+> **场景**：Echo 已经能回话了，可我还不清楚：插件放进 `plugins/` 之后，框架什么时候调用我的代码？重载插件时，我开的后台任务又该在哪里停掉？
+
+跑通 Echo 之后，我们来看看它背后发生了什么。给 BotQraft 添加新功能，其实就是写一个 Python 文件放进 `plugins/` 目录。在这个文件里，你声明一下"我是谁"（元数据），然后告诉框架"在什么时候做什么"（回调函数），剩下的事情框架会帮你搞定。
 
 BotQraft 独立运行，用 QQ 机器人作为运行环境，并且沿用了 MCDR 那套久经考验的插件系统，所以如果你用过 MCDR，会很熟悉。
 
-## 你的第一个插件长什么样
+## 最小的插件长什么样
 
 来看一个最小化的插件代码。保存成 `plugins/hello.py`：
 
@@ -51,7 +53,7 @@ def on_load(server: QQPluginServerInterface, prev_module: ModuleType | None) -> 
 - 框架会自动清理你注册的命令、帮助、事件和翻译。但是你自己创建的后台任务、计时器、网络连接这些东西，需要在 `on_unload` 里手动收拾干净。
 - 特别提醒：如果插件在加载过程中出错了，有可能 `on_unload` 不会被调用。所以初始化代码要防守好——如果中途出异常，要立即释放已经申请的资源，别指望 `on_unload` 来救场。
 
-如果你想看事件和消息怎么处理，可以看[插件事件](events.md)。想知道后台任务怎么优雅地停止，看[后台任务与卸载](tasks.md)。
+如果你想看事件和消息怎么处理，可以看[监听消息与事件](events.md)。想知道后台任务怎么优雅地停止，看[后台任务与卸载](tasks.md)。
 
 ## 你能用到的工具和接口
 
@@ -76,14 +78,10 @@ from botqraft.api.command import SimpleCommandBuilder, QQCommandSource
 
 命令回调里拿到的是 `QQCommandSource`。`source.get_server()` 返回的是实例级的 `QQServerInterface`，和上面的 `server` 不是一个东西。如果你需要注册功能、访问插件数据目录或打包资源，还是要用生命周期回调传给你的那个 `server`。回复用户的消息？直接用 `source.reply(...)` 最方便。
 
-想看完整的 API 列表，可以查[API 索引](api.md)。消息来源和回复的细节在[响应事件与回复消息](reply.md)里。
+想看完整的 API 列表，可以查[API 索引](api.md)。消息来源和回复的细节在[回复消息](reply.md)里。
 
-## 动手试试吧
+## 接下来
 
-仓库的 [`example_plugins/`](https://github.com/BotQraftReforged/BotQraftReforged/tree/main/example_plugins) 里放着几个现成的插件示例，复制到你的 `plugins/` 目录就能直接用。
+仓库的 [`example_plugins/`](https://github.com/tanhHeng/BotQraftReforged/tree/main/example_plugins) 里放着几个现成的插件示例，复制到你的 `plugins/` 目录就能直接用。想看一个功能更完整的插件，里面有命令、Markdown、按钮、多语言翻译还有数据存储，看看[今日人品插件](jrrp-plugin.md)。
 
-想先跑通一条简单命令看看效果，从[第一个插件](first-plugin.md)开始最舒服。
-
-想看一个功能更完整的、真正能用的插件示例，里面有命令、Markdown、按钮、多语言翻译还有数据存储，看看[今日人品插件](jrrp-plugin.md)就有感觉了。
-
-准备好了？下一步是为你的插件写[元数据](metadata.md)。
+下一步，阅读[注册命令](commands.md)，给插件加上自己的命令。

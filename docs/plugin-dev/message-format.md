@@ -1,8 +1,10 @@
-# 事件与消息格式
+# 读取消息内容
+
+> **场景**：收到一条群消息后，我想知道是谁发的、发在哪个群、有没有 @ 机器人，正文里还带了几张图片。这些信息去哪里取？
 
 读完这一页，你能看懂 QQ 事件里的每个字段，也知道什么时候读原始数据、什么时候读已解析的对象。
 
-先按[插件事件](events.md)选好回调，再按这里的方式取字段。需要平台原始字段时，读 `raw_payload`。
+先按[监听消息与事件](events.md)选好回调，再按这里的方式取字段。需要平台原始字段时，读 `raw_payload`。写命令时一般用 `context` 取参数就够了，用不到这一页。
 
 ## 读取消息正文与基础字段
 
@@ -46,7 +48,7 @@ def on_message(server: QQPluginServerInterface, event: QQMessageReceived):
 | `member_role`          | 平台群角色，用于对应的角色权限模式。                                |
 | `MentionedUser.is_you` | 该提及是否指向当前机器人。                                          |
 
-具体用法见[响应事件与回复消息](reply.md)和[发送消息](sending.md)。
+具体用法见[回复消息](reply.md)和[发送消息](sending.md)。
 
 `is_you` 的类型是 `Optional[bool]`。字段缺失或为 null 时，它是 `None`。判断是否是机器人的提及时，用 `is_you is True`。
 
@@ -109,4 +111,4 @@ def on_message(server: QQPluginServerInterface, event: QQMessageReceived):
 
 调用 `event.get_command_source()`，取得这条消息对应的原始 `QQCommandSource`。第一次调用会检查真实身份、消息 ID 和会话地址，然后缓存结果。缺少任何一项时会拒绝创建。
 
-接下来，读[响应事件与回复消息](reply.md)，把消息回复出去。
+接下来，读[主动发送、引用与撤回](sending.md)，在回复之外主动发出消息。

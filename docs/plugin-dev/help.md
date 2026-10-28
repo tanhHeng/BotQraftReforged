@@ -1,5 +1,7 @@
 # 帮助消息与指令面板
 
+> **场景**：我写好了 `/echo`，想让用户发 `/botqraft` 时能在帮助列表里看到它，还想让 `/echo` 出现在 QQ 的指令面板里。该怎么做？
+
 读完这一页，你能给命令登记帮助文字，让用户在 QQ 里查到它的用法。
 
 在 `on_load` 中调用 `server.register_help_message(...)`，为命令登记帮助文字和 QQ 指令面板项。命令树和帮助分开注册，互不影响。
@@ -39,7 +41,7 @@ server.register_help_message(
 
 在 QQ 里发送 `/botqraft`，看到的就是当前来源可见的插件帮助列表，也就是前面说的普通帮助列表。`/botqraft help` 展示的是内置运维命令目录。
 
-普通帮助按查询来源的用户语言解析。QQ 指令面板在同步时按实例配置的语言解析。需要翻译文件时，阅读[翻译与用户语言](translation.md)。
+普通帮助按查询来源的用户语言解析。QQ 指令面板在同步时按实例配置的语言解析。需要翻译文件时，阅读[多语言与用户偏好](translation.md)。
 
 ## 区分显示权限和执行权限
 
@@ -90,4 +92,4 @@ server.logger.info('Undisplayed prefixes: %s', status.undisplayed_prefixes)
 
 查询私聊面板时改用 `server.get_panel_status('c2c')`。状态快照还提供 `reason`、`err_code`、`code`、`http_code` 和 `trace_id`，方便你查同步失败的原因。
 
-接下来，了解[命令树](command-tree.md)，看看怎么用节点搭出更细致的命令结构。
+接下来，阅读[权限系统](permissions.md)，决定谁能执行命令。

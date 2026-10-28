@@ -1,5 +1,7 @@
 # 插件数据与打包资源
 
+> **场景**：我的插件要随包带一份默认语录，还要把用户投稿保存下来，重启以后也不丢。这些文件该放在哪里？
+
 插件通常会带两种文件：随插件发布的资源，比如帮助文档和图片；运行后自己产生的数据，比如配置和状态。前者跟着插件走，后者住在实例的数据目录里。分清这两处，收拾文件时就不会迷路。
 
 读完这一页，你能读打包资源，也能给插件找到一块可写的地方。两类文件都通过绑定插件的 `QQPluginServerInterface` 访问。
@@ -14,7 +16,7 @@ def read_help(server):
         return stream.read().decode('utf-8')
 ```
 
-在插件元数据的 `resources` 中加入 `assets`，让资源随归档分发。翻译文件使用根目录 `lang/`，并将 `lang` 加入 `resources`。具体结构见[插件格式](plugin-format.md)和[翻译与用户语言](translation.md)。
+在插件元数据的 `resources` 中加入 `assets`，让资源随归档分发。翻译文件使用根目录 `lang/`，并将 `lang` 加入 `resources`。具体结构见[插件格式](plugin-format.md)和[多语言与用户偏好](translation.md)。
 
 `open_bundled_file` 用于目录或压缩插件。单文件插件自行定位并读取外部文件。使用单文件插件或未绑定插件的接口调用该方法，会抛出 `FileNotFoundError`。目标资源也需要实际存在。
 

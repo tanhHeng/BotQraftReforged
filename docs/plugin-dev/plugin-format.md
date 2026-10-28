@@ -1,4 +1,6 @@
-# 插件格式
+# 插件格式、打包与发布
+
+> **场景**：我的插件从一个文件长成了好几个模块，还带着翻译和图片，想打包成一个文件发给别人，对方直接放进 `plugins/` 就能用。该怎么做？
 
 插件有三种形态：单文件、目录和压缩文件。读完这一页，你能挑出合适的形态，把目录整理好，并打包出可以分发的文件。
 
@@ -66,7 +68,7 @@ def read_help(server: QQPluginServerInterface) -> str:
         return stream.read().decode('utf-8')
 ```
 
-需要保存的可写数据放进 `server.get_data_folder()` 返回的 `config/<plugin_id>` 目录，归档只用于保存分发内容。单文件插件自行定位并读取外部资源文件。更多用法见[插件数据](data.md)和[翻译与用户语言](translation.md)。
+需要保存的可写数据放进 `server.get_data_folder()` 返回的 `config/<plugin_id>` 目录，归档只用于保存分发内容。单文件插件自行定位并读取外部资源文件。更多用法见[插件数据](data.md)和[多语言与用户偏好](translation.md)。
 
 ## 安装依赖
 
@@ -124,6 +126,6 @@ botqraft pack -i example -o packed_plugins --ignore-file .gitignore --shebang "/
 
 每个插件 ID 保留一个可加载副本。切换到压缩插件时，将同 ID 的单文件或目录副本移出插件目录。
 
-BotQraft 与 Minecraft 插件共享部分打包格式，各自使用对应的输入和宿主 API。迁移时先阅读[与 MCDR 插件的差异](api.md#与-mcdr-插件的差异)。
+BotQraft 与 Minecraft 插件共享部分打包格式，各自使用对应的输入和宿主 API。迁移时先阅读[MCDR 开发者路线](index.md#mcdr-开发者路线)。
 
-接下来，阅读[命令系统](commands.md)，认识命令的基本概念。
+接下来，查阅[API 索引](api.md)，看看还有哪些公开接口可用。

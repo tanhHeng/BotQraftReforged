@@ -33,26 +33,56 @@ export default defineConfig({
         text: "插件开发",
         link: "/plugin-dev/",
         items: [
-          { text: "基本知识", link: "/plugin-dev/basic" },
-          { text: "元数据", link: "/plugin-dev/metadata" },
-          { text: "插件格式", link: "/plugin-dev/plugin-format" },
-          { text: "插件事件", link: "/plugin-dev/events" },
-          { text: "事件与消息格式", link: "/plugin-dev/message-format" },
-          { text: "响应事件与回复消息", link: "/plugin-dev/reply" },
-          { text: "命令系统", link: "/plugin-dev/commands" },
-          { text: "SimpleCommandBuilder", link: "/plugin-dev/simple-command-builder" },
-          { text: "命令树", link: "/plugin-dev/command-tree" },
-          { text: "帮助消息与指令面板", link: "/plugin-dev/help" },
-          { text: "第一个插件", link: "/plugin-dev/first-plugin" },
-          { text: "权限系统", link: "/plugin-dev/permissions" },
-          { text: "交互事件与按钮响应", link: "/plugin-dev/interactions" },
-          { text: "Markdown、文本交互与键盘", link: "/plugin-dev/markdown" },
-          { text: "翻译与用户语言", link: "/plugin-dev/translation" },
-          { text: "插件数据与打包资源", link: "/plugin-dev/data" },
-          { text: "后台任务与卸载", link: "/plugin-dev/tasks" },
-          { text: "主动发送、引用与撤回", link: "/plugin-dev/sending" },
-          { text: "API 索引", link: "/plugin-dev/api" },
-          { text: "今日人品示例", link: "/plugin-dev/jrrp-plugin" },
+          {
+            text: "先跑起来",
+            items: [
+              { text: "第一个插件", link: "/plugin-dev/first-plugin" },
+              { text: "插件是怎么运行的", link: "/plugin-dev/basic" },
+            ],
+          },
+          {
+            text: "命令与回复",
+            items: [
+              { text: "注册命令", link: "/plugin-dev/commands" },
+              { text: "回复消息", link: "/plugin-dev/reply" },
+              { text: "帮助消息与指令面板", link: "/plugin-dev/help" },
+              { text: "权限系统", link: "/plugin-dev/permissions" },
+              { text: "复杂命令：命令树", link: "/plugin-dev/command-tree" },
+            ],
+          },
+          {
+            text: "不用命令也能响应",
+            items: [
+              { text: "监听消息与事件", link: "/plugin-dev/events" },
+              { text: "读取消息内容", link: "/plugin-dev/message-format" },
+              { text: "主动发送、引用与撤回", link: "/plugin-dev/sending" },
+              { text: "发送图片、视频和文件", link: "/plugin-dev/media" },
+            ],
+          },
+          {
+            text: "让消息更好看",
+            items: [
+              { text: "Markdown 消息与文本交互", link: "/plugin-dev/markdown" },
+              { text: "按钮：键盘与点击响应", link: "/plugin-dev/interactions" },
+              { text: "多语言与用户偏好", link: "/plugin-dev/translation" },
+            ],
+          },
+          {
+            text: "插件工程",
+            items: [
+              { text: "插件数据与打包资源", link: "/plugin-dev/data" },
+              { text: "后台任务与卸载", link: "/plugin-dev/tasks" },
+              { text: "元数据", link: "/plugin-dev/metadata" },
+              { text: "插件格式、打包与发布", link: "/plugin-dev/plugin-format" },
+            ],
+          },
+          {
+            text: "参考与示例",
+            items: [
+              { text: "API 索引", link: "/plugin-dev/api" },
+              { text: "今日人品示例", link: "/plugin-dev/jrrp-plugin" },
+            ],
+          },
         ],
       },
       {
