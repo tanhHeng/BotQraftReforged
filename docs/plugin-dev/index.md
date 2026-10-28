@@ -2,7 +2,15 @@
 
 这一节会带你从零开始写出一个能跑的插件，然后按需要学会命令、回复、按钮、翻译、数据存储和后台任务。
 
-BotQraft 独立运行在 QQ 机器人上，并沿用了 MCDReforged（MCDR）那套久经考验的插件系统。没用过 MCDR 也没关系，按下面的新手路线从头读就行。用过 MCDR 的话，可以直接走 [MCDR 开发者路线](#mcdr-开发者路线)。
+BotQraft 独立运行在 QQ 机器人上，并沿用了 MCDReforged（MCDR）那套久经考验的插件系统。没用过 MCDR 也没关系，按下面的新手路线从头读就行。用 AI agent 写插件的话，先看 [agent 路线](#agent-路线)；用过 MCDR 的话，可以直接走 [MCDR 开发者路线](#mcdr-开发者路线)。
+
+## agent 路线
+
+想让 Codex、Claude Code 这类 AI agent 替你写插件？三步就够：
+
+1. 按[第一个插件](./first-plugin.md)装好实例，确认 Echo 能在 QQ 里回话。agent 改完代码后，要靠这个实例来验证。
+2. 把[用 AI agent 开发插件](./agents.md)里的模板存成插件项目根目录的 `AGENTS.md`，填上插件 ID。
+3. 像文档各页开头的“场景”那样把需求讲具体：什么命令、在群聊还是私聊、回复长什么样。agent 写完后，你在 QQ 里亲自试一遍。
 
 ## 新手路线
 
@@ -45,6 +53,7 @@ BotQraft 独立运行在 QQ 机器人上，并沿用了 MCDReforged（MCDR）那
 
 19. [API 索引](./api.md) — 按模块查找公开接口。
 20. [今日人品示例](./jrrp-plugin.md) — 读一个完整插件的实现，照着自己的需求改。
+21. [用 AI agent 开发插件](./agents.md) — 给 Codex、Claude Code 这类 agent 准备一份 `AGENTS.md`，让它按 BotQraft 的规矩写插件。
 
 ## MCDR 开发者路线
 

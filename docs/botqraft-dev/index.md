@@ -28,5 +28,6 @@
 - [本地开发与验证](setup.md)：装开发依赖、跑能力探测与回归测试、构建发行包。
 - [代码与文档约定](conventions.md)：代码语言、docstring、示例注释与提交信息。
 - [文档站编写](docs.md)：栏目分工、导航配置、Markdown 扩展与页面数据。
+- [用 AI agent 开发框架](agents.md)：给仓库准备一份 `AGENTS.md`，让 AI agent 按框架的约束改代码。
 
 接下来，先去了解一下[框架结构](architecture.md)。
