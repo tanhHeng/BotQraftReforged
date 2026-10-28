@@ -36,7 +36,8 @@ class _Passive:
 
 class MessageSender:
     """Validated QQ sends, deletes and interaction responses with payload snapshots."""
-    PASSIVE_RETENTION = 600
+    # Platform passive-reply windows: group 5 minutes, C2C 60 minutes (reference/qq_docs/server-inter/message/overview.md).
+    PASSIVE_LIFETIME = {'group': 300, 'c2c': 3600}
 
     def __init__(self: Self, runtime: "Runtime") -> None:
         """Create the synchronous QQ operation validation and payload snapshot boundary.
@@ -198,8 +199,9 @@ class MessageSender:
         if status == 'error':
             event._passive_deadline = float('-inf')
             return
-        deadline = min(getattr(event, 'received_at', now) + self.PASSIVE_RETENTION,
-                       now + self.PASSIVE_RETENTION - max(0, -offset))
+        lifetime = self.PASSIVE_LIFETIME[scene]
+        deadline = min(getattr(event, 'received_at', now) + lifetime,
+                       now + lifetime - max(0, -offset))
         with self._lock:
             self._cleanup(now)
             if deadline <= now:

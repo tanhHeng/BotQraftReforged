@@ -74,7 +74,7 @@ QQ 消息、翻译与键盘。用法见[Markdown 消息与文本交互](markdown
 | ------------------------------- | ------------------------------------------------------------------------------------------------------- |
 | `UnsupportedOperationError`     | 调用的 MCDR 接口在 QQ 侧没有对应能力时抛出，例如 Minecraft 服务端操作、插件命令来源、手动派发内置事件。 |
 | `RuntimeNotReadyError`          | 实例状态不接受当前操作，例如停止后注册或调度任务。                                                      |
-| `PassiveReplyExpiredError`      | 被动回复上下文过期（超过框架保留的 10 分钟）或未登记。                                                  |
+| `PassiveReplyExpiredError`      | 被动回复上下文过期（群聊 5 分钟、C2C 60 分钟）或未登记。                                                |
 | `NetworkError`                  | 网络和平台失败的公开异常基类，表示操作确定没有完成。                                                    |
 | `PlatformError`、`GatewayError` | `NetworkError` 的子类：平台有证据地明确拒绝、网关连接失败。                                             |
 | `NotReadyError`                 | 运行时或网关未就绪时同步拒绝 QQ 操作。它是 `RuntimeNotReadyError` 的子类，不属于 `NetworkError`。       |
