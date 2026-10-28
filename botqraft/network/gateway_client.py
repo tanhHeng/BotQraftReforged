@@ -56,6 +56,8 @@ class GatewayClient:
         self._last_discovery = float('-inf')
         self._intents = runtime.get_config().gateway.intent_mask
         self._config_reconnect = False
+        # Consecutive failures since the last READY; drives reconnect backoff.
+        self._attempts = 0
 
     def is_ready(self: Self) -> bool:
         """Report whether the gateway is ready and not closing.
@@ -133,7 +135,6 @@ class GatewayClient:
             self._first_ready.set_exception(error)
 
     async def _run(self: Self) -> None:
-        attempts = 0
         try:
             while not self._closing:
                 self.state = GatewayState.CONNECTING
@@ -153,7 +154,6 @@ class GatewayClient:
                         raise GatewayError('invalid gateway URL')
                     token = await self.runtime.api_client.token_provider.get_token()
                     await self._connection(token)
-                    attempts = 0
                 except GatewayError as error:
                     if not error.recoverable:
                         self._fatal(error)
@@ -177,15 +177,15 @@ class GatewayClient:
                 if self._closing:
                     break
                 self.state = GatewayState.OFFLINE
-                attempts += 1
-                delay = min(60, 5 * 2 ** min(attempts - 1, 4)) + random.uniform(0, 1)
+                self._attempts += 1
+                delay = min(60, 5 * 2 ** min(self._attempts - 1, 4)) + random.uniform(0, 1)
                 # One line per outage: the cause (unless already logged elsewhere, e.g. token refresh) plus the retry plan.
                 if self._config_reconnect and isinstance(failure, GatewayError):
                     self.runtime.logger.info('QQ gateway reconnecting in %.1fs to apply new intents', delay)
                 elif claim_report(failure):
-                    self.runtime.logger.warning('QQ gateway offline, reconnecting in %.1fs (attempt %d): %s', delay, attempts, failure)
+                    self.runtime.logger.warning('QQ gateway offline, reconnecting in %.1fs (attempt %d): %s', delay, self._attempts, failure)
                 else:
-                    self.runtime.logger.info('QQ gateway offline, reconnecting in %.1fs (attempt %d)', delay, attempts)
+                    self.runtime.logger.info('QQ gateway offline, reconnecting in %.1fs (attempt %d)', delay, self._attempts)
                 deadline = time.monotonic() + delay
                 while not self._closing and time.monotonic() < deadline:
                     await asyncio.sleep(min(0.25, max(0, deadline - time.monotonic())))
@@ -270,6 +270,7 @@ class GatewayClient:
                             user = ready_data.get('user') if isinstance(ready_data, dict) else None
                             self.runtime.bot_user_id = user.get('id') if isinstance(user, dict) else None
                             self.state = GatewayState.READY
+                            self._attempts = 0
                             self.runtime.logger.info('QQ gateway authenticated, READY (intent mask=%s)', intents)
                             if not self._first_ready.done():
                                 self._first_ready.set_result(None)
