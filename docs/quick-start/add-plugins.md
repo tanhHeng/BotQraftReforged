@@ -26,7 +26,7 @@ python -m pip install -r 插件目录/requirements.txt
 
 ## 试试 Echo 插件
 
-仓库中提供了一个简单的 [Echo 示例](https://github.com/BotQraftReforged/BotQraftReforged/blob/main/example_plugins/echo.py)。它会复述你发送的文本和图片，很适合检查插件是否正常工作。
+仓库中提供了一个简单的 [Echo 示例](https://github.com/tanhHeng/BotQraftReforged/blob/main/example_plugins/echo.py)。它会复述你发送的文本和图片，很适合检查插件是否正常工作。
 
 将仓库中的 `example_plugins/echo.py` 复制到运行实例的 `plugins/echo.py`。完成后，目录大致是这样的：
 

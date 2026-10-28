@@ -1,13 +1,13 @@
 # 代码与文档约定
 
-这一页列出写 BotQraft 代码时要遵守的几条约定。读完你能让自己的改动和现有代码保持一致。
+这一页列出写 BotQraft 代码时要遵守的几条约定。读完这一页，你的改动就能和现有代码保持一致。
 
 这些约定都能在仓库里找到现成例子，照着最近的提交写就不会跑偏。
 
 ## 用英文写代码，用翻译键写用户文字
 
 日志、异常信息和注释一律用英文，源码里不出现中文字面量。
-面向用户的文字不硬编码，写成翻译键，由翻译文件提供各语言版本。
+面向用户的文字不要硬编码，而是写成翻译键，再由翻译文件提供各语言版本。
 
 翻译键以插件 ID 作为命名空间。插件 ID 为 `greet` 时，键写作 `greet.hello`，`lang/en_us.yml` 与 `lang/zh_cn.yml` 里都放这个键。
 框架自己的键放在 `botqraft/resources/lang/`。完整写法见[多语言与用户偏好](../plugin-dev/translation.md)。
@@ -21,8 +21,8 @@
 - `:return:` 说明返回结果。
 - `:raises ExceptionType:` 记录明确的异常条件。
 
-类型以函数签名为准，docstring 里省略 `:type:` 与 `:rtype:`。
-零参数函数省略参数区块。只会以异常结束的拒绝操作，只记录异常条件。
+类型以函数签名为准，所以 docstring 里不写 `:type:` 与 `:rtype:`。
+没有参数的函数省略参数区块。只会以抛出异常来拒绝调用的操作，只记录异常条件。
 
 ```python
 def escape_markdown(text: str) -> str:
@@ -52,7 +52,7 @@ def escape_markdown(text: str) -> str:
 
 ## 提交信息
 
-`git log --oneline` 里的 29 条提交中，28 条是单行的 `<类型>: <英文祈使短句>`，没有正文。唯一的例外是早期加入许可证的那条。沿用这个格式：
+`git log --oneline` 里，除了早期加入许可证的那一条，所有提交都是 `<类型>: <英文祈使短句>` 的格式。请沿用这个格式：
 
 | 类型       | 用于                 |
 | ---------- | -------------------- |
@@ -64,7 +64,7 @@ def escape_markdown(text: str) -> str:
 
 例如 `feat: show built-in BotQraft command help`。摘要用英文祈使句，描述「做了什么」，不要写「修改了某某文件」。
 
-仓库用 Vite Plus 管理提交前检查，配置在根目录的 `vite.config.ts`，钩子脚本 `.vite-hooks/pre-commit` 会对暂存文件执行 `vp check --fix`。
-执行 `pnpm install` 时 `prepare` 脚本会通过 `vp config` 装好这些钩子。
+仓库用 Vite Plus 管理提交前检查，配置在根目录的 `vite.config.ts`。钩子脚本 `.vite-hooks/pre-commit` 会对暂存的文件执行 `vp check --fix`。
+执行 `pnpm install` 时，`prepare` 脚本会通过 `vp config` 把这些钩子装好。
 
 接下来，如果你要改文档，读[文档站编写](docs.md)。

@@ -18,7 +18,7 @@ hero:
       link: /botqraft-dev/
     - theme: alt
       text: GitHub
-      link: "https://github.com/BotQraftReforged/BotQraftReforged"
+      link: "https://github.com/tanhHeng/BotQraftReforged"
 
 features:
   - title: 基于 MCDReforged 开发

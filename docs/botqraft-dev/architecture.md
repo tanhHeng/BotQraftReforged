@@ -1,9 +1,9 @@
 # 框架结构
 
-这一页讲 BotQraft 源码分成哪些部分，以及一次启动会依次经过哪些环节。读完你能判断改一个功能该动哪个子包。
+这一页讲 BotQraft 源码分成哪些部分，以及一次启动会依次经过哪些环节。读完这一页，你能判断改一个功能该动哪个子包。
 
 `botqraft/` 是框架本体。它不启动 MCDR 宿主进程，而是复用 MCDR 的插件、命令树、权限和翻译代码，把运行宿主换成 QQ。
-`botqraft/__init__.py` 只导出 `__version__`，导入这个包不会创建文件、线程或网络连接。
+`botqraft/__init__.py` 只导出 `__version__`，导入这个包时不会创建任何文件、线程或网络连接。
 
 ## 子包职责
 
@@ -29,7 +29,7 @@
 | `botqraft/constants/`      | 版本号 `core_constant.VERSION` 与插件文件名常量。                                                                                                                      |
 | `botqraft/resources/`      | 打包资源：默认配置、默认权限与内置语言文件。                                                                                                                           |
 
-另有三个支撑子包。`translation/` 负责翻译查找与延迟文本，`preference/` 保存用户偏好与已见过的 C2C 用户，`utils/` 放序列化、异常与 Future 辅助函数。
+表格之外还有三个支撑子包：`translation/` 负责翻译查找与延迟文本，`preference/` 保存用户偏好与已见过的 C2C 用户，`utils/` 放序列化、异常与 Future 辅助函数。
 
 `botqraft/plugin/_native.py` 把 MCDR 2.14.4 的函数绑定到 BotQraft 的子类上，不改动 MCDR 自己的类或全局变量。
 
@@ -37,9 +37,9 @@
 
 ### 1. 进程入口
 
-装好后可以用 `botqraft` 命令，也可以用 `python -m botqraft`，两者都进入 `botqraft/entrypoint.py` 的 `entrypoint()`。
-它调用 `botqraft.cli.cli_entry.cli_dispatch()`，把返回码交给 `SystemExit`。
-按下 Ctrl+C 时返回码是 130。其他异常会向标准错误打印 `BotQraft: <错误>`，返回码为 1。
+装好之后，你可以用 `botqraft` 命令，也可以用 `python -m botqraft`，两者都会进入 `botqraft/entrypoint.py` 的 `entrypoint()`。
+它调用 `botqraft.cli.cli_entry.cli_dispatch()`，再把返回码交给 `SystemExit`。
+按下 Ctrl+C 时返回码是 130；遇到其他异常时，会向标准错误打印 `BotQraft: <错误>`，返回码为 1。
 
 ### 2. 命令行解析
 
@@ -55,30 +55,30 @@
 | `reformat-config` | 校验并重排配置文件，不启动 QQ                            |
 
 `init`、`gen-default` 与 `start` 都接受 `--config` 与 `--permission`，用来指定配置文件路径，默认是 `config.yml` 与 `permissions.yml`。
-不带子命令时也按 `start` 处理。
+不带子命令时，按 `start` 处理。
 各子命令的实现都在 `botqraft/cli/`，`start` 最终调用 `Runtime(args).run()`。
 
 ### 3. 部署准备
 
 `Runtime.start()` 先做四件事：
 
-1. 调用 `bootstrap.prepare_environment()`。它要求配置文件与权限文件已存在，除非启动时选了 `--auto-init`，此时先补写默认文件与目录。
+1. 调用 `bootstrap.prepare_environment()`。它要求配置文件与权限文件已经存在；如果启动时加了 `--auto-init`，就先补写默认文件与目录。
 2. 给日志器挂上 `logs/botqraft.log` 文件输出，并加上凭据脱敏过滤器。
 3. 用 `ConfigManager` 读取并校验配置。
-4. 检查 appid 与 secret 非空，再调用 `compatibility.capability_checker.check_capabilities()` 做本地能力检查。
+4. 确认 appid 与 secret 不为空，再调用 `compatibility.capability_checker.check_capabilities()` 做本地能力检查。
 
 能力检查在独立子进程里运行 `python -m botqraft.compatibility.probes`，结果按 BotQraft 与 MCDR 版本缓存在 `config/botqraft/capabilities.json`。
-缓存命中的版本会直接跳过检查，`--check-capabilities` 则忽略缓存强制重跑。
+命中缓存的版本会直接跳过检查；加上 `--check-capabilities` 则会忽略缓存，强制重跑。
 
 ### 4. 本地初始化与插件加载
 
 `Runtime.start_local()` 负责不涉及网络的那一半启动：
 
 1. `initialize_local()` 依次创建 `ConfigManager`、`TranslationManager`、`PermissionManager`、`PreferenceManager`、`KnownUserStore`、`QQServerInterface`、`PluginManager`、`CommandManager`、两个任务执行器、`NetworkLoop`、`ApiClient`、`GatewayClient`、`MessageSender`、`PanelSynchronizer` 与 `EventDispatcher`。
-2. 状态置为 `STARTING`，并检查进程内只存在一个运行时。第二个实例会抛出 `RuntimeError`。
+2. 状态置为 `STARTING`，并确认进程内只有这一个运行时；第二个实例会抛出 `RuntimeError`。
 3. 启动同步与异步任务执行器。
 4. 状态置为 `PLUGIN_LOADING`，`register_builtin_plugins()` 载入 `CorePlugin` 与 `PythonPlugin` 两个内置插件。
-5. `load_all_plugins()` 按依赖顺序刷新全部启用的插件。插件发现、依赖解析与批量加载沿用 MCDR 的算法。
+5. `load_all_plugins()` 按依赖顺序刷新全部启用的插件。插件发现、依赖解析与批量加载用的都是 MCDR 的算法。
 
 ### 5. 网络阶段
 
@@ -94,11 +94,11 @@
 
 网关收到 `READY` 后，`GatewayClient` 把自身状态置为 `READY`，并结束启动等待。
 `Runtime` 随即把状态置为 `READY`，调用一次 `PluginEvents.BOTQRAFT_START`，再记录一行 `BotQraft READY`。
-从这时起 `server.is_ready()` 才为真。
+从这时起，`server.is_ready()` 才为真。
 
 ### 7. 运行与停止
 
-启动成功后 `run()` 创建控制台处理器并启动控制台线程，除非配置里关掉了 `disable_console_thread`。
+启动成功后，`run()` 会创建控制台处理器。只要配置里没有把 `disable_console_thread` 设为 `true`，它还会启动控制台线程。
 主线程每 0.2 秒检查一次退出请求，同时监视网关是否进入不可恢复的 `FAILED` 状态。
 
 `stop()` 按下面的顺序收尾：
@@ -106,12 +106,12 @@
 1. 停止控制台，关闭发送器。
 2. 若本次曾达到 READY，调用一次 `PluginEvents.BOTQRAFT_STOP`。
 3. 逐个卸载常规插件。
-4. 停止同步执行器并等待线程结束。中断时最多等 10 秒，正常最多等 600 秒。
+4. 停止同步执行器并等待线程结束。正常情况下最多等 600 秒，中断时最多等 10 秒。
 5. 停止异步执行器。
 6. 关闭网关、面板与 HTTP 客户端。
-7. 释放单运行时标记，状态置为 `STOPPED`。此前失败过则置为 `FAILED`。
+7. 释放单运行时标记，状态置为 `STOPPED`。如果此前失败过，则置为 `FAILED`。
 
-插件不要直接调用 `stop()`。在插件回调里请用 `server.exit()` 请求退出，`stop()` 无法等待自己所在的执行器线程。
+插件不要直接调用 `stop()`，因为 `stop()` 无法等待它自己所在的执行器线程。在插件回调里，请用 `server.exit()` 请求退出。
 
 ## 运行时状态
 
@@ -143,8 +143,8 @@
   → 插件监听器
 ```
 
-`EventParser` 认识三类收件事件（群 @、群消息、C2C 消息）和交互事件，其余类型按通用事件保留原始数据。
-模型解析失败时不会丢弃数据，而是标记 `model_parse_failed` 并记录警告。
+`EventParser` 认识三类收件事件（群 @、群消息、C2C 消息）和交互事件，其余类型作为通用事件，保留原始数据。
+模型解析失败时也不会丢弃数据，而是标记 `model_parse_failed` 并记录一条警告。
 
 `process()` 依次做四件事：
 
@@ -163,6 +163,6 @@
 | 异步执行器线程 | 插件提交的异步任务                                    |
 | 控制台线程     | 交互式控制台输入与补全，可用配置关闭                  |
 
-插件回调多数运行在同步执行器线程上，所以在回调里做长时间阻塞会拖慢事件处理。需要等待的活儿交给异步执行器，具体做法见[后台任务与卸载](../plugin-dev/tasks.md)。
+插件回调大多运行在同步执行器线程上，所以在回调里长时间阻塞会拖慢事件处理。需要等待的活儿交给异步执行器，具体做法见[后台任务与卸载](../plugin-dev/tasks.md)。
 
 接下来，按[本地开发与验证](setup.md)把源码跑起来。

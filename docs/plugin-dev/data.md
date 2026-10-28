@@ -4,11 +4,11 @@
 
 插件通常会带两种文件：随插件发布的资源，比如帮助文档和图片；运行后自己产生的数据，比如配置和状态。前者跟着插件走，后者住在实例的数据目录里。分清这两处，收拾文件时就不会迷路。
 
-读完这一页，你能读打包资源，也能给插件找到一块可写的地方。两类文件都通过绑定插件的 `QQPluginServerInterface` 访问。
+读完这一页，你能读取打包资源，也能给插件找到一块可写的地方。两类文件都通过绑定到插件的 `QQPluginServerInterface` 来访问。
 
 ## 读取打包资源
 
-目录和压缩插件使用 `server.open_bundled_file(relative_path)`。路径相对于插件根目录，返回二进制文件对象。请用 `with` 及时关闭文件：
+目录插件和压缩插件用 `server.open_bundled_file(relative_path)` 读取资源。路径相对于插件根目录，返回的是二进制文件对象。请用 `with` 打开，让文件及时关闭：
 
 ```python
 def read_help(server):
@@ -16,13 +16,13 @@ def read_help(server):
         return stream.read().decode('utf-8')
 ```
 
-目录插件直接读取目录中的文件。打包成 `.mcdr` / `.pyz` 时，打包命令只会自动带上元数据、`requirements.txt` 和以插件 ID 命名的源码目录，所以要在插件元数据的 `resources` 中加入 `assets`，让资源随归档分发。翻译文件使用根目录 `lang/`，并将 `lang` 加入 `resources`。具体结构见[插件格式](plugin-format.md)和[多语言与用户偏好](translation.md)。
+目录插件会直接读取目录里的文件。打包成 `.mcdr` / `.pyz` 时就要留意了：打包命令只会自动带上元数据、`requirements.txt` 和以插件 ID 命名的源码目录。所以请在插件元数据的 `resources` 里加入 `assets`，资源才会跟着归档一起分发。翻译文件也一样：放在根目录 `lang/`，并把 `lang` 加入 `resources`。具体结构见[插件格式](plugin-format.md)和[多语言与用户偏好](translation.md)。
 
-`open_bundled_file` 用于目录或压缩插件。单文件插件自行定位并读取外部文件。使用单文件插件或未绑定插件的接口调用该方法，会抛出 `FileNotFoundError`。目标资源不存在时，目录插件抛出 `FileNotFoundError`，压缩插件抛出 `KeyError`。
+`open_bundled_file` 只适用于目录插件和压缩插件。单文件插件需要自己定位并读取外部文件。在单文件插件里，或者用没有绑定插件的接口调用这个方法，会抛出 `FileNotFoundError`。如果要读的资源不存在，目录插件会抛出 `FileNotFoundError`，压缩插件则抛出 `KeyError`。
 
 ## 保存可写数据
 
-调用 `server.get_data_folder()` 获取实例的 `config/<plugin_id>` 路径，目录不存在时会自动创建。返回值是相对实例工作目录的路径字符串。请使用插件回调传入的绑定接口：
+调用 `server.get_data_folder()`，就能拿到实例里的 `config/<plugin_id>` 路径；目录不存在时会自动创建。返回值是一个相对于实例工作目录的路径字符串。请用插件回调传进来的绑定接口来调用：
 
 ```python
 import json
@@ -42,13 +42,19 @@ def load_state(server):
     return {}
 ```
 
-数据目录由稳定的插件 ID 决定。插件归档保存分发内容，可写状态存入数据目录。未绑定插件记录的接口调用 `get_data_folder()` 会抛出 `RuntimeError`。
+数据目录由插件 ID 决定，插件 ID 不变，目录就不变。插件归档里放随插件分发的内容，运行中可写的状态放进数据目录。如果接口没有绑定插件记录，调用 `get_data_folder()` 会抛出 `RuntimeError`。
 
-同一状态由多个任务访问时，请在插件中协调读写。文件、连接和其他资源由创建它们的插件关闭。卸载职责见[后台任务与卸载](tasks.md)。
+如果有多个任务访问同一份状态，读写要由插件自己协调。文件、连接和其他资源，由创建它们的插件负责关闭。卸载时要做哪些事，见[后台任务与卸载](tasks.md)。
 
 ## 使用公开序列化工具
 
-从 `botqraft.api.utils` 导入 `Serializable`、`serialize`、`deserialize`，它们就是 MCDR 的序列化工具。`Serializable` 子类用类型注解声明字段；`serialize()` 把对象转换成可以写入 JSON 的 dict、list 等数据，`deserialize()` 按注解恢复对象，缺少的字段使用默认值。模块级的 `serialize(obj)` 和 `deserialize(data, cls)` 是对应的函数写法：
+`botqraft.api.utils` 提供了 `Serializable`、`serialize`、`deserialize`，它们就是 MCDR 的序列化工具：
+
+- 继承 `Serializable`，用类型注解声明字段。
+- `serialize()` 把对象转换成能写进 JSON 的 dict、list 等数据。
+- `deserialize()` 按注解把对象恢复回来，缺少的字段使用默认值。
+
+模块级的 `serialize(obj)` 和 `deserialize(data, cls)` 是对应的函数写法。下面的例子把语录保存成 JSON：
 
 ```python
 import json

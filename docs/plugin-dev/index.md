@@ -2,11 +2,11 @@
 
 这一节会带你从零开始写出一个能跑的插件，然后按需要学会命令、回复、按钮、翻译、数据存储和后台任务。
 
-BotQraft 独立运行在 QQ 机器人上，沿用 MCDReforged（MCDR）那套久经考验的插件系统。没用过 MCDR 也没关系，按下面的新手路线从头读就行；用过 MCDR 的话，可以直接走 [MCDR 开发者路线](#mcdr-开发者路线)。
+BotQraft 独立运行在 QQ 机器人上，并沿用了 MCDReforged（MCDR）那套久经考验的插件系统。没用过 MCDR 也没关系，按下面的新手路线从头读就行。用过 MCDR 的话，可以直接走 [MCDR 开发者路线](#mcdr-开发者路线)。
 
 ## 新手路线
 
-不用一次读完所有页面。先读完前两组，你就能写出带命令、会回复的插件；后面的内容遇到需要时再来翻，每一页都能单独读完、马上动手。
+不用一次读完所有页面。先读完前两组，你就能写出带命令、会回复的插件。后面的内容等用到时再来翻；每一页都能单独读，读完就能动手。
 
 ### 一、先跑起来
 
@@ -55,16 +55,16 @@ BotQraft 独立运行在 QQ 机器人上，沿用 MCDReforged（MCDR）那套久
 3. [注册命令](./commands.md) — `SimpleCommandBuilder` 和命令树与 MCDR 一致，重点看 `QQCommandSource` 和 `scope`。
 4. [回复消息](./reply.md)、[主动发送、引用与撤回](./sending.md) — QQ 的被动回复有有效期，主动发送要指定群或私聊目标。
 5. [监听消息与事件](./events.md)、[读取消息内容](./message-format.md) — 用 QQ 事件替代 MCDR 的 `Info` 和服务端输出。
-6. [权限系统](./permissions.md)、[多语言与用户偏好](./translation.md) — 权限等级和翻译沿用原生结构，身份换成了 QQ 用户。
+6. [权限系统](./permissions.md)、[多语言与用户偏好](./translation.md) — 权限等级和翻译的结构与原生一致，只是身份换成了 QQ 用户。
 
-迁移时逐条对照这些差异：
+迁移时，请逐条对照下面这些差异：
 
-- Minecraft 服务端进程的启停与执行命令、RCON、服务端信息、服务端处理器与 Info 过滤器注册、MCDR 配置读写都属于 Minecraft 宿主能力。在 BotQraft 里调用它们会抛出 `UnsupportedOperationError`，请把业务改写成 QQ 事件和接口能完成的动作。
-- QQ 发送接口接受 `str`、`QText`、`QMarkdown` 等 `QTextBase` 文本、媒体消息或延迟翻译文本。原生 `RText` 不是这些类型，传入会抛出 `TypeError`，先转换成这些公开格式。
-- 公共 `execute_command(command, source)` 只接收本实例真实的 `QQCommandSource`，其他来源会抛出 `TypeError`。从命令回调或入站消息的 `event.get_command_source()` 取来源。`get_plugin_command_source()` 会抛出 `UnsupportedOperationError`。
-- `QQServerInterface.si()` 需要 BotQraft 正在运行，实例没跑起来时会抛出 `RuntimeError`。可选访问用 `si_opt()`，没有接口时返回 `None`。插件回调优先用传入的 `server`。
-- `.mcdr`（以及 `.pyz`）沿用 MCDR 的压缩包格式，但包里的元数据文件是 `botqraft.plugin.json`，不是 `mcdreforged.plugin.json`；原样的 MCDR 插件包会因找不到元数据而加载失败。迁到 QQ 时把元数据、输入事件、身份、消息和宿主操作一起改。格式与入口见[插件格式、打包与发布](./plugin-format.md)。
+- 以下能力都属于 Minecraft 宿主：Minecraft 服务端进程的启停与执行命令、RCON、服务端信息、服务端处理器与 Info 过滤器注册、MCDR 配置读写。在 BotQraft 里调用它们会抛出 `UnsupportedOperationError`。请把这部分业务改写成 QQ 事件和接口能完成的动作。
+- QQ 发送接口接受 `str`、`QText`、`QMarkdown` 等 `QTextBase` 文本，以及媒体消息和延迟翻译文本。原生 `RText` 不在其中，传入会抛出 `TypeError`。请先把它转换成这些公开格式。
+- 公共的 `execute_command(command, source)` 只接收本实例真实的 `QQCommandSource`，传入其他来源会抛出 `TypeError`。来源可以从命令回调里拿，也可以从入站消息的 `event.get_command_source()` 取。另外，`get_plugin_command_source()` 会抛出 `UnsupportedOperationError`。
+- `QQServerInterface.si()` 需要 BotQraft 正在运行，实例没跑起来时调用会抛出 `RuntimeError`。如果拿不到接口时不想报错，就用 `si_opt()`：没有接口时它返回 `None`。在插件回调里，优先用传进来的 `server`。
+- `.mcdr`（以及 `.pyz`）沿用 MCDR 的压缩包格式。不过包里的元数据文件是 `botqraft.plugin.json`，不是 `mcdreforged.plugin.json`，所以原样的 MCDR 插件包会因为找不到元数据而加载失败。迁到 QQ 时，把元数据、输入事件、身份、消息和宿主操作一起改掉。格式与入口见[插件格式、打包与发布](./plugin-format.md)。
 
 ---
 
-写完插件后，按[添加插件](../quick-start/add-plugins.md)把它装进运行实例，并在 QQ 中检查群聊与私聊的实际结果。
+写完插件后，按[添加插件](../quick-start/add-plugins.md)把它装进运行实例，再到 QQ 里分别在群聊和私聊中看看实际效果。

@@ -4,7 +4,7 @@
 
 读完这一页，你能查到插件能用的全部公开接口，以及每个接口放在哪个子模块里。
 
-从 `botqraft.api` 的公开子模块导入插件接口。`botqraft.api` 根模块本身不导出对象，按用途选择下面的模块。各模块的 `__all__` 定义公开导出。
+插件接口都从 `botqraft.api` 的公开子模块导入。`botqraft.api` 根模块本身不导出任何对象，请按用途从下面的模块里挑。每个模块公开导出哪些名字，以它的 `__all__` 为准。
 
 ```python
 from botqraft.api.command import Literal, QQCommandSource
@@ -32,10 +32,10 @@ from botqraft.api.types import QQPluginServerInterface
 
 - `qq_event_listener`：把回调注册为当前插件的事件监听器，事件可以是 `PluginEvents` 中的事件、QQ 事件类型或自定义事件 ID。
 - `event_listener`：`qq_event_listener` 的别名，行为完全相同。
-- `new_thread`、`FunctionThread`：沿用 MCDR 的线程装饰器与线程类型，被装饰的函数在新的守护线程中运行，调用后返回 `FunctionThread`。
-- `spam_proof`：沿用 MCDR 的防并发装饰器，同一时刻已有调用在执行时，后来的调用会被跳过。
+- `new_thread`、`FunctionThread`：MCDR 的线程装饰器与线程类型。被装饰的函数在新的守护线程中运行，调用后返回 `FunctionThread`。
+- `spam_proof`：MCDR 的防并发装饰器。同一时刻已有调用在执行时，后来的调用会被跳过。
 
-创建后台工作后，要在卸载时安排停止和资源关闭，参见[后台任务与卸载](tasks.md)。
+如果你创建了后台工作，记得在卸载时停止它并关闭资源，做法见[后台任务与卸载](tasks.md)。
 
 ## `botqraft.api.qtext`
 
@@ -64,9 +64,9 @@ QQ 消息、翻译与键盘。用法见[Markdown 消息与文本交互](markdown
 | 交互枚举   | `InteractionType`、`InteractionScene`、`InteractionChatType`、`FeedbackOption`、`InteractionAction`、`AuthorizeScene`、`AuthorizeScope` |
 | 权限与偏好 | `PreferenceItem`、`PermissionLevel`、`PermissionLevelItem`                                                                              |
 
-插件回调拿到的是绑定当前插件的 `QQPluginServerInterface`。命令来源的 `get_server()` 返回 `QQServerInterface`。绑定插件接口提供插件登记、数据目录和打包资源访问。
+插件回调拿到的是绑定了当前插件的 `QQPluginServerInterface`，而命令来源的 `get_server()` 返回的是 `QQServerInterface`。插件登记、数据目录和打包资源访问，都由绑定插件的接口提供。
 
-身份用 `User.id`，会话地址和 AT 用各自的 OpenID 字段。收到的消息和发送回执分别用对应类型，参见[读取消息内容](message-format.md)和[主动发送](sending.md)。
+识别用户身份用 `User.id`；会话地址和 AT 则用各自的 OpenID 字段。收到的消息和发送回执各有对应的类型，见[读取消息内容](message-format.md)和[主动发送](sending.md)。
 
 ## `botqraft.api.exception`
 
@@ -81,14 +81,14 @@ QQ 消息、翻译与键盘。用法见[Markdown 消息与文本交互](markdown
 | `ResultUnknownError`            | `NetworkError` 的子类：平台可能已经执行操作，结果尚未确认，不要自动重试。                               |
 | `ErrorCategory`                 | 稳定的失败分类枚举。                                                                                    |
 
-用 `NetworkError` 的 `category`、`http_code`、`err_code`、`code`、`trace_id` 判断失败。异常文字用于阅读和诊断。遇到 `ResultUnknownError` 先核实结果，再决定要不要提交，保证每项操作只执行一次。结果处理见[回复消息](reply.md#处理提交与网络错误)。
+判断失败原因时，请看 `NetworkError` 的 `category`、`http_code`、`err_code`、`code`、`trace_id`；异常文字只用于阅读和诊断。遇到 `ResultUnknownError` 时，先核实结果，再决定要不要提交，保证每项操作只执行一次。具体怎么处理结果，见[回复消息](reply.md#处理提交与网络错误)。
 
 ## `botqraft.api.utils`
 
-导出 MCDR 序列化工具 `Serializable`、`serialize`、`deserialize`。数据存储用法见[插件数据与打包资源](data.md)。
+导出 MCDR 的序列化工具 `Serializable`、`serialize`、`deserialize`。数据存储的用法见[插件数据与打包资源](data.md)。
 
 ## `botqraft.api.all`
 
-聚合 `command`、`decorator`、`event`、`qtext`、`types`、`exception`、`utils` 的公开导出，并去重。想集中导入时，从这里选名称。常规插件按用途显式导入，接口来自哪里一眼能看清。
+汇总 `command`、`decorator`、`event`、`qtext`、`types`、`exception`、`utils` 的公开导出，并去掉重复。想从一个地方集中导入时，可以从这里取名字。不过常规插件更适合按用途显式导入，这样每个接口来自哪里一眼就能看清。
 
 接下来，[今日人品插件](jrrp-plugin.md)会把这些公开接口组合成一个完整功能。

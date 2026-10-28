@@ -17,7 +17,7 @@ BotQraft 目前尚未发布到 PyPI，因此我们需要从源码安装。请依
 
 ```bash
 # 克隆 BotQraft 仓库
-git clone https://github.com/BotQraftReforged/BotQraftReforged.git
+git clone https://github.com/tanhHeng/BotQraftReforged.git
 cd BotQraftReforged
 
 # 安装 BotQraft
