@@ -34,7 +34,7 @@ export default defineConfig({
         link: "/plugin-dev/",
         items: [
           {
-            text: "先跑起来",
+            text: "让我们开始吧！",
             items: [
               { text: "第一个插件", link: "/plugin-dev/first-plugin" },
               { text: "插件是怎么运行的", link: "/plugin-dev/basic" },
@@ -51,17 +51,17 @@ export default defineConfig({
             ],
           },
           {
-            text: "不用命令也能响应",
+            text: "响应非命令消息",
             items: [
               { text: "监听消息与事件", link: "/plugin-dev/events" },
               { text: "读取消息内容", link: "/plugin-dev/message-format" },
               { text: "主动发送、引用与撤回", link: "/plugin-dev/sending" },
-              { text: "发送图片、视频和文件", link: "/plugin-dev/media" },
             ],
           },
           {
-            text: "让消息更好看",
+            text: "不同类型的消息",
             items: [
+              { text: "发送图片、视频和文件", link: "/plugin-dev/media" },
               { text: "Markdown 消息与文本交互", link: "/plugin-dev/markdown" },
               { text: "按钮：键盘与点击响应", link: "/plugin-dev/interactions" },
               { text: "多语言与用户偏好", link: "/plugin-dev/translation" },
