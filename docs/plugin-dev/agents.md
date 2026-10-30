@@ -1,10 +1,10 @@
-# 用 AI agent 开发插件
+# 用 AI Agent 开发插件
 
-> **场景**：我想让 Codex、Claude Code 或 Cursor 这类 AI agent 帮我写插件，可它总是照着 NoneBot 或 MCDR 的写法乱猜接口。怎么让它按 BotQraft 的规矩来？
+> **场景**：我想让 Codex、Claude Code 或 Cursor 这类 AI Agent 帮我写插件，可它总是照着 NoneBot 或 MCDR 的写法乱猜接口。怎么让它按 BotQraft 的规矩来？
 
-读完这一页，你能在插件项目里放好一份 `AGENTS.md`，让 AI agent 按 BotQraft 的公开接口写代码、按正确的步骤验证。
+读完这一页，你能在插件项目里放好一份 `AGENTS.md`，让 AI Agent 按 BotQraft 的公开接口写代码、按正确的步骤验证。
 
-AI agent 每次开工前，会先读项目根目录的说明文件。把下面的模板保存成插件项目根目录的 `AGENTS.md`，再把 `<your_plugin_id>` 换成你的插件 ID 就行。模板用英文写，各家 agent 都能稳定理解；你和 agent 对话时照样可以用中文。
+AI Agent 每次开工前，会先读项目根目录的说明文件。把下面的模板保存成插件项目根目录的 `AGENTS.md`，再把 `<your_plugin_id>` 换成你的插件 ID 就行。模板用英文写，各家 Agent 都能稳定理解；你和 Agent 对话时照样可以用中文。
 
 不同工具认的文件名不一样：Codex、Cursor 等读 `AGENTS.md`，Claude Code 读 `CLAUDE.md`。用 Claude Code 的话，新建一个 `CLAUDE.md`，里面只写一行 `@AGENTS.md`，它就会把模板一起读进来。
 
@@ -57,8 +57,8 @@ Plugin ID: `<your_plugin_id>`. The data folder, translation key prefix and depen
 
 ## 用起来更顺手的小建议
 
-- 第一次让 agent 干活时，先让它读一遍模板里列出的文档页面，再开始写代码。
+- 第一次让 Agent 干活时，先让它读一遍模板里列出的文档页面，再开始写代码。
 - 提需求时，像页面开头的“场景”那样写：要什么命令、在哪种聊天里用、回复长什么样。需求越具体，它越少猜。
-- agent 说“已经验证过了”的时候，问一句它具体跑了哪一步。QQ 里的实际效果，最后还是要你自己发条消息看一看。
+- Agent 说“已经验证过了”的时候，问一句它具体跑了哪一步。QQ 里的实际效果，最后还是要你自己发条消息看一看。
 
-接下来，可以对照[今日人品示例](jrrp-plugin.md)，看看一个完整插件的结构，再让 agent 照着写。
+接下来，可以对照[今日人品示例](jrrp-plugin.md)，看看一个完整插件的结构，再让 Agent 照着写。

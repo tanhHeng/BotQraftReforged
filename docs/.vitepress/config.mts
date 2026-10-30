@@ -81,7 +81,7 @@ export default defineConfig({
             items: [
               { text: "API 索引", link: "/plugin-dev/api" },
               { text: "今日人品示例", link: "/plugin-dev/jrrp-plugin" },
-              { text: "用 AI agent 开发插件", link: "/plugin-dev/agents" },
+              { text: "用 AI Agent 开发插件", link: "/plugin-dev/agents" },
             ],
           },
         ],
@@ -94,7 +94,7 @@ export default defineConfig({
           { text: "本地开发与验证", link: "/botqraft-dev/setup" },
           { text: "代码与文档约定", link: "/botqraft-dev/conventions" },
           { text: "文档站编写", link: "/botqraft-dev/docs" },
-          { text: "用 AI agent 开发框架", link: "/botqraft-dev/agents" },
+          { text: "用 AI Agent 开发框架", link: "/botqraft-dev/agents" },
         ],
       },
     ],

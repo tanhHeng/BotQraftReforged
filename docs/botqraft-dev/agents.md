@@ -1,8 +1,8 @@
-# 用 AI agent 开发框架
+# 用 AI Agent 开发框架
 
-这一页写给用 AI agent 改 BotQraft 框架的贡献者。读完这一页，你能在源码仓库根目录放好一份 `AGENTS.md`，让 agent 了解仓库结构、架构约束和验证方式。
+这一页写给用 AI Agent 改 BotQraft 框架的贡献者。读完这一页，你能在源码仓库根目录放好一份 `AGENTS.md`，让 Agent 了解仓库结构、架构约束和验证方式。
 
-agent 每次开工前会先读仓库根目录的说明文件。把下面的模板保存成源码仓库根目录的 `AGENTS.md` 就行。模板用英文写，和仓库里代码、注释、提交信息的语言保持一致。Codex、Cursor 等读 `AGENTS.md`；Claude Code 读 `CLAUDE.md`，可以新建一个只写一行 `@AGENTS.md` 的 `CLAUDE.md`。
+Agent 每次开工前会先读仓库根目录的说明文件。把下面的模板保存成源码仓库根目录的 `AGENTS.md` 就行。模板用英文写，和仓库里代码、注释、提交信息的语言保持一致。Codex、Cursor 等读 `AGENTS.md`；Claude Code 读 `CLAUDE.md`，可以新建一个只写一行 `@AGENTS.md` 的 `CLAUDE.md`。
 
 只是写插件的话，请用[插件开发里的模板](../plugin-dev/agents.md)。
 
@@ -60,10 +60,10 @@ This is the source repository of the BotQraft framework itself: a Python framewo
 - Do not push on your own; leave that to the maintainer.
 ```
 
-## 和 agent 协作的小建议
+## 和 Agent 协作的小建议
 
-- 让 agent 先读[框架结构](architecture.md)和[代码与文档约定](conventions.md)，再动手。
+- 让 Agent 先读[框架结构](architecture.md)和[代码与文档约定](conventions.md)，再动手。
 - 涉及 QQ 平台行为的改动，让它先查阅 [QQ 官方文档](https://bot.q.qq.com/wiki/)，并在回复里引用具体页面。
-- agent 说“测试通过”时，确认它说的是哪一组测试；真机上的表现，还需要你自己在 QQ 里看一看。
+- Agent 说“测试通过”时，确认它说的是哪一组测试；真机上的表现，还需要你自己在 QQ 里看一看。
 
 接下来，回到[栏目首页](index.md)挑一个方向开始吧。
