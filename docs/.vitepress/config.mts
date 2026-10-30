@@ -1,6 +1,9 @@
 import { defineConfig } from "vitepress";
 
 const base = process.env.VITEPRESS_BASE || "/";
+// Evaluated at build time, so the range follows the year the site was last deployed.
+const buildYear = new Date().getFullYear();
+const copyrightYears = buildYear > 2026 ? `2026-${buildYear}` : "2026";
 
 export default defineConfig({
   base,
@@ -99,5 +102,10 @@ export default defineConfig({
       },
     ],
     socialLinks: [{ icon: "github", link: "https://github.com/tanhHeng/BotQraftReforged" }],
+    footer: {
+      message:
+        '基于 <a href="https://github.com/tanhHeng/BotQraftReforged/blob/main/LICENSE">LGPL-3.0</a> 许可证发布',
+      copyright: `Copyright © ${copyrightYears} tanhHeng`,
+    },
   },
 });
