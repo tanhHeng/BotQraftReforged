@@ -76,7 +76,7 @@ botqraft fetch-official-docs
 
 官网正文里有几个失效链接，访问时会跳回首页。命令会打印 `Skipped ...: redirected to ...` 提醒一下，这不算错误，跳过就好。如果最后打印了 `Export incomplete`，退出码为 1，说明有页面、图片或路由清单真的没抓到，其余内容都已经保存好了，具体是哪些，可以看 `qq_docs/manifest.json` 里的 `errors`。
 
-这份文档版权归腾讯，体积也有几 MB，记得把 `qq_docs/` 加进插件项目的 `.gitignore`，别把它提交进仓库。
+这份文档版权归腾讯，体积也有几 MB，别把它提交进仓库。如果插件项目是 Git 仓库，并且根目录有 `.gitignore`，导出结束后命令会问 `Add /qq_docs/ to .gitignore? (Y/n)`，回车就帮你加上了。
 
 ## 用起来更顺手的小建议
 
