@@ -27,6 +27,7 @@
 | `botqraft/logging/`        | 日志器：轮转、凭据脱敏与颜色格式。                                                                                                                                     |
 | `botqraft/compatibility/`  | 本地能力探测，以及按版本缓存的能力检查。                                                                                                                               |
 | `botqraft/constants/`      | 版本号 `core_constant.VERSION` 与插件文件名常量。                                                                                                                      |
+| `botqraft/official_docs/`  | `fetch-official-docs` 子命令背后的导出器：抓取 QQ 官方文档并转成本地 Markdown。依赖可选的 `docs` 依赖组，运行时不会导入它。                                            |
 | `botqraft/resources/`      | 打包资源：默认配置、默认权限与内置语言文件。                                                                                                                           |
 
 表格之外还有三个支撑子包：`translation/` 负责翻译查找与延迟文本，`preference/` 保存用户偏好与已见过的 C2C 用户，`utils/` 放序列化、异常与 Future 辅助函数。
@@ -45,14 +46,15 @@
 
 `cli_dispatch()` 用 `argparse` 解析子命令：
 
-| 子命令            | 作用                                                     |
-| ----------------- | -------------------------------------------------------- |
-| `init`            | 创建缺失的部署文件与目录，不连接 QQ                      |
-| `gen-default`     | 用内置默认值覆盖指定的配置与权限文件                     |
-| `version`         | 打印版本号                                               |
-| `start`           | 启动运行时，可选 `--auto-init` 与 `--check-capabilities` |
-| `pack`            | 按 MCDR 归档约定打包目录插件                             |
-| `reformat-config` | 校验并重排配置文件，不启动 QQ                            |
+| 子命令                | 作用                                                     |
+| --------------------- | -------------------------------------------------------- |
+| `init`                | 创建缺失的部署文件与目录，不连接 QQ                      |
+| `gen-default`         | 用内置默认值覆盖指定的配置与权限文件                     |
+| `version`             | 打印版本号                                               |
+| `start`               | 启动运行时，可选 `--auto-init` 与 `--check-capabilities` |
+| `pack`                | 按 MCDR 归档约定打包目录插件                             |
+| `reformat-config`     | 校验并重排配置文件，不启动 QQ                            |
+| `fetch-official-docs` | 把 QQ 官方文档导出为本地 Markdown，需要 `docs` 可选依赖  |
 
 `init`、`gen-default` 与 `start` 都接受 `--config` 与 `--permission`，用来指定配置文件路径，默认是 `config.yml` 与 `permissions.yml`。
 不带子命令时，按 `start` 处理。

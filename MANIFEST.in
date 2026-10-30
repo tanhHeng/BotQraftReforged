@@ -1,4 +1,4 @@
-include README.md README_en.md requirements.txt requirements.dev.txt
+include README.md README_en.md requirements.txt requirements.docs.txt requirements.dev.txt
 include botqraft/py.typed
 recursive-include botqraft/resources *.yml
 recursive-include docs *.md

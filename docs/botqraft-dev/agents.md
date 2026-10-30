@@ -24,8 +24,8 @@ This is the source repository of the BotQraft framework itself: a Python framewo
 ## Order of authority
 
 1. Code and observed runtime behavior.
-2. Official QQ platform documentation at https://bot.q.qq.com/wiki/. Cite the relevant page when changing platform-dependent behavior. If observed platform behavior differs from the docs, explain the evidence and document the constraint in the relevant tracked documentation.
-3. Tracked documentation in `docs/`. If it conflicts with the code, report the discrepancy to the maintainer before changing behavior. Local reference snapshots and design notes are not included in this repository; do not require them for development.
+2. Official QQ platform documentation at https://bot.q.qq.com/wiki/. If `reference/qq_docs/` exists, it is a Markdown export of the same docs (refresh it with `botqraft fetch-official-docs -o reference/qq_docs`); each page starts with its original URL. Cite that URL, not the local path, when changing platform-dependent behavior. If observed platform behavior differs from the docs, explain the evidence and document the constraint in the relevant tracked documentation.
+3. Tracked documentation in `docs/`. If it conflicts with the code, report the discrepancy to the maintainer before changing behavior. Design notes under `reference/` are local only; do not require them for development.
 
 ## Architecture constraints
 
@@ -45,7 +45,7 @@ This is the source repository of the BotQraft framework itself: a Python framewo
 
 ## Verification
 
-- Install with `python -m pip install -e .`. If a local instance runs an older non-editable install, your changes will not take effect; confirm with `python -c "import botqraft; print(botqraft.__file__)"` that the source tree is imported.
+- Install with `python -m pip install -e .` and `python -m pip install -r requirements.dev.txt`. If a local instance runs an older non-editable install, your changes will not take effect; confirm with `python -c "import botqraft; print(botqraft.__file__)"` that the source tree is imported.
 - Regression tests: when `tests/` exists, run `python -m unittest discover -s tests -q`. Tests use local aiohttp fake servers and never contact real QQ.
 - Capability probe: `python -m botqraft.compatibility.probes`.
 - Docs: `pnpm run docs:build`. The build only checks page links; verify `#anchors` separately.
@@ -63,7 +63,7 @@ This is the source repository of the BotQraft framework itself: a Python framewo
 ## 和 Agent 协作的小建议
 
 - 让 Agent 先读[框架结构](architecture.md)和[代码与文档约定](conventions.md)，再动手。
-- 涉及 QQ 平台行为的改动，让它先查阅 [QQ 官方文档](https://bot.q.qq.com/wiki/)，并在回复里引用具体页面。
+- 涉及 QQ 平台行为的改动，让它先查阅 [QQ 官方文档](https://bot.q.qq.com/wiki/)，并在回复里引用具体页面。想让它离线查，先按[本地开发与验证](setup.md#准备离线的-qq-官方文档)导出一份到 `reference/qq_docs/`。
 - Agent 说“测试通过”时，确认它说的是哪一组测试；真机上的表现，还需要你自己在 QQ 里看一看。
 
 接下来，回到[栏目首页](index.md)挑一个方向开始吧。

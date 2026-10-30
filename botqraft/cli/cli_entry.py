@@ -2,6 +2,7 @@
 from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
 from typing import Optional, Sequence
 
+from botqraft.official_docs.scope import DEFAULT_BASE_URL
 from botqraft.runtime_args import RuntimeArgs
 
 
@@ -51,6 +52,14 @@ def cli_dispatch(argv: Optional[Sequence[str]] = None) -> int:
     reformat.add_argument('-i', '--input', required=True, help='Input configuration file')
     reformat.add_argument('-o', '--output', help='Output configuration file (defaults to input)')
 
+    docs = subparsers.add_parser('fetch-official-docs', help='Export the official QQ bot documentation as local Markdown (needs the docs extra)',
+                                formatter_class=ArgumentDefaultsHelpFormatter)
+    docs.add_argument('-o', '--output', default='qq_docs', help='Output directory')
+    docs.add_argument('--base-url', default=DEFAULT_BASE_URL, help='Documentation directory to crawl')
+    docs.add_argument('--timeout', type=float, default=30, help='Per-request timeout in seconds')
+    docs.add_argument('--delay', type=float, default=0.1, help='Minimum seconds between requests')
+    docs.add_argument('--quiet', action='store_true', help='Only print errors and the summary')
+
     args = parser.parse_args(argv)
     if args.version or args.command == 'version':
         from botqraft.cli.cmd_version import show_version
@@ -67,6 +76,9 @@ def cli_dispatch(argv: Optional[Sequence[str]] = None) -> int:
     elif args.command == 'reformat-config':
         from botqraft.cli.cmd_reformat_config import reformat_config
         reformat_config(args.input, args.output)
+    elif args.command == 'fetch-official-docs':
+        from botqraft.cli.cmd_fetch_official_docs import fetch_official_docs
+        fetch_official_docs(args.output, base_url=args.base_url, timeout=args.timeout, delay=args.delay, quiet=args.quiet)
     else:
         from botqraft.cli.cmd_start import run_botqraft
         runtime_args = RuntimeArgs() if args.command is None else RuntimeArgs(

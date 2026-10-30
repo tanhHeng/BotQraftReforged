@@ -21,6 +21,7 @@ Plugin ID: `<your_plugin_id>`. The data folder, translation key prefix and depen
 
 - Plugin development docs: https://botqraft.tanh.moe/plugin-dev/ (Chinese). Read the pages relevant to the task before writing code.
 - The installed `botqraft` package is the source of truth for names. When unsure, run `python -c "import botqraft.api.<module> as m; print(m.__all__)"`.
+- Official QQ platform docs: https://bot.q.qq.com/wiki/develop/api-v2/. If `qq_docs/` exists in this repository, it is a local Markdown export of them; each page starts with its original URL. Search it before guessing platform limits.
 - Do not apply patterns from NoneBot, go-cqhttp, OneBot or MCDR server plugins. BotQraft reuses only MCDR's plugin, command tree, permission and translation systems.
 
 ## Plugin layout
@@ -54,6 +55,28 @@ Plugin ID: `<your_plugin_id>`. The data folder, translation key prefix and depen
 4. Step 3 needs a human in QQ. Tell the user exactly what to send and what to look for, then wait for their report; treat what they report as fact.
 5. Only call a step "verified" if it was actually run.
 ```
+
+## 让 Agent 离线查 QQ 官方文档
+
+Agent 遇到“群里一条消息能带几张图”这类平台问题时，最爱凭印象瞎编。给它一份本地的官方文档，它就能先查后写。
+
+先在 BotQraft 源码目录装上 `docs` 可选依赖：
+
+```bash
+python -m pip install ".[docs]"
+```
+
+然后在插件项目根目录执行：
+
+```bash
+botqraft fetch-official-docs
+```
+
+大约一分钟后，`qq_docs/` 里就是转好的 Markdown，每页开头都写着原站地址。模板里已经告诉 Agent 去这里查。
+
+命令最后可能打印 `Export incomplete`，退出码为 1。这通常是官网自己有几个失效链接，其余页面都已经保存好了，具体是哪几页，可以看 `qq_docs/manifest.json` 里的 `errors`。
+
+这份文档版权归腾讯，体积也有几 MB，记得把 `qq_docs/` 加进插件项目的 `.gitignore`，别把它提交进仓库。
 
 ## 用起来更顺手的小建议
 

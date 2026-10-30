@@ -13,11 +13,23 @@ python -m pip install -r requirements.dev.txt
 
 这里用可编辑安装（`-e`）。装好后 Python 导入的是你正在改的源码目录，改完不用重装就生效。
 
-`requirements.txt` 里是运行时依赖：MCDReforged 2.16.2、aiohttp 与 ruamel.yaml。`requirements.dev.txt` 在这些之外再加上 `build`。
+`requirements.txt` 里是运行时依赖：MCDReforged 2.16.2、aiohttp 与 ruamel.yaml。`requirements.dev.txt` 在这些之外，还会装上 `build` 和 `requirements.docs.txt` 里的 `docs` 可选依赖（beautifulsoup4 与 markdownify）。
 
 MCDReforged 固定在 2.16.2，aiohttp 限定在 3.x，只有 `ruamel.yaml` 没写版本上界，会装成当前最新版。如果你在验证兼容的版本区间，请显式固定版本。
 
 BotQraft 独立运行，MCDR 只作为 Python 依赖安装。你不需要另外搭一个 MCDR 服务端。
+
+## 准备离线的 QQ 官方文档
+
+改动涉及 QQ 平台行为时，你和 Agent 都得反复翻官方文档。把它导出到本地，查起来快得多：
+
+```bash
+botqraft fetch-official-docs -o reference/qq_docs
+```
+
+`reference/` 已经被 `.gitignore` 忽略，导出的文档不会混进提交。每个页面开头都写着原站地址，引用时请贴这个地址，不要贴本地路径。
+
+导出大约需要一分钟。官网上有几个失效链接，会被记成错误，所以命令通常以退出码 1 结束。看到 `Export incomplete` 先别慌，打开 `reference/qq_docs/manifest.json` 看看 `errors` 里是哪些页面就行。官方文档更新后，重新执行一次即可覆盖旧文件。
 
 ## 运行能力探测
 

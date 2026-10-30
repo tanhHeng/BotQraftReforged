@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "botqraft"
-dynamic = ["version", "dependencies"]
+dynamic = ["version", "dependencies", "optional-dependencies"]
 description = "Independent QQ bot framework using native MCDReforged plugin and command primitives"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -23,6 +23,7 @@ include-package-data = true
 [tool.setuptools.dynamic]
 version = { attr = "botqraft.constants.core_constant.VERSION" }
 dependencies = { file = ["requirements.txt"] }
+optional-dependencies = { docs = { file = ["requirements.docs.txt"] } }
 
 [tool.setuptools.packages.find]
 where = ["."]
