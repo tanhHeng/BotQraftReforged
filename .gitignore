@@ -28,6 +28,7 @@ Thumbs.db
 
 # Local design references and protocol snapshots
 /reference/
+/qq_docs/
 
 # vitepress
 docs/.vitepress/dist

@@ -36,7 +36,7 @@ class _Passive:
 
 class MessageSender:
     """Validated QQ sends, deletes and interaction responses with payload snapshots."""
-    # Platform passive-reply windows: group 5 minutes, C2C 60 minutes (reference/qq_docs/server-inter/message/overview.md).
+    # Platform passive-reply windows: group 5 minutes, C2C 60 minutes (https://bot.q.qq.com/wiki/develop/api-v2/server-inter/message/overview.html).
     PASSIVE_LIFETIME = {'group': 300, 'c2c': 3600}
 
     def __init__(self: Self, runtime: "Runtime") -> None:

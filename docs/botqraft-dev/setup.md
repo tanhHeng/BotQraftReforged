@@ -24,26 +24,26 @@ BotQraft 独立运行，MCDR 只作为 Python 依赖安装。你不需要另外�
 改动涉及 QQ 平台行为时，你和 Agent 都得反复翻官方文档。把它导出到本地，查起来快得多：
 
 ```bash
-botqraft fetch-official-docs -o reference/qq_docs
+botqraft fetch-official-docs
 ```
 
-`reference/` 已经被 `.gitignore` 忽略，导出的文档不会混进提交。每个页面开头都写着原站地址，引用时请贴这个地址，不要贴本地路径。
+文档会导出到源码根目录的 `qq_docs/`。这个目录已经被 `.gitignore` 忽略，不会混进提交。每个页面开头都写着原站地址，引用时请贴这个地址，不要贴本地路径。
 
-导出大约需要一分钟。官网正文里有几个失效链接，访问时会跳回首页，命令会打印 `Skipped ...: redirected to ...` 提醒你，但不算错误。如果有页面、图片或路由清单真的没抓到，命令会打印 `Export incomplete` 并以退出码 1 结束，这时打开 `reference/qq_docs/manifest.json` 看看 `errors` 就行。跳转的链接记在同一个文件的 `redirects` 里。
+导出大约需要一分钟。官网正文里有几个失效链接，访问时会跳回首页，命令会打印 `Skipped ...: redirected to ...` 提醒你，但不算错误。如果有页面、图片或路由清单真的没抓到，命令会打印 `Export incomplete` 并以退出码 1 结束，这时打开 `qq_docs/manifest.json` 看看 `errors` 就行。跳转的链接记在同一个文件的 `redirects` 里。
 
 官方文档更新后，重新执行一次就能同步：同名页面会被覆盖，官网已经撤下的页面和不再被引用的图片会被删掉。这次只是没抓到的页面或图片会沿用上次的版本，你自己放进目录的文件也不会动。官网没变时，重新导出的文件和上次一模一样。
 
 想知道官网每次改了什么？加上 `--git`：
 
 ```bash
-botqraft fetch-official-docs -o reference/qq_docs --git
+botqraft fetch-official-docs --git
 ```
 
-第一次运行会在 `reference/qq_docs/` 里建一个独立的 Git 仓库，并提交一份快照。之后每次重新导出，只要有页面或图片变化，就自动提交一次，提交信息里会列出新增、修改和删除了哪些页面。想看平台规则哪里变了，执行 `git -C reference/qq_docs log -p` 就行。
+第一次运行会在 `qq_docs/` 里建一个独立的 Git 仓库，并提交一份快照。之后每次重新导出，只要有页面或图片变化，就自动提交一次，提交信息里会列出新增、修改和删除了哪些页面。想看平台规则哪里变了，执行 `git -C qq_docs log -p` 就行。
 
 如果只有 `README.md` 和 `manifest.json` 变了（比如某次网络出错），不会提交。提交的作者固定为 `BotQraft docs fetcher`，不会用你的 Git 身份。
 
-输出目录在另一个 Git 仓库里、却没被它的 `.gitignore` 忽略时，命令会在抓取前直接报错，免得外层仓库把它当成嵌套仓库收进去。`reference/` 已经被忽略，可以放心用。
+输出目录在另一个 Git 仓库里、却没被它的 `.gitignore` 忽略时，命令会在抓取前直接报错，免得外层仓库把它当成嵌套仓库收进去。`qq_docs/` 已经被忽略，可以放心用。
 
 ## 运行能力探测
 
