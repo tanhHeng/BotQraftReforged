@@ -3,9 +3,9 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from collections import deque
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import quote
 
@@ -18,6 +18,8 @@ from botqraft.official_docs.fetch import AssetStore, FetchError, HttpClient
 from botqraft.official_docs.scope import DEFAULT_BASE_URL, DocumentScope
 
 logger = logging.getLogger(__name__)
+_SOURCE_LINE = re.compile(r'> Source: <(.+)>')
+_ASSET_NAME = re.compile(r'[0-9a-f]{64}\.[a-z]+')
 
 
 @dataclass
@@ -26,6 +28,7 @@ class ExportResult:
     exported: int
     output_dir: Path
     errors: list[dict[str, str]] = field(default_factory=list)
+    removed: list[str] = field(default_factory=list)
 
     @property
     def complete(self: Self) -> bool:
@@ -33,10 +36,45 @@ class ExportResult:
         return self.exported == self.discovered and not self.errors
 
 
+def _exported_markdown(destination: Path) -> list[Path]:
+    return sorted(path for path in destination.rglob('*.md') if '.git' not in path.relative_to(destination).parts)
+
+
+def _prune_withdrawn(destination: Path, scope: DocumentScope, known: set[str]) -> list[str]:
+    """Delete exported pages the site no longer lists, then images no page references.
+
+    Only files this exporter wrote are touched: pages are recognized by their source line, images by their hash name.
+    Pages that were discovered but failed this time are kept, so a network error never looks like a withdrawal.
+    """
+    removed: list[Path] = []
+    for path in _exported_markdown(destination):
+        with path.open(encoding='utf-8', errors='replace') as stream:
+            match = _SOURCE_LINE.fullmatch(stream.readline().rstrip('\r\n'))
+        if match is None or scope.canonical(match.group(1)) != match.group(1) or match.group(1) in known:
+            continue
+        path.unlink()
+        removed.append(path)
+    assets = destination / '_assets'
+    if assets.is_dir():
+        referenced = set()
+        for path in _exported_markdown(destination):
+            referenced.update(re.findall(r'_assets/([0-9a-f]{64}\.[a-z]+)', path.read_text(encoding='utf-8', errors='replace')))
+        for asset in sorted(assets.iterdir()):
+            if asset.is_file() and _ASSET_NAME.fullmatch(asset.name) and asset.name not in referenced:
+                asset.unlink()
+                removed.append(asset)
+    for directory in sorted({parent for path in removed for parent in path.parents if destination in parent.parents}, key=lambda path: len(path.parts), reverse=True):
+        if directory.is_dir() and not any(directory.iterdir()):
+            directory.rmdir()
+    return [path.relative_to(destination).as_posix() for path in removed]
+
+
 def export_docs(base_url: str = DEFAULT_BASE_URL, output_dir: str | Path = 'qq_docs', *, timeout: float = 30, delay: float = 0.1) -> ExportResult:
     """Export every in-scope VuePress route and recursively linked document as Markdown.
 
-    Files of the same name are overwritten; other files in the output directory are kept.
+    Files of the same name are overwritten. When route discovery succeeded, exported pages whose URL was not
+    discovered again are deleted together with unreferenced images; other files in the output directory are kept.
+    Output depends only on the site content, so re-running against an unchanged site rewrites identical files.
     Failures never stop the crawl and are never retried: they are recorded in the result and in
     ``manifest.json``, and the pages that succeeded are still written.
 
@@ -44,7 +82,7 @@ def export_docs(base_url: str = DEFAULT_BASE_URL, output_dir: str | Path = 'qq_d
     :param output_dir: Output directory, created when missing.
     :param timeout: Per-request timeout in seconds.
     :param delay: Minimum seconds between requests.
-    :return: Discovery and export counts plus error records.
+    :return: Discovery and export counts, error records and removed paths.
     :raises ValueError: Invalid base URL, non-positive timeout or negative delay.
     :raises OSError: An output file cannot be written.
     """
@@ -61,6 +99,7 @@ def export_docs(base_url: str = DEFAULT_BASE_URL, output_dir: str | Path = 'qq_d
     processed: set[str] = set()
     fetched_bundles: set[str] = set()
     route_count = 0
+    routes_complete = False
     while queue:
         url = queue.popleft()
         processed.add(url)
@@ -75,6 +114,7 @@ def export_docs(base_url: str = DEFAULT_BASE_URL, output_dir: str | Path = 'qq_d
             found = page_links(soup, url, scope)
             if url == scope.base_url:
                 bundles = app_scripts(soup, url)
+                routes_complete = bool(bundles)
                 if not bundles:
                     errors.append({'url': url, 'error': 'No VuePress app bundle found; collapsed navigation may be missing'})
                 for bundle_url in bundles:
@@ -88,6 +128,7 @@ def export_docs(base_url: str = DEFAULT_BASE_URL, output_dir: str | Path = 'qq_d
                         found.update(routes)
                         logger.info('Route table lists %d documents', len(routes))
                     except (FetchError, ValueError) as error:
+                        routes_complete = False
                         errors.append({'url': bundle_url, 'error': 'Route discovery failed: {}'.format(error)})
             pages[url] = page
             for discovered in sorted(found - known):
@@ -109,10 +150,12 @@ def export_docs(base_url: str = DEFAULT_BASE_URL, output_dir: str | Path = 'qq_d
         records.append({'url': url, 'title': page.title, 'path': relative.as_posix()})
         logger.info('Saved %s', relative)
 
-    result = ExportResult(len(known), len(records), destination, errors)
+    removed = _prune_withdrawn(destination, scope, known) if routes_complete else []
+    for path in removed:
+        logger.info('Removed %s', path)
+    result = ExportResult(len(known), len(records), destination, errors, removed)
     manifest = {
         'base_url': scope.base_url,
-        'generated_at': datetime.now(timezone.utc).isoformat(),
         'route_count': route_count,
         'discovered': result.discovered,
         'exported': result.exported,

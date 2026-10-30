@@ -32,7 +32,7 @@ def fetch_official_docs(output: str, *, base_url: str, timeout: float, delay: fl
         result = export_docs(base_url, output, timeout=timeout, delay=delay)
     finally:
         logger.removeHandler(handler)
-    print('Discovered {} documents, exported {}, {} errors; output: {}'.format(
-        result.discovered, result.exported, len(result.errors), result.output_dir.resolve()))
+    print('Discovered {} documents, exported {}, removed {} files, {} errors; output: {}'.format(
+        result.discovered, result.exported, len(result.removed), len(result.errors), result.output_dir.resolve()))
     if not result.complete:
         raise RuntimeError('Export incomplete; see {} for the errors'.format(result.output_dir / 'manifest.json'))
