@@ -111,11 +111,11 @@ def render_page(page: Page, scope: DocumentScope, available_urls: set[str], asse
     """Render a page as Markdown with local links and images.
 
     Links to exported documents become relative ``.md`` links; other links keep their absolute URL.
-    Image failures keep the remote URL and are appended to ``errors``.
+    Image failures are appended to ``errors`` and fall back to the copy saved by the last export, or to the remote URL.
 
     :param page: Extracted page.
     :param scope: Crawl boundary used for output paths.
-    :param available_urls: Canonical URLs of every successfully fetched document.
+    :param available_urls: Canonical URLs of every document that has a local Markdown file.
     :param assets: Image store for the output directory.
     :param errors: Error records to append image failures to.
     :return: Markdown starting with a source line.
@@ -143,7 +143,8 @@ def render_page(page: Page, scope: DocumentScope, available_urls: set[str], asse
             image['src'] = _relative_link(assets.save(absolute), output_path)
         except (ValueError, OSError) as error:
             errors.append({'page': page.url, 'url': absolute[:300], 'error': str(error)})
-            image['src'] = absolute
+            saved = assets.fallback(absolute)
+            image['src'] = _relative_link(saved, output_path) if saved else absolute
         # Retained HTML tables would otherwise keep pointing at remote images.
         image.attrs.pop('srcset', None)
     converter = _ArticleConverter(

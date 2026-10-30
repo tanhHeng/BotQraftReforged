@@ -40,6 +40,20 @@ def _exported_markdown(destination: Path) -> list[Path]:
     return sorted(path for path in destination.rglob('*.md') if '.git' not in path.relative_to(destination).parts)
 
 
+def _source_url(path: Path) -> str | None:
+    with path.open(encoding='utf-8', errors='replace') as stream:
+        match = _SOURCE_LINE.fullmatch(stream.readline().rstrip('\r\n'))
+    return match.group(1) if match else None
+
+
+def _previous_assets(destination: Path) -> dict[str, str]:
+    try:
+        assets = json.loads((destination / 'manifest.json').read_text(encoding='utf-8')).get('assets', {})
+    except (OSError, ValueError, AttributeError):
+        return {}
+    return {url: path for url, path in assets.items() if isinstance(url, str) and isinstance(path, str)} if isinstance(assets, dict) else {}
+
+
 def _prune_withdrawn(destination: Path, scope: DocumentScope, known: set[str]) -> list[str]:
     """Delete exported pages the site no longer lists, then images no page references.
 
@@ -48,9 +62,8 @@ def _prune_withdrawn(destination: Path, scope: DocumentScope, known: set[str]) -
     """
     removed: list[Path] = []
     for path in _exported_markdown(destination):
-        with path.open(encoding='utf-8', errors='replace') as stream:
-            match = _SOURCE_LINE.fullmatch(stream.readline().rstrip('\r\n'))
-        if match is None or scope.canonical(match.group(1)) != match.group(1) or match.group(1) in known:
+        url = _source_url(path)
+        if url is None or scope.canonical(url) != url or url in known:
             continue
         path.unlink()
         removed.append(path)
@@ -138,8 +151,14 @@ def export_docs(base_url: str = DEFAULT_BASE_URL, output_dir: str | Path = 'qq_d
             errors.append({'url': url, 'error': str(error)})
             logger.error('Failed to fetch %s: %s', url, error)
 
-    assets = AssetStore(destination, client)
+    # Transient failures must not rewrite unchanged content: keep links to pages that failed this time but
+    # were exported before, and keep images that failed to download but were saved before.
+    assets = AssetStore(destination, client, _previous_assets(destination))
     available = set(pages)
+    for url in known - available:
+        previous = destination.joinpath(*scope.output_path(url).parts)
+        if previous.is_file() and _source_url(previous) == url:
+            available.add(url)
     records: list[dict[str, str]] = []
     for url, page in sorted(pages.items()):
         relative = scope.output_path(url)
@@ -161,6 +180,7 @@ def export_docs(base_url: str = DEFAULT_BASE_URL, output_dir: str | Path = 'qq_d
         'exported': result.exported,
         'complete': result.complete,
         'pages': records,
+        'assets': {url: path.as_posix() for url, path in sorted(assets.cache.items()) if not url.startswith('data:')},
         'errors': errors,
     }
     (destination / 'manifest.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + '\n', encoding='utf-8', newline='\n')

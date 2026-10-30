@@ -70,10 +70,28 @@ class AssetStore:
         'image/bmp': '.bmp', 'image/x-icon': '.ico',
     }
 
-    def __init__(self: Self, output_dir: Path, client: HttpClient) -> None:
+    def __init__(self: Self, output_dir: Path, client: HttpClient, previous: dict[str, str] | None = None) -> None:
+        """
+        :param output_dir: Export output directory.
+        :param client: HTTP client for remote images.
+        :param previous: Image URL to relative path mapping from the last export, used by ``fallback``.
+        """
         self.output_dir = output_dir
         self.client = client
+        self.previous = previous or {}
         self.cache: dict[str, PurePosixPath] = {}
+
+    def fallback(self: Self, url: str) -> PurePosixPath | None:
+        """Reuse the image saved for this URL by the last export after a failed download.
+
+        :param url: Image URL whose download failed.
+        :return: Path relative to the output directory, or None when no saved copy exists.
+        """
+        path = self.previous.get(url)
+        if path is None or not self.output_dir.joinpath(*PurePosixPath(path).parts).is_file():
+            return None
+        self.cache[url] = PurePosixPath(path)
+        return self.cache[url]
 
     def save(self: Self, url: str) -> PurePosixPath:
         """Store an image under ``_assets/`` named by its SHA-256, downloading each URL once.
