@@ -29,10 +29,11 @@ class ExportResult:
     output_dir: Path
     errors: list[dict[str, str]] = field(default_factory=list)
     removed: list[str] = field(default_factory=list)
+    redirected: dict[str, str] = field(default_factory=dict)
 
     @property
     def complete(self: Self) -> bool:
-        """Whether every discovered document was exported without any error."""
+        """Whether every discovered document was exported without any error; redirected links do not count."""
         return self.exported == self.discovered and not self.errors
 
 
@@ -89,13 +90,14 @@ def export_docs(base_url: str = DEFAULT_BASE_URL, output_dir: str | Path = 'qq_d
     discovered again are deleted together with unreferenced images; other files in the output directory are kept.
     Output depends only on the site content, so re-running against an unchanged site rewrites identical files.
     Failures never stop the crawl and are never retried: they are recorded in the result and in
-    ``manifest.json``, and the pages that succeeded are still written.
+    ``manifest.json``, and the pages that succeeded are still written. Links that redirect to another page
+    (usually dead links sent to the home page) are not documents: they are reported, not counted as errors.
 
     :param base_url: Documentation directory to crawl.
     :param output_dir: Output directory, created when missing.
     :param timeout: Per-request timeout in seconds.
     :param delay: Minimum seconds between requests.
-    :return: Discovery and export counts, error records and removed paths.
+    :return: Discovery and export counts, error records, removed paths and redirected links.
     :raises ValueError: Invalid base URL, non-positive timeout or negative delay.
     :raises OSError: An output file cannot be written.
     """
@@ -107,6 +109,7 @@ def export_docs(base_url: str = DEFAULT_BASE_URL, output_dir: str | Path = 'qq_d
     client = HttpClient(timeout, delay)
     errors: list[dict[str, str]] = []
     pages: dict[str, Page] = {}
+    redirected: dict[str, str] = {}
     known = {scope.base_url}
     queue = deque([scope.base_url])
     processed: set[str] = set()
@@ -121,7 +124,12 @@ def export_docs(base_url: str = DEFAULT_BASE_URL, output_dir: str | Path = 'qq_d
             markup, final_url = client.text(url)
             # Missing pages redirect to the home page; never store that as the requested document.
             if scope.canonical(final_url) != url:
-                raise ValueError('Document redirected to another page: {}'.format(final_url))
+                # Without the root page there are no routes to crawl, so this is a failure, not a dead link.
+                if url == scope.base_url:
+                    raise ValueError('Documentation root redirected to another page: {}'.format(final_url))
+                redirected[url] = final_url
+                logger.warning('Skipped %s: redirected to %s', url, final_url)
+                continue
             page = extract_page(markup, url)
             soup = BeautifulSoup(markup, 'html.parser')
             found = page_links(soup, url, scope)
@@ -151,11 +159,12 @@ def export_docs(base_url: str = DEFAULT_BASE_URL, output_dir: str | Path = 'qq_d
             errors.append({'url': url, 'error': str(error)})
             logger.error('Failed to fetch %s: %s', url, error)
 
+    documents = known - set(redirected)
     # Transient failures must not rewrite unchanged content: keep links to pages that failed this time but
     # were exported before, and keep images that failed to download but were saved before.
     assets = AssetStore(destination, client, _previous_assets(destination))
     available = set(pages)
-    for url in known - available:
+    for url in documents - available:
         previous = destination.joinpath(*scope.output_path(url).parts)
         if previous.is_file() and _source_url(previous) == url:
             available.add(url)
@@ -169,10 +178,10 @@ def export_docs(base_url: str = DEFAULT_BASE_URL, output_dir: str | Path = 'qq_d
         records.append({'url': url, 'title': page.title, 'path': relative.as_posix()})
         logger.info('Saved %s', relative)
 
-    removed = _prune_withdrawn(destination, scope, known) if routes_complete else []
+    removed = _prune_withdrawn(destination, scope, documents) if routes_complete else []
     for path in removed:
         logger.info('Removed %s', path)
-    result = ExportResult(len(known), len(records), destination, errors, removed)
+    result = ExportResult(len(documents), len(records), destination, errors, removed, redirected)
     manifest = {
         'base_url': scope.base_url,
         'route_count': route_count,
@@ -181,14 +190,19 @@ def export_docs(base_url: str = DEFAULT_BASE_URL, output_dir: str | Path = 'qq_d
         'complete': result.complete,
         'pages': records,
         'assets': {url: path.as_posix() for url, path in sorted(assets.cache.items()) if not url.startswith('data:')},
+        'redirects': dict(sorted(redirected.items())),
         'errors': errors,
     }
     (destination / 'manifest.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + '\n', encoding='utf-8', newline='\n')
-    catalog = ['# QQ bot official documentation', '', 'Source: <{}>'.format(scope.base_url), '',
-               'Discovered {} documents, exported {}, {} errors.'.format(result.discovered, result.exported, len(errors)), '']
+    catalog = [
+        '# QQ bot official documentation', '',
+        'Source: <{}>'.format(scope.base_url), '',
+        'Discovered {} documents, exported {}, {} errors, {} redirected links.'.format(
+            result.discovered, result.exported, len(errors), len(redirected)), '',
+    ]
     for record in records:
         title = record['title'].replace('\\', '\\\\').replace('[', r'\[').replace(']', r'\]')
         catalog.append('- [{}]({})'.format(title, quote(record['path'], safe='/-._~')))
-    catalog.extend(['', 'See [manifest.json](manifest.json) for the page list and errors.', ''])
+    catalog.extend(['', 'See [manifest.json](manifest.json) for the page list, redirected links and errors.', ''])
     (destination / 'README.md').write_text('\n'.join(catalog), encoding='utf-8', newline='\n')
     return result

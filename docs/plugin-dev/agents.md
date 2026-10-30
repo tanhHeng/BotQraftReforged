@@ -74,7 +74,7 @@ botqraft fetch-official-docs
 
 大约一分钟后，`qq_docs/` 里就是转好的 Markdown，每页开头都写着原站地址。模板里已经告诉 Agent 去这里查。
 
-命令最后可能打印 `Export incomplete`，退出码为 1。这通常是官网自己有几个失效链接，其余页面都已经保存好了，具体是哪几页，可以看 `qq_docs/manifest.json` 里的 `errors`。
+官网正文里有几个失效链接，访问时会跳回首页。命令会打印 `Skipped ...: redirected to ...` 提醒一下，这不算错误，跳过就好。如果最后打印了 `Export incomplete`，退出码为 1，说明有页面、图片或路由清单真的没抓到，其余内容都已经保存好了，具体是哪些，可以看 `qq_docs/manifest.json` 里的 `errors`。
 
 这份文档版权归腾讯，体积也有几 MB，记得把 `qq_docs/` 加进插件项目的 `.gitignore`，别把它提交进仓库。
 

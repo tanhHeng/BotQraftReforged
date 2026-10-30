@@ -29,7 +29,7 @@ botqraft fetch-official-docs -o reference/qq_docs
 
 `reference/` 已经被 `.gitignore` 忽略，导出的文档不会混进提交。每个页面开头都写着原站地址，引用时请贴这个地址，不要贴本地路径。
 
-导出大约需要一分钟。官网上有几个失效链接，会被记成错误，所以命令通常以退出码 1 结束。看到 `Export incomplete` 先别慌，打开 `reference/qq_docs/manifest.json` 看看 `errors` 里是哪些页面就行。
+导出大约需要一分钟。官网正文里有几个失效链接，访问时会跳回首页，命令会打印 `Skipped ...: redirected to ...` 提醒你，但不算错误。如果有页面、图片或路由清单真的没抓到，命令会打印 `Export incomplete` 并以退出码 1 结束，这时打开 `reference/qq_docs/manifest.json` 看看 `errors` 就行。跳转的链接记在同一个文件的 `redirects` 里。
 
 官方文档更新后，重新执行一次就能同步：同名页面会被覆盖，官网已经撤下的页面和不再被引用的图片会被删掉。这次只是没抓到的页面或图片会沿用上次的版本，你自己放进目录的文件也不会动。官网没变时，重新导出的文件和上次一模一样。
 

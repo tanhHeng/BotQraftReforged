@@ -39,8 +39,8 @@ def fetch_official_docs(output: str, *, base_url: str, timeout: float, delay: fl
         result = export_docs(base_url, output, timeout=timeout, delay=delay)
     finally:
         logger.removeHandler(handler)
-    print('Discovered {} documents, exported {}, removed {} files, {} errors; output: {}'.format(
-        result.discovered, result.exported, len(result.removed), len(result.errors), result.output_dir.resolve()))
+    print('Discovered {} documents, exported {}, removed {} files, {} errors, {} redirected links skipped; output: {}'.format(
+        result.discovered, result.exported, len(result.removed), len(result.errors), len(result.redirected), result.output_dir.resolve()))
     if git:
         commit = commit_history(result.output_dir, result, base_url)
         print('Committed {}'.format(commit) if commit else 'No page or image changed; nothing committed')
