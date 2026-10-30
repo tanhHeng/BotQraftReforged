@@ -196,7 +196,9 @@ def export_docs(base_url: str = DEFAULT_BASE_URL, output_dir: str | Path = 'qq_d
     (destination / 'manifest.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + '\n', encoding='utf-8', newline='\n')
     catalog = [
         '# QQ bot official documentation', '',
-        'Source: <{}>'.format(scope.base_url), '',
+        '> Unofficial Markdown copy of the QQ bot documentation at <{}>, made by BotQraft for offline reference.'.format(scope.base_url),
+        '> Copyright © Tencent. All rights reserved. All text and images belong to their copyright owners;',
+        '> the original site is authoritative. Do not redistribute this copy or commit it to a public repository.', '',
         'Discovered {} documents, exported {}, {} errors, {} redirected links.'.format(
             result.discovered, result.exported, len(errors), len(redirected)), '',
     ]
