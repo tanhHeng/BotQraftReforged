@@ -6,15 +6,25 @@ from botqraft.message.qtext.text import QTextBase
 
 if TYPE_CHECKING:
     from botqraft.runtime import Runtime
-import collections
-from mcdreforged.command.command_manager import CommandManager as NativeCommandManager, TraversePurpose
+from mcdreforged.command.command_manager import CommandManager as NativeCommandManager
 from mcdreforged.command.builder import command_builder_utils as utils
+from mcdreforged.command.builder.callback import CallbackError, DirectCallbackInvoker
 from mcdreforged.command.builder.exception import CommandError, RequirementNotMet
-from mcdreforged.command.builder.nodes.basic import CallbackError, CommandSuggestion, CommandSuggestions
+from mcdreforged.command.builder.nodes.basic import CommandSuggestion, CommandSuggestions, EntryNode
 from mcdreforged.utils import string_utils
 from botqraft.message.qtext.text import QText
 from botqraft.command.command_source import QQCommandSource, ConsoleSource
 from mcdreforged.plugin.type.common import PluginState
+
+
+def _execute_entry(node: EntryNode, source: QQCommandSource | ConsoleSource, command: str) -> None:
+    """Parse a command and run its callbacks inline in the caller's plugin context.
+    
+    MCDR 2.16 parses into scheduled callbacks; running them directly keeps the
+    synchronous behavior. Coroutine callbacks raise inside a CallbackError.
+    """
+    for execution in node._entry_execute(source, command):
+        execution.scheduled_callback.invoke(DirectCallbackInvoker())
 
 
 class ConsoleSuggestionSource(ConsoleSource):
@@ -39,7 +49,7 @@ class CommandManager(NativeCommandManager):
         """
         self.runtime = runtime
         self.logger = runtime.logger
-        self.root_nodes = collections.defaultdict(list)
+        self.root_nodes = {}
         self._CommandManager__preserve_command_error_display_flag = False
 
     def matches_root(self: Self, command: str) -> bool:
@@ -60,7 +70,7 @@ class CommandManager(NativeCommandManager):
         if not isinstance(command, str):
             raise TypeError('command must be str')
         self._check_source(source)
-        return self._traverse(command, source, TraversePurpose.EXECUTE)
+        self._traverse(command, source, suggest=False)
 
     def suggest_command(self: Self, command: str, source: QQCommandSource) -> CommandSuggestions:
         """Generate suggestions for registered QQ command roots.
@@ -72,7 +82,7 @@ class CommandManager(NativeCommandManager):
         if not isinstance(command, str):
             raise TypeError('command must be str')
         self._check_source(source)
-        return self._traverse(command, source, TraversePurpose.SUGGEST)
+        return self._traverse(command, source, suggest=True)
 
     def _check_source(self: Self, source: QQCommandSource) -> None:
         if not isinstance(source, QQCommandSource) or source._runtime is not self.runtime:
@@ -93,10 +103,10 @@ class CommandManager(NativeCommandManager):
             self.logger.debug('Cannot translate command error %s', key)
         source.reply(QText(error.to_rtext().to_plain_text()))
 
-    def _traverse(self: Self, command: str, source: QQCommandSource, purpose: TraversePurpose) -> CommandSuggestions | None:
+    def _traverse(self: Self, command: str, source: QQCommandSource, *, suggest: bool) -> CommandSuggestions | None:
         roots = self.root_nodes.get(utils.get_element(command), [])
         suggestions = CommandSuggestions()
-        if purpose is TraversePurpose.SUGGEST and not roots:
+        if suggest and not roots:
             return CommandSuggestions([CommandSuggestion('', literal) for literal in self.root_nodes])
         for holder in tuple(roots):
             plugin, node = holder.plugin, holder.node
@@ -106,10 +116,10 @@ class CommandManager(NativeCommandManager):
                 with self.runtime.plugin_manager.with_plugin_context(plugin):
                     if source.scene not in holder.scope:
                         raise RequirementNotMet('', command, 'Command is not available in this QQ scene')
-                    if purpose is TraversePurpose.EXECUTE:
-                        node._entry_execute(source, command)
-                    else:
+                    if suggest:
                         suggestions.extend(node._entry_generate_suggestions(source, command))
+                    else:
+                        _execute_entry(node, source, command)
             except CommandError as error:
                 self._format_error(error, source)
             except Exception as error:
@@ -121,7 +131,7 @@ class CommandManager(NativeCommandManager):
                 else:
                     exc_info = True
                 self.logger.error('Error when executing command %r, %s', command, ', '.join(f'{key}={value!r}' for key, value in data.items()), exc_info=exc_info)
-        if purpose is TraversePurpose.SUGGEST:
+        if suggest:
             return suggestions
 
     def suggest_console(self: Self, command: str, source: ConsoleSource | None = None) -> CommandSuggestions:
@@ -167,7 +177,7 @@ class CommandManager(NativeCommandManager):
             return
         try:
             with self.runtime.plugin_manager.with_plugin_context(plugin):
-                node._entry_execute(source, command)
+                _execute_entry(node, source, command)
         except CommandError as error:
             self._format_error(error, source)
         except Exception as error:

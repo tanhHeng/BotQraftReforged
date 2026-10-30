@@ -89,7 +89,7 @@ class PromptToolkitWrapper:
                 return
             try:
                 self.prompt_session = ConsolePromptSession(self.console_handler)
-                self.stdout_proxy = MCDRStdoutProxy()
+                self.stdout_proxy = MCDRStdoutProxy(self.console_handler.logger)
             except Exception:
                 if self.prompt_session is not None:
                     self.prompt_session.app.input.close()

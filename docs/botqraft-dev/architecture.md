@@ -31,7 +31,7 @@
 
 表格之外还有三个支撑子包：`translation/` 负责翻译查找与延迟文本，`preference/` 保存用户偏好与已见过的 C2C 用户，`utils/` 放序列化、异常与 Future 辅助函数。
 
-`botqraft/plugin/_native.py` 把 MCDR 2.14.4 的函数绑定到 BotQraft 的子类上，不改动 MCDR 自己的类或全局变量。
+`botqraft/plugin/_native.py` 把 MCDR 2.16.2 的函数绑定到 BotQraft 的子类上，不改动 MCDR 自己的类或全局变量。
 
 ## 一次启动的完整顺序
 

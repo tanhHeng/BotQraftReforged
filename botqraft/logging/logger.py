@@ -8,15 +8,23 @@ if TYPE_CHECKING:
     from botqraft.runtime import Runtime
 import json
 import logging
+import os
 import re
 from threading import RLock
 from colorlog import ColoredFormatter
+from mcdreforged.logging.file_handler import ZippingDayRotatingFileHandler
 from mcdreforged.logging.logger import MCDReforgedLogger
 from mcdreforged.logging.formatter import PluginIdAwareFormatter, NoColorFormatter
+from mcdreforged.logging.stream_handler import SyncStdoutStreamHandler
 
 
 class Logger(MCDReforgedLogger):
     DEFAULT_NAME = 'BotQraft'
+    FILE_FORMATTER = PluginIdAwareFormatter(
+        NoColorFormatter,
+        '[%(name)s] [%(asctime)s.%(msecs)03d] [%(threadName)s/%(levelname)s] [%(filename)s:%(lineno)d(%(funcName)s)] [%(plugin_id)s]: %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S',
+    )
     CONSOLE_FORMATTER = PluginIdAwareFormatter(
         ColoredFormatter,
         '[%(name)s] [%(asctime)s] [%(threadName)s/%(log_color)s%(levelname)s%(reset)s] [%(plugin_id)s]: %(message)s',
@@ -27,6 +35,62 @@ class Logger(MCDReforgedLogger):
         '[%(name)s] [%(asctime)s] [%(threadName)s/%(levelname)s] [%(plugin_id)s]: %(message)s',
         datefmt='%H:%M:%S',
     )
+
+    def __init__(self: Self, plugin_id: str | None = None) -> None:
+        """Create a standalone logger that owns its console and file handlers.
+        
+        The native initializer is skipped on purpose: it registers every instance in
+        MCDR's process-wide shared file handler, which BotQraft never configures.
+        
+        :param plugin_id: Plugin identifier attached to every record, or None for the runtime logger.
+        :return: No return value.
+        """
+        logging.Logger.__init__(self, self.DEFAULT_NAME)
+        self.setLevel(logging.INFO)
+        self.file_handler: ZippingDayRotatingFileHandler | None = None
+        self._plugin_id = plugin_id
+        self.console_handler = SyncStdoutStreamHandler()
+        self.console_handler.setFormatter(self.CONSOLE_FORMATTER)
+        self.addHandler(self.console_handler)
+
+    def _log(self: Self, level: int, msg: object, args: Any, *remaining_args: Any, **kwargs: Any) -> None:
+        """Attach the plugin identifier and keep the caller's stack location.
+        
+        :param level: Numeric logging level.
+        :param msg: Message or format string.
+        :param args: Format arguments.
+        :return: No return value.
+        """
+        if self._plugin_id is not None:
+            extra = kwargs.get('extra') or {}
+            extra[PluginIdAwareFormatter.PLUGIN_ID_KEY] = self._plugin_id
+            kwargs['extra'] = extra
+        # One extra frame for this override; logging.Logger._log defaults to 1.
+        kwargs['stacklevel'] = kwargs.get('stacklevel', 1) + 1
+        super()._log(level, msg, args, *remaining_args, **kwargs)
+
+    def set_file(self: Self, file_path: str) -> None:
+        """Write records to a daily rotating, zipped log file, replacing any previous file.
+        
+        :param file_path: Path of the active log file.
+        :return: No return value.
+        """
+        if self.file_handler is not None:
+            self.unset_file()
+        os.makedirs(os.path.dirname(file_path) or '.', exist_ok=True)
+        self.file_handler = ZippingDayRotatingFileHandler(file_path, self.ROTATE_DAY_COUNT)
+        self.file_handler.setFormatter(self.FILE_FORMATTER)
+        self.addHandler(self.file_handler)
+
+    def unset_file(self: Self) -> None:
+        """Detach and close the log file handler if one is set.
+        
+        :return: No return value.
+        """
+        if self.file_handler is not None:
+            self.removeHandler(self.file_handler)
+            self.file_handler.close()
+            self.file_handler = None
 
     def setLevel(self: Self, level: int | str) -> None:
         """Set the log level and clear the directly constructed logger cache.

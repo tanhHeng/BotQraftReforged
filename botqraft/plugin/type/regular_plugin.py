@@ -29,7 +29,6 @@ class RegularPlugin(Plugin, NativeRegularPlugin):
         self.file_path = Path(file_path)
         self.file_name = self.file_path.name
         self.file_modify_time = None
-        self._RegularPlugin__metadata = None
         self.entry_module_instance = None
         self.old_entry_module_instance = None
         self.decorated_event_listeners = []

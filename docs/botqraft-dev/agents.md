@@ -11,7 +11,7 @@ Agent 每次开工前会先读仓库根目录的说明文件。把下面的模�
 ```md
 # AGENTS.md
 
-This is the source repository of the BotQraft framework itself: a Python framework built on MCDReforged 2.14.4 that talks to the official QQ bot API and supports group and C2C (one-to-one) chats.
+This is the source repository of the BotQraft framework itself: a Python framework built on MCDReforged 2.16.2 that talks to the official QQ bot API and supports group and C2C (one-to-one) chats.
 
 ## Repository map
 

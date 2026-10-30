@@ -13,9 +13,9 @@ python -m pip install -r requirements.dev.txt
 
 这里用可编辑安装（`-e`）。装好后 Python 导入的是你正在改的源码目录，改完不用重装就生效。
 
-`requirements.txt` 里是运行时依赖：MCDReforged 2.14.4、aiohttp 与 ruamel.yaml。`requirements.dev.txt` 在这些之外再加上 `build`。
+`requirements.txt` 里是运行时依赖：MCDReforged 2.16.2、aiohttp 与 ruamel.yaml。`requirements.dev.txt` 在这些之外再加上 `build`。
 
-MCDReforged 固定在 2.14.4，aiohttp 限定在 3.x，只有 `ruamel.yaml` 没写版本上界，会装成当前最新版。如果你在验证兼容的版本区间，请显式固定版本。
+MCDReforged 固定在 2.16.2，aiohttp 限定在 3.x，只有 `ruamel.yaml` 没写版本上界，会装成当前最新版。如果你在验证兼容的版本区间，请显式固定版本。
 
 BotQraft 独立运行，MCDR 只作为 Python 依赖安装。你不需要另外搭一个 MCDR 服务端。
 

@@ -18,7 +18,7 @@ def read_help(server):
 
 目录插件会直接读取目录里的文件。打包成 `.mcdr` / `.pyz` 时就要留意了：打包命令只会自动带上元数据、`requirements.txt` 和以插件 ID 命名的源码目录。所以请在插件元数据的 `resources` 里加入 `assets`，资源才会跟着归档一起分发。翻译文件也一样：放在根目录 `lang/`，并把 `lang` 加入 `resources`。具体结构见[插件格式](plugin-format.md)和[多语言与用户偏好](translation.md)。
 
-`open_bundled_file` 只适用于目录插件和压缩插件。单文件插件需要自己定位并读取外部文件。在单文件插件里，或者用没有绑定插件的接口调用这个方法，会抛出 `FileNotFoundError`。如果要读的资源不存在，目录插件会抛出 `FileNotFoundError`，压缩插件则抛出 `KeyError`。
+`open_bundled_file` 只适用于目录插件和压缩插件。单文件插件需要自己定位并读取外部文件。在单文件插件里，或者用没有绑定插件的接口调用这个方法，会抛出 `FileNotFoundError`。要读的资源不存在时，目录插件和压缩插件都会抛出 `FileNotFoundError`。
 
 ## 保存可写数据
 

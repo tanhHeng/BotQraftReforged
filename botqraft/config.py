@@ -111,7 +111,7 @@ def load_resource_yaml(resource_path: str) -> dict[str, Any]:
 
 
 class ResourceStorageMixin:
-    """Replace only the native package-bound lazy resource provider (MCDR 2.14.4)."""
+    """Replace only the native package-bound lazy resource provider (MCDR 2.16.2)."""
     def __init__(self: Self, logger: logging.Logger, path: str | PathLike[str], resource_path: str) -> None:
         """Bind native YAML storage to a BotQraft resource template.
         
@@ -214,6 +214,19 @@ class ConfigManager(MCDReforgedConfigManager):
         if missing and initial:
             self.save()
         return missing
+
+    def save(self: Self) -> None:
+        """Merge the current configuration into native storage and write it.
+        
+        MCDR 2.16 configs are pydantic models; BotQraft's ``Config`` stays a ``Serializable``.
+        
+        :return: No return value.
+        """
+        with self._MCDReforgedConfigManager__config_lock:
+            data = self.get_config().serialize()
+        storage = self._MCDReforgedConfigManager__storage
+        storage.merge_from_dict(data)
+        storage.save()
 
     def save_default(self: Self) -> None:
         """Write the bundled default configuration through native storage.

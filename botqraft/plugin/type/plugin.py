@@ -29,6 +29,7 @@ class Plugin(AbstractPlugin):
         self.runtime = plugin_manager.runtime
         self.state = PluginState.UNINITIALIZED
         self.plugin_registry = PluginRegistry(self, plugin_manager.registry_storage)
+        self._AbstractPlugin__metadata = None
         from botqraft.plugin.si.plugin_server_interface import QQPluginServerInterface
         self.server_interface = QQPluginServerInterface(self.runtime, self)
 

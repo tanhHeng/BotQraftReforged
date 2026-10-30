@@ -6,7 +6,7 @@
 ## 环境依赖
 
 - Python 3.10 及以上版本
-- MCDreforged 2.14.4
+- MCDReforged 2.16.2
 - ruamel.yaml 0.17.23 及以上版本
 
 一般来说，你不需要手动安装这些依赖，让我们直接使用 pip ！

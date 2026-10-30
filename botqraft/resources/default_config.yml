@@ -13,6 +13,7 @@ disable_console_color: false
 debug:
   all: false
   mcdr: false
+  process: false
   handler: false
   reactor: false
   plugin: false

@@ -354,10 +354,10 @@ class Runtime:
             self._exit_requested.set()
             if hasattr(self, 'console_handler'):
                 self.console_handler.stop()
-                console_thread = self.console_handler.get_thread()
-                if console_thread is not None and not self.console_handler.is_on_thread():
+                # The console thread is never started when disable_console_thread is set.
+                if self.console_handler.is_thread_alive() and not self.console_handler.is_on_thread():
                     self.console_handler.join(timeout=5)
-                    if console_thread.is_alive():
+                    if self.console_handler.is_thread_alive():
                         self.logger.warning('Console executor did not stop within five seconds')
             if hasattr(self, 'sender'):
                 self.sender.close()
@@ -386,7 +386,7 @@ class Runtime:
                         self.logger.warning('Synchronous executor still alive after %s seconds', elapsed + 1)
                         stack = self.sync_task_executor.get_thread_stack()
                         if stack is not None:
-                            for line in stack.format():
+                            for line in stack.get_lines():
                                 self.logger.warning('%s', line)
                 if self.sync_task_executor.get_thread().is_alive():
                     error = TimeoutError('Synchronous shutdown deadline exceeded; running threads were not killed')

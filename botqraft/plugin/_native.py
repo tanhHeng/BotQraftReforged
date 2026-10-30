@@ -1,4 +1,4 @@
-"""Local MCDR 2.14.4 function bindings; never mutate native classes or globals."""
+"""Local MCDR 2.16.2 function bindings; never mutate native classes or globals."""
 from typing import Any, Callable, Mapping, TypeVar
 from types import CellType
 

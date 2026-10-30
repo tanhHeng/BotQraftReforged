@@ -5,6 +5,7 @@ from typing_extensions import Self
 if TYPE_CHECKING:
     from botqraft.plugin.plugin_manager import PluginManager
 from typing import Any
+from mcdreforged.plugin.meta.schema import PluginMetadataJsonModel
 from mcdreforged.plugin.type.builtin_plugin import BuiltinPlugin as NativeBuiltinPlugin
 from mcdreforged.plugin.builtin.python_plugin import PythonPlugin as NativePythonPlugin, METADATA
 from botqraft.constants.core_constant import VERSION
@@ -13,15 +14,15 @@ from .plugin import Plugin
 
 
 class BuiltinPlugin(Plugin, NativeBuiltinPlugin):
-    def __init__(self: Self, plugin_manager: PluginManager, metadata_dict: dict[str, Any]) -> None:
+    def __init__(self: Self, plugin_manager: PluginManager, metadata: dict[str, Any] | PluginMetadataJsonModel) -> None:
         """Initialize a built-in plugin from native metadata fields.
         
         :param plugin_manager: Manager owning the record.
-        :param metadata_dict: Metadata fields with open JSON-compatible values.
+        :param metadata: Metadata fields with open JSON-compatible values, or a native metadata model.
         :return: No value is returned.
         """
         Plugin.__init__(self, plugin_manager)
-        self._BuiltinPlugin__metadata = Metadata(metadata_dict, plugin=self)
+        self._set_metadata(Metadata.create(metadata, plugin=self))
 
 
 class CorePlugin(BuiltinPlugin):

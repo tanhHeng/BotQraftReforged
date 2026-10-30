@@ -15,7 +15,7 @@ BotQraftReforged builds on MCDR's plugin development, command management, permis
 - Provides QQ interfaces for passive replies, text, Markdown, keyboards, and command panels.
 - Supports single-file, directory, and packed plugins for development and distribution.
 
-Requires **Python 3.10 or later**. MCDR 2.14.4 is a code dependency, not the runtime host; no Minecraft server is required.
+Requires **Python 3.10 or later**. MCDR 2.16.2 is a code dependency, not the runtime host; no Minecraft server is required.
 
 ## Documentation
 

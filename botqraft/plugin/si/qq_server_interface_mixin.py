@@ -117,9 +117,9 @@ class ServerInterfaceMixin:
         plugin = getattr(self, '_plugin', None) or self._plugin_manager.get_plugin_in_current_context()
         return plugin_logger(self._runtime.logger, plugin.get_id()) if plugin is not None else self._runtime.logger
 
-    def _create_plugin_logger(self: Self, plugin_id: str) -> Logger:
-        from botqraft.logging.logger import plugin_logger
-        return plugin_logger(self._runtime.logger, plugin_id)
+    def _on_plugin_metadata_set(self: Self) -> None:
+        # Native MCDR caches a process-global plugin logger here; BotQraft builds loggers on access.
+        return None
 
     def _reset_on_load(self: Self) -> None:
         # Logger access is uncached; the plugin record remains the same bound object.
@@ -686,3 +686,4 @@ class ServerInterfaceMixin:
     get_mcdr_config = modify_mcdr_config = reload_config_file = get_mcdr_language = _unsupported
     wait_until_stop = wait_for_start = stop_exit = set_exit_after_stop_flag = _unsupported
     is_rcon_running = get_server_pid_all = _unsupported
+    get_player_command_source = get_console_command_source = _unsupported

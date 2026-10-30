@@ -29,3 +29,4 @@ class PackedPlugin(MultiFilePlugin, NativePackedPlugin):
 PackedPlugin._reset = bind_native(NativePackedPlugin._reset, owner=PackedPlugin)
 PackedPlugin._on_unload = bind_native(NativePackedPlugin._on_unload, runtime=True, owner=PackedPlugin)
 PackedPlugin._load_entry_instance = bind_native(NativePackedPlugin._load_entry_instance, owner=PackedPlugin)
+PackedPlugin.release_file_occupation = bind_native(NativePackedPlugin.release_file_occupation, runtime=True)

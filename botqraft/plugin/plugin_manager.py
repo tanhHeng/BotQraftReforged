@@ -276,7 +276,7 @@ class PluginManager(NativePluginManager):
             future = Future()
             future.set_result(None)
             return observe_future(future, self.logger, 'plugin listener skipped')
-        if listener.is_async():
+        if listener.is_async:
             return self.runtime.async_task_executor.submit(self._trigger_listener_async(listener, args), plugin=listener.plugin)
         future = Future()
         observe_future(future, self.logger, 'plugin listener')
