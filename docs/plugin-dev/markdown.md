@@ -48,7 +48,15 @@ message = QMarkdown('**请选择：** ').append(
 
 `QTextAt(target)` 可以接收一个 `User`（包括它的子类 `MentionedUser`），也可以接收提及 ID 字符串。传入 `User` 时，它只看 `member_openid`；`id`、`user_openid` 和昵称都不参与生成提及。群消息里的 `source.user`，以及 `event.message_data.mentions` 中的用户，都带有 `member_openid`，直接传进去就行。
 
-生成的内容是一个 `<qqbot-at-user id="member_openid" />` 标签。直接发送时，它是一条普通文本消息；追加到 `QMarkdown` 时，标签原样保留。
+生成的内容是一个 `<qqbot-at-user id="member_openid" />` 标签。追加到 `QMarkdown` 时，标签原样保留，群里会显示成 @。
+
+直接发送，或者和普通字符串、`QText` 相加后发送，得到的是一条普通文本消息。实测 QQ 目前不会把纯文本里的标签显示成 @，群里只会看到标签原文。框架仍然照常发送，同时在日志里打一条警告，等 QQ 平台适配。想让 @ 显示出来，请把它放进 `QMarkdown`：
+
+```python
+from botqraft.api.qtext import QMarkdown, QTextAt
+
+message = QMarkdown().append(QTextAt(source.user), ' 任务完成')
+```
 
 以下情况会出错：
 

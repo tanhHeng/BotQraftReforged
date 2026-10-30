@@ -270,6 +270,9 @@ class MessageSender:
         payload = deepcopy(text.to_payload())
         if not isinstance(payload, dict):
             raise TypeError('message encoder must return a dict')
+        # QQ does not render mention tags in plain-text messages yet; keep sending them until the platform adapts.
+        if payload.get('msg_type') == 0 and '<qqbot-at-user ' in payload.get('content', ''):
+            self.runtime.logger.warning('QQ does not render QTextAt mentions in plain-text messages yet; combine them into QMarkdown to show @')
         return payload
 
     def send(self: Self, target: Group | C2C, message: str | QTextBase | QMediaBase, *, refer_msg: QQMessageReceived | QQMessageReceipt | None = None, msg_id: str | None = None, event_id: str | None = None, passive_context: QQEvent | None = None) -> Future[QQMessageReceipt]:

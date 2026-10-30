@@ -38,7 +38,7 @@ Plugin ID: `<your_plugin_id>`. The data folder, translation key prefix and depen
 - Prefer `SimpleCommandBuilder`. Root names include the `/`, e.g. `/roll <count>`. To restrict scenes, use `for root in builder.build(): server.register_command(root, scope=('group',))` and pass the same `scope` to `server.register_help_message(...)`.
 - Reply to the triggering message with `source.reply(...)`. This is a passive reply, valid for 5 minutes in groups and 60 minutes in C2C.
 - For later or scheduled messages use `server.send(source.target, ...)`. `send` accepts only `Group` or `C2C` targets, never `User`.
-- To mention someone, put `QTextAt(...)` into the message content. Mentions work only in group chats.
+- To mention someone, put `QTextAt(...)` into a `QMarkdown` message, e.g. `QMarkdown().append(QTextAt(source.user), ' text')`. QQ does not render mentions in plain-text messages yet (BotQraft logs a warning), and mentions work only in group chats.
 - Send images, video, voice and files with `QImage`, `QVideo`, `QVoice`, `QFile`; pass local files as `pathlib.Path`. Media messages cannot carry text, so send any caption as a separate message.
 - User-visible text must be translation keys `<your_plugin_id>.<key>`, sent with `server.rtr(...)`. Use `server.tr(...)` only when a plain string is needed immediately (e.g. button labels).
 - Plugin callbacks run on the framework's single synchronous executor thread. Never `time.sleep`, loop for long, or make blocking network calls in a callback, and never use `schedule_task(..., block=True)` or call `.result()` on your own scheduled task there.

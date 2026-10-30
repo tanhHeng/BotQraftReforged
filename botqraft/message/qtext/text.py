@@ -250,7 +250,7 @@ class QMarkdown(QTextBase):
 
 
 class QTextAt(QText):
-    """A user mention usable in plain text and Markdown messages."""
+    """A user mention; QQ currently renders it as @ only inside QMarkdown messages, not plain text."""
 
     def __init__(self, target: User | str, *, keyboard: QKeyboardBase | None = None) -> None:
         """Create a mention from a group member OpenID.

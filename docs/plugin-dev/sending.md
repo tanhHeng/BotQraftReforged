@@ -50,10 +50,11 @@ def notify_later(server: QQPluginServerInterface, source: QQCommandSource):
 ```python
 from botqraft.api.command import QQCommandSource
 from botqraft.api.types import QQPluginServerInterface
-from botqraft.api.qtext import QTextAt
+from botqraft.api.qtext import QMarkdown, QTextAt
 
 def remind_member(server: QQPluginServerInterface, source: QQCommandSource):
-    message = QTextAt(source.user) + ' Task completed'
+    # QQ only renders the mention as @ in Markdown messages for now.
+    message = QMarkdown().append(QTextAt(source.user), ' Task completed')
     return server.send(source.target, message, return_future=True)
 ```
 
