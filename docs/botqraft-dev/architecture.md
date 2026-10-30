@@ -7,28 +7,28 @@
 
 ## 子包职责
 
-| 路径                       | 职责                                                                                                                                                                   |
-| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `botqraft/api/`            | 插件的公开接口层，按用途分成 `types`、`command`、`event`、`qtext`、`exception`、`decorator`、`utils`，`api.all` 汇总导出。插件只从这一层导入。                         |
-| `botqraft/bootstrap.py`    | 部署文件准备：写默认 `config.yml` 与 `permissions.yml`，创建插件、数据与日志目录。它不创建 Runtime，也不连接 QQ。                                                      |
-| `botqraft/config.py`       | 配置模型与读写。`Config` 保存 appid、secret、语言、插件目录、收件日志开关、控制台选项、调试开关、网关 intents、HTTP 超时与权限模式，复用 MCDR 的 YAML 合并与保存逻辑。 |
-| `botqraft/runtime.py`      | 运行时本体。创建并串联各管理器，驱动启动、运行与停止，对外提供 `is_ready()`、`exit()` 等状态查询。                                                                     |
-| `botqraft/runtime_args.py` | `RuntimeArgs` 数据类，携带部署动作与配置文件路径。                                                                                                                     |
-| `botqraft/state.py`        | `RuntimeState` 状态枚举。                                                                                                                                              |
-| `botqraft/cli/`            | 命令行入口与各子命令的实现。                                                                                                                                           |
-| `botqraft/command/`        | 命令注册与执行（`CommandManager`），以及命令来源（`QQCommandSource`、`ConsoleSource`）。                                                                               |
-| `botqraft/event/`          | 平台事件解析与调用：`EventParser`、`EventDispatcher`、`QQEvent`、`QQInteraction`。                                                                                     |
-| `botqraft/message/`        | 消息数据、用户与场景、收件对象、发送器、发送回执，以及 `qtext/` 下的文本、Markdown 与键盘。                                                                            |
-| `botqraft/network/`        | QQ 传输层：访问令牌、HTTP 客户端、网关客户端、独立网络循环，以及传输层异常。                                                                                           |
-| `botqraft/panel/`          | 帮助驱动的群聊与 C2C 全局面板同步。                                                                                                                                    |
-| `botqraft/permission/`     | 权限列表与最高等级查询，以及默认权限策略。                                                                                                                             |
-| `botqraft/plugin/`         | 插件管理：管理器、注册表、工厂、`type/` 插件类型、`meta/` 元数据、`si/` 服务接口、`builtin/` 内置插件，以及生命周期事件定义。                                          |
-| `botqraft/executor/`       | 同步与异步任务执行器，以及控制台输入处理。                                                                                                                             |
-| `botqraft/logging/`        | 日志器：轮转、凭据脱敏与颜色格式。                                                                                                                                     |
-| `botqraft/compatibility/`  | 本地能力探测，以及按版本缓存的能力检查。                                                                                                                               |
-| `botqraft/constants/`      | 版本号 `core_constant.VERSION` 与插件文件名常量。                                                                                                                      |
-| `botqraft/official_docs/`  | `fetch-official-docs` 子命令背后的导出器：抓取 QQ 官方文档并转成本地 Markdown。依赖可选的 `docs` 依赖组，运行时不会导入它。                                            |
-| `botqraft/resources/`      | 打包资源：默认配置、默认权限与内置语言文件。                                                                                                                           |
+| 路径                       | 职责                                                                                                                                                                                 |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `botqraft/api/`            | 插件的公开接口层，按用途分成 `types`、`command`、`event`、`qtext`、`exception`、`decorator`、`utils`，`api.all` 汇总导出。插件只从这一层导入。                                       |
+| `botqraft/bootstrap.py`    | 部署文件准备：写默认 `config.yml` 与 `permissions.yml`，创建插件、数据与日志目录。它不创建 Runtime，也不连接 QQ。                                                                    |
+| `botqraft/config.py`       | 配置模型与读写。`Config` 保存 appid、secret、语言、插件目录、收件日志开关、控制台选项、调试开关、网关 intents、HTTP 超时与权限模式，复用 MCDR 的 YAML 合并与保存逻辑。               |
+| `botqraft/runtime.py`      | 运行时本体。创建并串联各管理器，驱动启动、运行与停止，对外提供 `is_ready()`、`exit()` 等状态查询。                                                                                   |
+| `botqraft/runtime_args.py` | `RuntimeArgs` 数据类，携带部署动作与配置文件路径。                                                                                                                                   |
+| `botqraft/state.py`        | `RuntimeState` 状态枚举。                                                                                                                                                            |
+| `botqraft/cli/`            | 命令行入口与各子命令的实现。                                                                                                                                                         |
+| `botqraft/command/`        | 命令注册与执行（`CommandManager`），以及命令来源（`QQCommandSource`、`ConsoleSource`）。                                                                                             |
+| `botqraft/event/`          | 平台事件解析与调用：`EventParser`、`EventDispatcher`、`QQEvent`、`QQInteraction`。                                                                                                   |
+| `botqraft/message/`        | 消息数据、用户与场景、收件对象、发送器、发送回执，以及 `qtext/` 下的文本、Markdown 与键盘。                                                                                          |
+| `botqraft/network/`        | QQ 传输层：访问令牌、HTTP 客户端、网关客户端、独立网络循环，以及传输层异常。                                                                                                         |
+| `botqraft/panel/`          | 帮助驱动的群聊与 C2C 全局面板同步。                                                                                                                                                  |
+| `botqraft/permission/`     | 权限列表与最高等级查询，以及默认权限策略。                                                                                                                                           |
+| `botqraft/plugin/`         | 插件管理：管理器、注册表、工厂、`type/` 插件类型、`meta/` 元数据、`si/` 服务接口、`builtin/` 内置插件，以及生命周期事件定义。                                                        |
+| `botqraft/executor/`       | 同步与异步任务执行器，以及控制台输入处理。                                                                                                                                           |
+| `botqraft/logging/`        | 日志器：轮转、凭据脱敏与颜色格式。                                                                                                                                                   |
+| `botqraft/compatibility/`  | 本地能力探测，以及按版本缓存的能力检查。                                                                                                                                             |
+| `botqraft/constants/`      | 版本号 `core_constant.VERSION` 与插件文件名常量。                                                                                                                                    |
+| `botqraft/official_docs/`  | `fetch-official-docs` 子命令背后的导出器：抓取 QQ 官方文档并转成本地 Markdown，可选用 `--git` 把输出目录维护成独立仓库，按变化自动提交。依赖可选的 `docs` 依赖组，运行时不会导入它。 |
+| `botqraft/resources/`      | 打包资源：默认配置、默认权限与内置语言文件。                                                                                                                                         |
 
 表格之外还有三个支撑子包：`translation/` 负责翻译查找与延迟文本，`preference/` 保存用户偏好与已见过的 C2C 用户，`utils/` 放序列化、异常与 Future 辅助函数。
 

@@ -33,6 +33,18 @@ botqraft fetch-official-docs -o reference/qq_docs
 
 官方文档更新后，重新执行一次就能同步：同名页面会被覆盖，官网已经撤下的页面和不再被引用的图片会被删掉。这次只是没抓到的页面或图片会沿用上次的版本，你自己放进目录的文件也不会动。官网没变时，重新导出的文件和上次一模一样。
 
+想知道官网每次改了什么？加上 `--git`：
+
+```bash
+botqraft fetch-official-docs -o reference/qq_docs --git
+```
+
+第一次运行会在 `reference/qq_docs/` 里建一个独立的 Git 仓库，并提交一份快照。之后每次重新导出，只要有页面或图片变化，就自动提交一次，提交信息里会列出新增、修改和删除了哪些页面。想看平台规则哪里变了，执行 `git -C reference/qq_docs log -p` 就行。
+
+如果只有 `README.md` 和 `manifest.json` 变了（比如某次网络出错），不会提交。提交的作者固定为 `BotQraft docs fetcher`，不会用你的 Git 身份。
+
+输出目录在另一个 Git 仓库里、却没被它的 `.gitignore` 忽略时，命令会在抓取前直接报错，免得外层仓库把它当成嵌套仓库收进去。`reference/` 已经被忽略，可以放心用。
+
 ## 运行能力探测
 
 ```bash

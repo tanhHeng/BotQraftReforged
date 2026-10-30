@@ -24,7 +24,7 @@ This is the source repository of the BotQraft framework itself: a Python framewo
 ## Order of authority
 
 1. Code and observed runtime behavior.
-2. Official QQ platform documentation at https://bot.q.qq.com/wiki/. If `reference/qq_docs/` exists, it is a Markdown export of the same docs (refresh it with `botqraft fetch-official-docs -o reference/qq_docs`); each page starts with its original URL. Cite that URL, not the local path, when changing platform-dependent behavior. If observed platform behavior differs from the docs, explain the evidence and document the constraint in the relevant tracked documentation.
+2. Official QQ platform documentation at https://bot.q.qq.com/wiki/. If `reference/qq_docs/` exists, it is a Markdown export of the same docs (refresh it with `botqraft fetch-official-docs -o reference/qq_docs --git`); each page starts with its original URL. If it is a Git repository, `git -C reference/qq_docs log -p` shows how the platform docs changed over time. Cite the original URL, not the local path, when changing platform-dependent behavior. If observed platform behavior differs from the docs, explain the evidence and document the constraint in the relevant tracked documentation.
 3. Tracked documentation in `docs/`. If it conflicts with the code, report the discrepancy to the maintainer before changing behavior. Design notes under `reference/` are local only; do not require them for development.
 
 ## Architecture constraints

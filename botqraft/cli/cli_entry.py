@@ -59,6 +59,8 @@ def cli_dispatch(argv: Optional[Sequence[str]] = None) -> int:
     docs.add_argument('--timeout', type=float, default=30, help='Per-request timeout in seconds')
     docs.add_argument('--delay', type=float, default=0.1, help='Minimum seconds between requests')
     docs.add_argument('--quiet', action='store_true', help='Only print errors and the summary')
+    docs.add_argument('--git', action='store_true',
+                      help='Keep the output directory as its own Git repository and commit when pages or images change')
 
     args = parser.parse_args(argv)
     if args.version or args.command == 'version':
@@ -78,7 +80,7 @@ def cli_dispatch(argv: Optional[Sequence[str]] = None) -> int:
         reformat_config(args.input, args.output)
     elif args.command == 'fetch-official-docs':
         from botqraft.cli.cmd_fetch_official_docs import fetch_official_docs
-        fetch_official_docs(args.output, base_url=args.base_url, timeout=args.timeout, delay=args.delay, quiet=args.quiet)
+        fetch_official_docs(args.output, base_url=args.base_url, timeout=args.timeout, delay=args.delay, quiet=args.quiet, git=args.git)
     else:
         from botqraft.cli.cmd_start import run_botqraft
         runtime_args = RuntimeArgs() if args.command is None else RuntimeArgs(
